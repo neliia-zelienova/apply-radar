@@ -1,10 +1,15 @@
 import './App.css'
+import { Content } from './components/content/content'
+import { Header } from './components/header/header'
 
 function App() {
 
   return (
     <>
-     <h1>Chrome Extension Template - using Vite, React and TypeScript.</h1>
+    {/** Header */}
+      <Header />
+    {/** Content */}
+    <Content />
     </>
   )
 }

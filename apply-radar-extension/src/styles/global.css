@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* Tailwind v4 theme block */
+@theme {
+    --font-momo-trust: 'Momo Trust Display', sans-serif;
+    --font-roboto: 'Roboto', sans-serif;
+ --pending-color: rgba(250,204,21,0.5);   /* amber */
+  --interview-bg: rgba(10,15,36,0.5);      /* dark blue */
+  --interview-line: #3BC47F;               /* emerald */
+  --offered-color: rgba(56,211,153,0.5);     /* emerald */
+  --rejected-color: rgba(239,68,68,0.5);   /* red */
+
+  /* Soft ambient shadow for depth */
+  --shadow-ambient: 0 6px 18px rgba(255,255,255,0.12);
+
+  /* Animations */
+  @keyframes offeredPulse {
+    0%   { transform: scale(1); opacity: 0.7; }
+    60%  { transform: scale(2.2); opacity: 0.1; }
+    100% { transform: scale(2.6); opacity: 0; }
+  }
+
+  @keyframes pendingRipple {
+    0%   { transform: scale(1); opacity: 0.7; }
+    70%  { transform: scale(1.8); opacity: 0; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  @keyframes radarSweepMinimal {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+}
+@layer components {
+
+  /* --- Pending ---------------------------------------------------- */
+  .status-pending {
+    @apply relative w-7 h-7 rounded-full;
+    background: var(--pending-color);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(250,204,21,0.3);
+    box-shadow: var(--shadow-ambient);
+  }
+  .status-pending::after {
+    content: "";
+    @apply absolute inset-0 rounded-full;
+    background: var(--pending-color);
+    opacity: 0.3;
+    animation: pendingRipple 1.6s ease-out infinite;
+  }
+
+  /* --- Interview --------------------------------------------------- */
+  .status-interview {
+    @apply relative w-14 h-14 rounded-full overflow-hidden;
+    background: var(--interview-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(59,196,127,0.2);
+    box-shadow: var(--shadow-ambient);
+  }
+  .status-interview::before {
+    content: "";
+    @apply absolute inset-0;
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      var(--interview-line) 40deg,
+      transparent 80deg
+    );
+    animation: radarSweepMinimal 1.6s linear infinite;
+  }
+
+  /* --- Rejected ---------------------------------------------------- */
+  .status-rejected {
+    @apply w-7 h-7 rounded-full;
+    background: var(--rejected-color);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(239,68,68,0.3);
+    box-shadow: var(--shadow-ambient);
+  }
+
+  /* --- offered -------------------------------------------------------- */
+  .status-offered {
+    @apply relative w-7 h-7 rounded-full;
+    background: var(--offered-color);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(56,211,153,0.3);
+    box-shadow: var(--shadow-ambient);
+    box-shadow: 0 0 10px rgba(59,196,127,0.4);
+  }
+  .status-offered::after {
+    content: "";
+    @apply absolute inset-0 rounded-full;
+    border: 2px solid rgba(56,211,153,0.5);
+    opacity: 0.5;
+    animation: offeredPulse 1.4s ease-out infinite;
+  }
+}
+
+@theme dark {
+    --interview-bg: rgba(10,15,36,0.7); /* instead of 0.5 */
+    --pending-color: rgba(250,204,21,0.6);
+    --offer-color: rgba(56,211,153,0.6);
+}
