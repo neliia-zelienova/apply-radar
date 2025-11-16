@@ -14,8 +14,8 @@ interface ItemContextMenuProps {
 export const ItemContextMenu = ({itemId, options}: ItemContextMenuProps) => {
     return <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <button className="mx-auto cursor-pointer rounded-md p-3 hover:bg-teal-300/20">
-                <EllipsisVertical className="h-4 w-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200" />
+            <button className="mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20">
+                <EllipsisVertical className="h-4 w-4 text-gray-900 dark:text-teal-600" />
             </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="flex flex-col bg-white gap-2 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-md p-2">

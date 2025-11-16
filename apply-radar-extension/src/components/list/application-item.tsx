@@ -1,16 +1,20 @@
 import { useState } from "react";
-import { type ApplicationData } from "../../types/applications";
+import { ApplicationStatus, type ApplicationData } from "../../types/applications";
 import { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "../ui/tooltip";
 import { ItemContextMenu } from "./item-context-menu";
 import { Archive, Pencil, Trash2 } from "lucide-react";
 import { ApplicationStatusIcon } from "./applications-status-icon";
+import { v4 as uuidv4 } from "uuid";
 
 interface ApplicationItemProps {
-  app?: ApplicationData;
-  onSaveChanges: () => void;
+    app?: ApplicationData;
+    createApp?: (app: ApplicationData) => void;
+    deleteApp?: (id: string) => void;
+    updateApp?: (id: string, updater: (app: ApplicationData) => ApplicationData) => void;
+    archiveApp?: (id: string) => void;
 }
 
-export const ApplicationItem = ({ app, onSaveChanges }: ApplicationItemProps) => {
+export const ApplicationItem = ({ app, createApp, deleteApp, updateApp, archiveApp }: ApplicationItemProps) => {
 
     const [editMode, setEditMode] = useState<boolean>(app === undefined);
     const [name, setName] = useState<string>(app?.name || "");
@@ -27,12 +31,12 @@ export const ApplicationItem = ({ app, onSaveChanges }: ApplicationItemProps) =>
         {
             label: "Delete",
             icon: <Trash2 />,
-            action: (itemId: string) => { console.log("Delete", itemId); /* Delete action logic */ },
+            action: (itemId: string) => { console.log("Delete", itemId); deleteApp && deleteApp(itemId); },
         },
         {
             label: "Archive",
             icon: <Archive />,
-            action: (itemId: string) => { console.log("Archive", itemId); /* Archive action logic */ },
+            action: (itemId: string) => { console.log("Archive", itemId); archiveApp && archiveApp(itemId); },
         }
 
     ]
@@ -64,7 +68,7 @@ export const ApplicationItem = ({ app, onSaveChanges }: ApplicationItemProps) =>
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             onClick={() => {
                 setEditMode(false);
-                onSaveChanges && onSaveChanges();
+                app ? updateApp && updateApp(app.id, (prevApp) => ({ ...prevApp, name, link, notes })) : createApp && createApp({ id: uuidv4(), name, link, notes, status: ApplicationStatus.PENDING } as ApplicationData);
             }}
             >
             Save
@@ -73,22 +77,22 @@ export const ApplicationItem = ({ app, onSaveChanges }: ApplicationItemProps) =>
         );
     }
     return (
-        <div className="relative grid grid-cols-6 gap-3 p-3 border-b border-teal-800">
+        <div className="relative grid grid-cols-6 gap-3 p-3 border border-white/30 bg-white/10 backdrop-blur-sm rounded-md">
             <TooltipProvider>
-            {/* <TooltipRoot> */}
-                {/* <TooltipTrigger asChild> */}
-                    <a href={app?.link} className="col-span-2 text-lg font-semibold line-clamp-2 hover:underline transition-all transition-100 ease-linear">{app?.name}</a>
-                {/* </TooltipTrigger> */}
-                {/* <TooltipContent align="center">Go to Application Link</TooltipContent> */}
-            {/* </TooltipRoot> */}
-            <TooltipRoot>
-                <TooltipTrigger asChild>
-                    <ApplicationStatusIcon status={app?.status}/>
-                    {/* <button className={`mx-auto text-sm h-6 w-6 text-gray-500 cursor-pointer status-${app?.status?.toLowerCase()}`}/> */}
-                </TooltipTrigger>
-                <TooltipContent align="center">Current status: {app?.status}. Click to change</TooltipContent>
-            </TooltipRoot>
-            <p className="col-span-2 mt-2 text-sm text-gray-600">{app?.notes}</p>
+                {/* <TooltipRoot> */}
+                    {/* <TooltipTrigger asChild> */}
+                        <a href={app?.link} className="col-span-2 text-lg font-semibold line-clamp-2 hover:underline transition-all transition-100 ease-linear">{app?.name}</a>
+                    {/* </TooltipTrigger> */}
+                    {/* <TooltipContent align="center">Go to Application Link</TooltipContent> */}
+                {/* </TooltipRoot> */}
+                <TooltipRoot>
+                    <TooltipTrigger asChild>
+                        <ApplicationStatusIcon status={app?.status}/>
+                        {/* <button className={`mx-auto text-sm h-6 w-6 text-gray-500 cursor-pointer status-${app?.status?.toLowerCase()}`}/> */}
+                    </TooltipTrigger>
+                    <TooltipContent align="center">Current status: {app?.status}. Click to change</TooltipContent>
+                </TooltipRoot>
+                <p className="col-span-2 mt-2 text-sm text-gray-600">{app?.notes}</p>
             </TooltipProvider>
             <ItemContextMenu options={menuOptions} itemId={app?.id ?? ''} />
         </div>
