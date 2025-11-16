@@ -5,7 +5,7 @@ import { SwitchRoot, SwitchThumb } from "../ui/switch";
 export const Header = () => {
     const { setShowNewAppForm } = useApplicationContext();
     return (
-        <div className="flex flex-col items-start gap-2">
+        <div className="fixed z-10 top-0 left-0 w-full p-4 bg-stone-50 dark:bg-teal-600 flex flex-col items-start gap-2 shadow-sm ring-teal-100">
             <div className="flex flex-row gap-2 items-center justify-center">
                 <img src="/logo.svg" alt="Logo" className='h-10' />
                 <h1 className='w-full text-sm font-normal font-momo-trust'>Every application. Always on radar</h1>

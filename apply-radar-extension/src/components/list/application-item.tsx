@@ -3,6 +3,7 @@ import { type ApplicationData } from "../../types/applications";
 import { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "../ui/tooltip";
 import { ItemContextMenu } from "./item-context-menu";
 import { Archive, Pencil, Trash2 } from "lucide-react";
+import { ApplicationStatusIcon } from "./applications-status-icon";
 
 interface ApplicationItemProps {
   app?: ApplicationData;
@@ -72,17 +73,18 @@ export const ApplicationItem = ({ app, onSaveChanges }: ApplicationItemProps) =>
         );
     }
     return (
-        <div className="grid grid-cols-6 gap-3 p-3 border-b border-teal-800">
+        <div className="relative grid grid-cols-6 gap-3 p-3 border-b border-teal-800">
             <TooltipProvider>
+            {/* <TooltipRoot> */}
+                {/* <TooltipTrigger asChild> */}
+                    <a href={app?.link} className="col-span-2 text-lg font-semibold line-clamp-2 hover:underline transition-all transition-100 ease-linear">{app?.name}</a>
+                {/* </TooltipTrigger> */}
+                {/* <TooltipContent align="center">Go to Application Link</TooltipContent> */}
+            {/* </TooltipRoot> */}
             <TooltipRoot>
                 <TooltipTrigger asChild>
-                    <a href={app?.link} className="col-span-2 text-lg font-semibold line-clamp-2">{app?.name}</a>
-                </TooltipTrigger>
-                <TooltipContent align="center">Go to Application Link</TooltipContent>
-            </TooltipRoot>
-            <TooltipRoot>
-                <TooltipTrigger asChild>
-                    <button className={`mx-auto text-sm h-6 w-6 text-gray-500 cursor-pointer status-${app?.status?.toLowerCase()}`}/>
+                    <ApplicationStatusIcon status={app?.status}/>
+                    {/* <button className={`mx-auto text-sm h-6 w-6 text-gray-500 cursor-pointer status-${app?.status?.toLowerCase()}`}/> */}
                 </TooltipTrigger>
                 <TooltipContent align="center">Current status: {app?.status}. Click to change</TooltipContent>
             </TooltipRoot>
