@@ -5,89 +5,53 @@ import { ItemContextMenu } from "./item-context-menu";
 import { Archive, Pencil, Trash2 } from "lucide-react";
 import { ApplicationStatusIcon } from "./applications-status-icon";
 import { v4 as uuidv4 } from "uuid";
+import { ApplicationForm } from "./application-form";
 
 interface ApplicationItemProps {
-    app?: ApplicationData;
-    createApp?: (app: ApplicationData) => void;
+    app: ApplicationData;
     deleteApp?: (id: string) => void;
     updateApp?: (id: string, updater: (app: ApplicationData) => ApplicationData) => void;
     archiveApp?: (id: string) => void;
 }
 
-export const ApplicationItem = ({ app, createApp, deleteApp, updateApp, archiveApp }: ApplicationItemProps) => {
+export const ApplicationItem = ({ app, deleteApp, updateApp, archiveApp }: ApplicationItemProps) => {
 
     const [editMode, setEditMode] = useState<boolean>(app === undefined);
-    const [name, setName] = useState<string>(app?.name || "");
-    const [link, setLink] = useState<string>(app?.link || "");
-    const [notes, setNotes] = useState<string>(app?.notes || "");
-    // const [appStatus, setAppStatus] = useState<ApplicationStatus>(app?.status || ApplicationStatus.PENDING);
 
     const menuOptions = [
         {
             label: "Edit",
             icon: <Pencil />,
-            action: (itemId: string) => {console.log("Edit", itemId); setEditMode(true)},
+            action: () => setEditMode(true),
         },
         {
             label: "Delete",
             icon: <Trash2 />,
-            action: (itemId: string) => { console.log("Delete", itemId); deleteApp && deleteApp(itemId); },
+            action: (itemId: string) => deleteApp && deleteApp(itemId),
         },
         {
             label: "Archive",
             icon: <Archive />,
-            action: (itemId: string) => { console.log("Archive", itemId); archiveApp && archiveApp(itemId); },
+            action: (itemId: string) => archiveApp && archiveApp(itemId),
         }
 
     ]
 
     if (editMode) {
-        return (
-        <div className="flex flex-col p-4 border-b border-gray-200">
-            <input
-            type="text"
-            placeholder="Application Name"
-            defaultValue={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mb-2 p-2 border border-gray-300 rounded"
-            />
-            <input
-            type="text"
-            placeholder="Application Link"
-            defaultValue={link}
-            onChange={(e) => setLink(e.target.value)}
-            className="mb-2 p-2 border border-gray-300 rounded"
-            />
-            <textarea
-            placeholder="Notes"
-            defaultValue={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="mb-2 p-2 border border-gray-300 rounded"
-            />
-            <button
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            onClick={() => {
+        return <ApplicationForm app={app} onSave={(application) => {
+                updateApp && updateApp(app.id, (prevApp) => ({ ...prevApp, ...application }));
                 setEditMode(false);
-                app ? updateApp && updateApp(app.id, (prevApp) => ({ ...prevApp, name, link, notes })) : createApp && createApp({ id: uuidv4(), name, link, notes, status: ApplicationStatus.PENDING, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as ApplicationData);
-            }}
-            >
-            Save
-            </button>
-        </div>
-        );
+        }}
+        onCancel={() => setEditMode(false)} />;
     }
+
     return (
-        <div className="relative grid grid-cols-6 gap-3 p-3 border border-white/30 bg-white/10 backdrop-blur-sm rounded-md">
+        <div className="relative grid grid-cols-6 gap-3 p-3 border border-white/30 bg-white/10 backdrop-blur-sm rounded-md shadow-sm hover:scale-[1.02] transition-scale ease-in-out duration-200 ease-in-out shadow-zinc-400/40 dark:shadow-zinc-100/40">
             <TooltipProvider>
-                {/* <TooltipRoot> */}
-                    {/* <TooltipTrigger asChild> */}
-                        <a href={app?.link} className="col-span-2 text-lg font-semibold line-clamp-2 hover:underline transition-all transition-100 ease-linear">{app?.name}</a>
-                    {/* </TooltipTrigger> */}
-                    {/* <TooltipContent align="center">Go to Application Link</TooltipContent> */}
-                {/* </TooltipRoot> */}
+                <a href={app?.link} className="col-span-2 text-lg font-semibold line-clamp-2 hover:underline transition-all transition-100 ease-linear">{app?.name}</a>
                 <TooltipRoot>
                     <TooltipTrigger asChild>
-                        <ApplicationStatusIcon status={app?.status}/>
+                        <ApplicationStatusIcon status={app?.status} onClick={() => {}} />
                         {/* <button className={`mx-auto text-sm h-6 w-6 text-gray-500 cursor-pointer status-${app?.status?.toLowerCase()}`}/> */}
                     </TooltipTrigger>
                     <TooltipContent align="center">Current status: {app?.status}. Click to change</TooltipContent>

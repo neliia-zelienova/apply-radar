@@ -1,22 +1,22 @@
 import { ApplicationStatus } from "../../types/applications";
 
-export const ApplicationStatusIcon = ({ status }: {status?: ApplicationStatus}) => {
+export const ApplicationStatusIcon = ({ status, onClick }: {status?: ApplicationStatus, onClick?: () => void}) => {
     const getDivWithClasses = (status?: ApplicationStatus) => {
         switch (status) {
             case ApplicationStatus.PENDING:
-                return <div role='button' className="radar-no-target m-auto">
+                return <button className="radar-no-target m-auto" onClick={onClick}>
                     <div className="radar-ring"></div>
-                </div> 
+                </button>;
             case ApplicationStatus.INTERVIEW:
-                return <div role='button' className="radar-weak-lock m-auto">
+                return <button role='button' className="radar-weak-lock m-auto" onClick={onClick}>
                     <div className="radar-ring"></div>
-                </div>
+                </button>
             case ApplicationStatus.OFFERED:
-                return <div role='button' className="radar-strong-lock m-auto">
+                return <button role='button' className="radar-strong-lock m-auto" onClick={onClick}>
                     <div className="radar-ring"></div> {/* ping ring */}
-                </div>;
+                </button>;
             case ApplicationStatus.REJECTED:
-                return <div role='button' className="radar-lost m-auto" />
+                return <button role='button' className="radar-lost m-auto" onClick={onClick} />;
             default: return null;
         }
     }
