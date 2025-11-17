@@ -1,6 +1,5 @@
 import { Plus } from "lucide-react"
 import { useApplicationContext } from "../../context/applications-context";
-import { SwitchRoot, SwitchThumb } from "../ui/switch";
 
 export const Header = () => {
     const { showNewAppForm } = useApplicationContext();
@@ -16,9 +15,6 @@ export const Header = () => {
                     >
                         Theme
                     </label>
-                <SwitchRoot>
-                    <SwitchThumb className="block w-5 h-5 bg-white rounded-full shadow-lg translate-x-0 data-[state=checked]:translate-x-5 transition-transform duration-200 ease-in-out" />
-                </SwitchRoot>
             </div>
             <button className='px-4 py-2 rounded-md border border-gray-300 bg-white text-sm text-sky-900 flex items-center hover:bg-gray-100 hover:border-emerald-300 transition-colors ease-linear duration-150 cursor-pointer' onClick={showNewAppForm}>
                 <Plus className='inline h-4 w-4 mr-2' />

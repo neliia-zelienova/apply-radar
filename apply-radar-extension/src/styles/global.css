@@ -5,8 +5,33 @@
 ----------------------------------------------------------- */
 
 @keyframes radar-sweep {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  /* Full rotation - 0% to 30% */
+  0% { transform: rotate(0deg); }
+  30% { transform: rotate(360deg); }
+  
+  /* Oscillation with attenuation - 30% to 100% */
+  /* First swing back (largest) */
+  35% { transform: rotate(340deg); }
+  /* First swing forward */
+  40% { transform: rotate(360deg); }
+  
+  /* Second swing back (medium) */
+  44% { transform: rotate(350deg); }
+  /* Second swing forward */
+  48% { transform: rotate(360deg); }
+  
+  /* Third swing back (small) */
+  51% { transform: rotate(355deg); }
+  /* Third swing forward */
+  54% { transform: rotate(360deg); }
+  
+  /* Fourth swing back (smallest) */
+  56.5% { transform: rotate(357deg); }
+  /* Fourth swing forward and settle */
+  59% { transform: rotate(360deg); }
+  
+  /* Hold at 360 before restart */
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes radar-noise {
@@ -88,7 +113,7 @@
     rgba(0,255,180,0.30),
     rgba(0,255,180,0) 40%
   );
-  animation: radar-sweep 2.6s linear infinite;
+  animation: radar-sweep 4s ease-in-out infinite;
   mix-blend-mode: screen;
 }
 

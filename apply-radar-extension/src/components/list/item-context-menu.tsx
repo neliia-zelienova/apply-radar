@@ -1,5 +1,5 @@
 import * as React from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
+import { DropdownMenuRoot, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { EllipsisVertical } from "lucide-react"
 
 interface ItemContextMenuProps {
@@ -12,7 +12,7 @@ interface ItemContextMenuProps {
 }
 
 export const ItemContextMenu = ({itemId, options}: ItemContextMenuProps) => {
-    return <DropdownMenu>
+    return <DropdownMenuRoot>
         <DropdownMenuTrigger asChild>
             <button className="mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20">
                 <EllipsisVertical className="h-4 w-4 text-gray-900 dark:text-teal-600" />
@@ -35,5 +35,5 @@ export const ItemContextMenu = ({itemId, options}: ItemContextMenuProps) => {
                     </DropdownMenuItem>
                     ))}
                 </DropdownMenuContent>
-    </DropdownMenu>
+    </DropdownMenuRoot>
 }

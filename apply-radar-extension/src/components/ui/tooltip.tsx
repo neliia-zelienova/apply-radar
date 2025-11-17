@@ -1,4 +1,4 @@
-import { Tooltip } from "radix-ui";
+import * as Tooltip from "@radix-ui/react-tooltip";
 
 const TooltipProvider = Tooltip.Provider;
 const TooltipRoot = (props: Tooltip.TooltipProps) => <Tooltip.Root delayDuration={0} {...props}>{props.children}</Tooltip.Root>;

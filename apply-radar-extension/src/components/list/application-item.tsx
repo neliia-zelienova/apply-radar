@@ -68,7 +68,7 @@ export const ApplicationItem = ({ app, createApp, deleteApp, updateApp, archiveA
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             onClick={() => {
                 setEditMode(false);
-                app ? updateApp && updateApp(app.id, (prevApp) => ({ ...prevApp, name, link, notes })) : createApp && createApp({ id: uuidv4(), name, link, notes, status: ApplicationStatus.PENDING } as ApplicationData);
+                app ? updateApp && updateApp(app.id, (prevApp) => ({ ...prevApp, name, link, notes })) : createApp && createApp({ id: uuidv4(), name, link, notes, status: ApplicationStatus.PENDING, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as ApplicationData);
             }}
             >
             Save
