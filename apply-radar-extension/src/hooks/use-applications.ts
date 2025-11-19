@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ApplicationData } from "../types/applications";
+import { getFromStorage, setInStorage } from "../utils/storage";
+
+const STORAGE_KEY = "applications";
 
 export const useApplications = ({ search, filterStatus }: { search: string, filterStatus: string }) => {
     const [applications, setApplications] = useState<ApplicationData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const filteredApplications = useMemo(() => {
         return applications.filter(app => {
@@ -12,66 +16,68 @@ export const useApplications = ({ search, filterStatus }: { search: string, filt
         });
     }, [applications, search, filterStatus]);
 
-    const createApplication = (app: ApplicationData) => {
-        setApplications((prevState) => ([...prevState, app]));
-        const storedApplications = localStorage.getItem("applications");
-        const apps = storedApplications ? JSON.parse(storedApplications) : [];
-        apps.push(app);
-        localStorage.setItem("applications", JSON.stringify(apps)); 
+    const createApplication = async (app: ApplicationData) => {
+        const storedApplications = await getFromStorage<ApplicationData[]>(STORAGE_KEY);
+        const apps = storedApplications || [];
+        const updatedApps = [...apps, app];
+        
+        await setInStorage(STORAGE_KEY, updatedApps);
+        setApplications(updatedApps);
     }
 
-    const deleteApplication = (id: string) => {
-        setApplications((prevState) => prevState.filter(app => app.id !== id));
-        const storedApplications = localStorage.getItem("applications");
+    const deleteApplication = async (id: string) => {
+        const storedApplications = await getFromStorage<ApplicationData[]>(STORAGE_KEY);
         if (storedApplications) {
-            const apps = JSON.parse(storedApplications);
-            const updatedApps = apps.filter((app: ApplicationData) => app.id !== id);
-            localStorage.setItem("applications", JSON.stringify(updatedApps));
+            const updatedApps = storedApplications.filter((app: ApplicationData) => app.id !== id);
+            await setInStorage(STORAGE_KEY, updatedApps);
+            setApplications(updatedApps);
         }
     }
 
-    const archiveApplication = (id: string) => {
-        setApplications((prevState) => 
-            prevState.map(app => 
-                app.id === id ? { ...app, archived: true } : app
-            )
-        );
-        const storedApplications = localStorage.getItem("applications");
+    const archiveApplication = async (id: string) => {
+        const storedApplications = await getFromStorage<ApplicationData[]>(STORAGE_KEY);
         if (storedApplications) {
-            const apps = JSON.parse(storedApplications);
-            const updatedApps = apps.map((app: ApplicationData) => 
+            const updatedApps = storedApplications.map((app: ApplicationData) => 
                 app.id === id ? { ...app, archived: true } : app
             );
-            localStorage.setItem("applications", JSON.stringify(updatedApps));
+            await setInStorage(STORAGE_KEY, updatedApps);
+            setApplications(updatedApps);
         }
     }
 
-    const updateApplication = (id: string, updater: (app: ApplicationData) => ApplicationData) => {
-        setApplications((prevState) => 
-            prevState.map(app => 
-                app.id === id ? updater(app) : app
-            )
-        );
-        const storedApplications = localStorage.getItem("applications");
+    const updateApplication = async (id: string, updater: (app: ApplicationData) => ApplicationData) => {
+        const storedApplications = await getFromStorage<ApplicationData[]>(STORAGE_KEY);
         if (storedApplications) {
-            const apps = JSON.parse(storedApplications);
-            const updatedApps = apps.map((app: ApplicationData) => 
+            const updatedApps = storedApplications.map((app: ApplicationData) => 
                 app.id === id ? updater(app) : app
             );
-            localStorage.setItem("applications", JSON.stringify(updatedApps));
+            await setInStorage(STORAGE_KEY, updatedApps);
+            setApplications(updatedApps);
         }
     }
 
     useEffect(() => {
-        const storedApplications = localStorage.getItem("applications");
-        if (storedApplications) {
-            setApplications(JSON.parse(storedApplications));
-        }
+        const loadApplications = async () => {
+            setIsLoading(true);
+            try {
+                const storedApplications = await getFromStorage<ApplicationData[]>(STORAGE_KEY);
+                if (storedApplications) {
+                    setApplications(storedApplications);
+                }
+            } catch (error) {
+                console.error("Error loading applications:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        loadApplications();
     }, []);
 
     return { 
         applications: filteredApplications, 
         total: filteredApplications.length,
+        isLoading,
         createApplication,
         deleteApplication,
         archiveApplication,
