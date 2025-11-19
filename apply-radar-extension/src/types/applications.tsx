@@ -11,6 +11,7 @@ export interface ApplicationData {
     status: ApplicationStatus;
     link: string;
     notes: string;
+    favorite: boolean;
     createdAt: string;
     updatedAt: string;
     archived?: boolean;
