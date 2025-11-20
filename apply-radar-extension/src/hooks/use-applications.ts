@@ -43,8 +43,12 @@ export const useApplications = ({ search, filterStatus }: { search: string, filt
             const updatedApps = storedApplications.map((app: ApplicationData) => 
                 app.id === id ? { ...app, archived: true } : app
             );
-            await setInStorage(STORAGE_KEY, updatedApps);
-            setApplications(updatedApps);
+            try {
+                await setInStorage(STORAGE_KEY, updatedApps);
+                setApplications(updatedApps);
+            } catch (error) {
+                console.error("Error archiving application:", error);
+            }
         }
     }
 
