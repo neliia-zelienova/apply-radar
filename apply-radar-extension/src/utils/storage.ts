@@ -34,8 +34,16 @@ export const getFromStorage = async <T>(key: string): Promise<T | null> => {
     // Fallback to localStorage for development
     console.warn('Chrome storage API not available, falling back to localStorage');
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : null;
-  }
+    if (item) {
+      try {
+        return JSON.parse(item);
+      } catch (error) {
+        console.error(`Error parsing localStorage item for key "${key}":`, error);
+        return null;
+      }
+    } else {
+      return null;
+    }
 };
 
 /**
