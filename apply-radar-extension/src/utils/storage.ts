@@ -44,6 +44,7 @@ export const getFromStorage = async <T>(key: string): Promise<T | null> => {
     } else {
       return null;
     }
+  }
 };
 
 /**
