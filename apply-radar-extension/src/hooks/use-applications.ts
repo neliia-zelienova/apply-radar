@@ -31,9 +31,12 @@ export const useApplications = ({
     );
     const apps = storedApplications || [];
     const updatedApps = [...apps, app];
-
-    await setInStorage(STORAGE_KEY, updatedApps);
-    setApplications(updatedApps);
+    try {
+      await setInStorage(STORAGE_KEY, updatedApps);
+      setApplications(updatedApps);
+    } catch (error) {
+      console.error("Error saving application:", error);
+    }
   };
 
   const deleteApplication = async (id: string) => {
@@ -41,11 +44,15 @@ export const useApplications = ({
       STORAGE_KEY
     );
     if (storedApplications) {
-      const updatedApps = storedApplications.filter(
-        (app: ApplicationData) => app.id !== id
-      );
-      await setInStorage(STORAGE_KEY, updatedApps);
-      setApplications(updatedApps);
+      try {
+        const updatedApps = storedApplications.filter(
+          (app: ApplicationData) => app.id !== id
+        );
+        await setInStorage(STORAGE_KEY, updatedApps);
+        setApplications(updatedApps);
+      } catch (error) {
+        console.error("Error deleting application:", error);
+      }
     }
   };
 
@@ -57,8 +64,12 @@ export const useApplications = ({
       const updatedApps = storedApplications.map((app: ApplicationData) =>
         app.id === id ? { ...app, archived: true } : app
       );
-      await setInStorage(STORAGE_KEY, updatedApps);
-      setApplications(updatedApps);
+      try {
+        await setInStorage(STORAGE_KEY, updatedApps);
+        setApplications(updatedApps);
+      } catch (error) {
+        console.error("Error archiving application:", error);
+      }
     }
   };
 
@@ -70,11 +81,15 @@ export const useApplications = ({
       STORAGE_KEY
     );
     if (storedApplications) {
-      const updatedApps = storedApplications.map((app: ApplicationData) =>
-        app.id === id ? updater(app) : app
-      );
-      await setInStorage(STORAGE_KEY, updatedApps);
-      setApplications(updatedApps);
+      try {
+        const updatedApps = storedApplications.map((app: ApplicationData) =>
+          app.id === id ? updater(app) : app
+        );
+        await setInStorage(STORAGE_KEY, updatedApps);
+        setApplications(updatedApps);
+      } catch (error) {
+        console.error("Error updating application:", error);
+      }
     }
   };
 
