@@ -11,9 +11,11 @@
  * Check if chrome.storage API is available
  */
 const isChromeStorageAvailable = (): boolean => {
-  return typeof chrome !== 'undefined' && 
-         chrome.storage !== undefined && 
-         chrome.storage.local !== undefined;
+  return (
+    typeof chrome !== "undefined" &&
+    chrome.storage !== undefined &&
+    chrome.storage.local !== undefined
+  );
 };
 
 /**
@@ -32,7 +34,9 @@ export const getFromStorage = async <T>(key: string): Promise<T | null> => {
     }
   } else {
     // Fallback to localStorage for development
-    console.warn('Chrome storage API not available, falling back to localStorage');
+    console.warn(
+      "Chrome storage API not available, falling back to localStorage"
+    );
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : null;
   }
@@ -54,7 +58,9 @@ export const setInStorage = async <T>(key: string, value: T): Promise<void> => {
     }
   } else {
     // Fallback to localStorage for development
-    console.warn('Chrome storage API not available, falling back to localStorage');
+    console.warn(
+      "Chrome storage API not available, falling back to localStorage"
+    );
     localStorage.setItem(key, JSON.stringify(value));
   }
 };
@@ -74,7 +80,9 @@ export const removeFromStorage = async (key: string): Promise<void> => {
     }
   } else {
     // Fallback to localStorage for development
-    console.warn('Chrome storage API not available, falling back to localStorage');
+    console.warn(
+      "Chrome storage API not available, falling back to localStorage"
+    );
     localStorage.removeItem(key);
   }
 };
@@ -88,12 +96,14 @@ export const clearStorage = async (): Promise<void> => {
     try {
       await chrome.storage.local.clear();
     } catch (error) {
-      console.error('Error clearing chrome.storage:', error);
+      console.error("Error clearing chrome.storage:", error);
       throw error;
     }
   } else {
     // Fallback to localStorage for development
-    console.warn('Chrome storage API not available, falling back to localStorage');
+    console.warn(
+      "Chrome storage API not available, falling back to localStorage"
+    );
     localStorage.clear();
   }
 };
@@ -111,19 +121,21 @@ export const onStorageChange = (
       changes: { [key: string]: chrome.storage.StorageChange },
       areaName: string
     ) => {
-      if (areaName === 'local') {
+      if (areaName === "local") {
         callback(changes);
       }
     };
-    
+
     chrome.storage.onChanged.addListener(listener);
-    
+
     return () => {
       chrome.storage.onChanged.removeListener(listener);
     };
   } else {
     // For development, we can't listen to localStorage changes from the same window
-    console.warn('Chrome storage API not available, storage change listener not active');
+    console.warn(
+      "Chrome storage API not available, storage change listener not active"
+    );
     return () => {};
   }
 };
