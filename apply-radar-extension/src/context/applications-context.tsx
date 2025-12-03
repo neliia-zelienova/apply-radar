@@ -16,6 +16,10 @@ interface ApplicationsContextType {
     id: string,
     updater: (app: ApplicationData) => ApplicationData
   ) => void;
+  sortBy: "name" | "date" | "status" | "favorite";
+  sortOrder: "asc" | "desc";
+  setSortBy: (sortBy: "name" | "date" | "status" | "favorite") => void;
+  setSortOrder: (sortOrder: "asc" | "desc") => void;
 }
 
 export const ApplicationsContext = createContext<
