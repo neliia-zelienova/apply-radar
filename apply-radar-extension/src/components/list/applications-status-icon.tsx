@@ -1,52 +1,38 @@
 import { ApplicationStatus } from "../../types/applications";
+import { TooltipContent, TooltipRoot, TooltipTrigger } from "../ui/tooltip";
 
 export const ApplicationStatusIcon = ({
   status,
-  onClick,
 }: {
   status?: ApplicationStatus;
-  onClick?: () => void;
 }) => {
-  const getDivWithClasses = (status?: ApplicationStatus) => {
+  const buttonClassName = (status?: ApplicationStatus) => {
     switch (status) {
       case ApplicationStatus.PENDING:
-        return (
-          <button className="radar-no-target m-auto" onClick={onClick}>
-            <div className="radar-ring"></div>
-          </button>
-        );
+        return "radar-no-target m-auto";
       case ApplicationStatus.INTERVIEW:
-        return (
-          <button
-            role="button"
-            className="radar-weak-lock m-auto"
-            onClick={onClick}
-          >
-            <div className="radar-ring"></div>
-          </button>
-        );
+        return "radar-weak-lock m-auto";
       case ApplicationStatus.OFFERED:
-        return (
-          <button
-            role="button"
-            className="radar-strong-lock m-auto"
-            onClick={onClick}
-          >
-            <div className="radar-ring"></div> {/* ping ring */}
-          </button>
-        );
+        return "radar-strong-lock m-auto";
       case ApplicationStatus.REJECTED:
-        return (
-          <button
-            role="button"
-            className="radar-lost m-auto"
-            onClick={onClick}
-          />
-        );
+        return "radar-lost m-auto";
       default:
-        return null;
+        return "";
     }
   };
 
-  return getDivWithClasses(status);
+  return (
+    <TooltipRoot>
+      <TooltipTrigger asChild>
+        <div className={buttonClassName(status)}>
+          {status !== ApplicationStatus.REJECTED ? (
+            <div className="radar-ring"></div>
+          ) : null}
+        </div>
+      </TooltipTrigger>
+      <TooltipContent align="center">
+        Current status: {status}. Click to change
+      </TooltipContent>
+    </TooltipRoot>
+  );
 };
