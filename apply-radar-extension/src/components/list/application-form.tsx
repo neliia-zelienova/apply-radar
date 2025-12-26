@@ -27,7 +27,7 @@ export const ApplicationForm = ({
   const isNameValid = name.trim().length > 1;
   const isLinkValid =
     !link ||
-    /^(https?:\/\/)?[\w.-]+(\.[\w.-]+)+[\w\-._~:\/?#\[\]@!$&'()*+,;=.]*$/.test(
+    /^(https?:\/\/)?[\w.-]+(\.[\w.-]+)+[\w\-._~:\/?#\[\]@!$&'()*+,;=]*$/.test(
       link.trim()
     );
   const notesLimit = 500;
