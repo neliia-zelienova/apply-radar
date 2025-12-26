@@ -40,12 +40,14 @@ export const useApplications = ({
               : b.status.localeCompare(a.status);
           case "favorite":
             return sortOrder === "asc"
-              ? Number(b.favorite) - Number(a.favorite)
-              : Number(a.favorite) - Number(b.favorite);
-          default:
+              ? Number(a.favorite) - Number(b.favorite)
+              : Number(b.favorite) - Number(a.favorite);
+          case "date":
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
             return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+          default:
+            return 0;
         }
       });
   }, [applications, search, filterStatus, sortBy, sortOrder]);
