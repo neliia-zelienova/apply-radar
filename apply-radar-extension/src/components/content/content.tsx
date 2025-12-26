@@ -2,6 +2,7 @@ import { useApplicationContext } from "../../context/applications-context";
 import type { ApplicationData } from "../../types/applications";
 import { ApplicationForm } from "../list/application-form";
 import { ApplicationItem } from "../list/application-item";
+import { ListHeader } from "../list/list-header";
 
 export const Content = () => {
   const {
@@ -12,6 +13,10 @@ export const Content = () => {
     archiveApplication,
     deleteApplication,
     applications,
+    sortBy,
+    sortOrder,
+    setSortBy,
+    setSortOrder,
   } = useApplicationContext();
 
   const createNewApp = (application: ApplicationData) => {
@@ -21,6 +26,12 @@ export const Content = () => {
 
   return (
     <div className="pt-[118px] flex flex-col gap-3">
+      <ListHeader
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSortByChange={setSortBy}
+        onSortOrderChange={setSortOrder}
+      />
       {newAppFormVisible && (
         <ApplicationForm onSave={createNewApp} onCancel={hideNewAppForm} />
       )}

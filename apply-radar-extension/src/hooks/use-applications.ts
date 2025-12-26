@@ -7,23 +7,50 @@ const STORAGE_KEY = "applications";
 export const useApplications = ({
   search,
   filterStatus,
+  sortBy,
+  sortOrder,
 }: {
   search: string;
   filterStatus: string;
+  sortBy: "name" | "date" | "status" | "favorite";
+  sortOrder: "asc" | "desc";
 }) => {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const filteredApplications = useMemo(() => {
-    return applications.filter((app) => {
-      const matchesSearch = app.name
-        .toLowerCase()
-        .includes(search.toLowerCase());
-      const matchesStatus =
-        filterStatus === "All" || app.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    });
-  }, [applications, search, filterStatus]);
+    return applications
+      .filter((app) => {
+        const matchesSearch = app.name
+          .toLowerCase()
+          .includes(search.toLowerCase());
+        const matchesStatus =
+          filterStatus === "All" || app.status === filterStatus;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "name":
+            return sortOrder === "asc"
+              ? a.name.localeCompare(b.name)
+              : b.name.localeCompare(a.name);
+          case "status":
+            return sortOrder === "asc"
+              ? a.status.localeCompare(b.status)
+              : b.status.localeCompare(a.status);
+          case "favorite":
+            return sortOrder === "asc"
+              ? Number(a.favorite) - Number(b.favorite)
+              : Number(b.favorite) - Number(a.favorite);
+          case "date":
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
+            return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+          default:
+            return 0;
+        }
+      });
+  }, [applications, search, filterStatus, sortBy, sortOrder]);
 
   const createApplication = async (app: ApplicationData) => {
     const storedApplications = await getFromStorage<ApplicationData[]>(

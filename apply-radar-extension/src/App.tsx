@@ -8,6 +8,10 @@ import { ApplicationsContext } from "./context/applications-context";
 function App() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [sortBy, setSortBy] = useState<"name" | "date" | "status" | "favorite">(
+    "date"
+  ); // Currently unused
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [newAppFormVisible, setNewAppFormVisible] = useState(false);
   const {
     applications,
@@ -16,7 +20,7 @@ function App() {
     deleteApplication,
     archiveApplication,
     updateApplication,
-  } = useApplications({ search, filterStatus });
+  } = useApplications({ search, filterStatus, sortBy, sortOrder });
 
   const contextInput = {
     applications,
@@ -30,6 +34,10 @@ function App() {
     deleteApplication,
     archiveApplication,
     updateApplication,
+    sortBy,
+    sortOrder,
+    setSortBy,
+    setSortOrder,
   };
 
   return (
