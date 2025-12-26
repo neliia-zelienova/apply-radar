@@ -46,7 +46,6 @@ export const useApplications = ({
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
             return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-            break;
         }
       });
   }, [applications, search, filterStatus, sortBy, sortOrder]);

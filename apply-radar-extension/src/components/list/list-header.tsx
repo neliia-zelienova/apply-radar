@@ -15,7 +15,6 @@ export const ListHeader = ({
     field: "date" | "name" | "status" | "favorite",
     order: "asc" | "desc"
   ) => {
-    console.log(`Sorting by ${field} in ${order} order`);
     onSortByChange(field);
     onSortOrderChange(order);
   };
