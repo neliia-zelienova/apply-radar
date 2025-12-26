@@ -1,5 +1,8 @@
-import { useState } from "react";
-import { type ApplicationData } from "../../types/applications";
+import { useMemo, useState } from "react";
+import {
+  ApplicationStatus,
+  type ApplicationData,
+} from "../../types/applications";
 import {
   TooltipContent,
   TooltipProvider,
@@ -17,6 +20,12 @@ import {
 } from "lucide-react";
 import { ApplicationStatusIcon } from "./applications-status-icon";
 import { ApplicationForm } from "./application-form";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+} from "../ui/select";
 
 interface ApplicationItemProps {
   app: ApplicationData;
@@ -63,6 +72,12 @@ export const ApplicationItem = ({
       }));
   };
 
+  const allowedStatuses = useMemo(() => {
+    return Object.values(ApplicationStatus).filter((status) => {
+      return status !== app.status;
+    });
+  }, [app.status]);
+
   if (editMode) {
     return (
       <ApplicationForm
@@ -84,14 +99,30 @@ export const ApplicationItem = ({
           <div className="col-span-3 text-base font-semibold line-clamp-2 transition-all transition-100 ease-linear">
             {app?.name}
           </div>
-          <TooltipRoot>
-            <TooltipTrigger asChild>
-              <ApplicationStatusIcon status={app?.status} onClick={() => {}} />
-            </TooltipTrigger>
-            <TooltipContent align="center">
-              Current status: {app?.status}. Click to change
-            </TooltipContent>
-          </TooltipRoot>
+          <SelectRoot
+            onValueChange={(value) => {
+              updateApp &&
+                updateApp(app.id, (prevApp) => ({
+                  ...prevApp,
+                  status: value as ApplicationStatus,
+                }));
+            }}
+          >
+            <SelectTrigger className="col-span-1 mx-auto">
+              <ApplicationStatusIcon status={app?.status} />
+            </SelectTrigger>
+            <SelectContent>
+              {allowedStatuses.map((status) => (
+                <SelectItem
+                  key={`${app.id}-status-option-${status}`}
+                  value={status}
+                >
+                  {status.slice(0, 1).toUpperCase() +
+                    status.slice(1).toLowerCase()}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </SelectRoot>
           <div className="col-span-2 text-sm text-gray-500">
             {new Date(app.createdAt).toLocaleDateString()}
           </div>
