@@ -115,7 +115,7 @@ export const ApplicationItem = ({
             }}
           >
             <SelectTrigger
-              className={`flex gap-1.5 py-2 px-4 bg-white dark:bg-neutral-600 rounded-4xl col-span-3 mx-auto border-1 inset-ring-2 ${getStatusContainerClassNames(
+              className={`flex gap-1.5 cursor-pointer py-2 px-4 bg-white dark:bg-neutral-600 rounded-4xl col-span-3 mx-auto border-1 inset-ring-2 ${getStatusContainerClassNames(
                 app?.status
               )}`}
             >
