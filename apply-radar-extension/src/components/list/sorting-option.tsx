@@ -23,11 +23,14 @@ export const SortingOption = ({
         onClick={handleSortChange}
         className="flex flex-row items-center gap-1 cursor-pointer"
       >
-        <span>{name}</span>
-        {order === "asc" && <Triangle className={"h-3 w-3 text-blue-500"} />}
-        {order === "desc" && (
-          <Triangle className={"h-3 w-3 rotate-180 text-blue-500"} />
-        )}
+        <span className="text-slate-500 dark:text-gray-100 font-semibold">
+          {name.toUpperCase()}
+        </span>
+        <Triangle
+          className={`h-3 w-3 text-teal-500 transition-transform ${
+            order ? (order === "desc" ? "rotate-180" : "") : "opacity-0"
+          }`}
+        />
       </button>
     </div>
   );

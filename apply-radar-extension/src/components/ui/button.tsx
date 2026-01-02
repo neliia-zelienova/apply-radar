@@ -25,13 +25,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm cursor-pointer";
+      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm cursor-pointer";
 
     const variantStyles = {
       primary:
-        "bg-teal-600/70 hover:bg-teal-600/80 text-white shadow-md hover:shadow-teal-950/30 dark:hover:shadow-teal-400/30 focus:ring-white border border-teal-700",
+        "bg-teal-600 text-white shadow-md hover:shadow-teal-950/30 dark:hover:shadow-teal-400/30 focus:ring-white border hover:border-white/30 dark:border-teal-700",
       secondary:
-        "dark:bg-white/10 bg-blue-950/10 text-white border dark:border-white/30 border-blue-950/30 dark:hover:bg-white/20 hover:bg-blue-950/20 dark:hover:border-white/50 hover:border-bulue-950/50 shadow-md hover:shadow-lg dark:focus:ring-white/50 focus:ring-blue-950/50",
+        "bg-blue-950 dark:bg-white/10 text-white border dark:border-white/30 border-blue-950/30 dark:hover:bg-white/20 hover:border-white/30 dark:hover:border-white/40 hover:shadow-blue-950/50 dark:hover:shadow-white shadow-md dark:focus:ring-white/50 focus:ring-blue-950/50",
     };
 
     const sizeStyles = {
