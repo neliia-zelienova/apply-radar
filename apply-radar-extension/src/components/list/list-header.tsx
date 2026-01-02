@@ -39,10 +39,10 @@ export const ListHeader = ({
           onChange={(e) => updateSearchValue(e.target.value)}
         />
       </div>
-      <div className="-mx-4 p-4 border-b bg-slate-100/50 dark:bg-neutral-700 border-t border-t-gray-200 dark:border-t-gray-600 border-b-gray-100 dark:border-b-gray-500 py-2 relative grid grid-cols-13 items-center justify-center gap-3">
+      <div className="-mx-4 p-4 border-b bg-slate-100/50 dark:bg-neutral-700 border-t border-t-gray-200 dark:border-t-gray-600 border-b-gray-100 dark:border-b-gray-500 py-2 relative grid grid-cols-8 items-center justify-center gap-3">
         <SortingOption
           name="Application"
-          className="col-span-3 text-sm flex justify-center text-slate-800"
+          className="col-span-2 text-sm flex justify-center"
           order={sortBy === "companyName" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") =>
             handleSortChange("companyName", order)
@@ -51,26 +51,26 @@ export const ListHeader = ({
 
         <SortingOption
           name="Status"
-          className="col-span-3 text-sm flex justify-center"
+          className="col-span-2 text-sm flex justify-center"
           order={sortBy === "status" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") => handleSortChange("status", order)}
         />
 
         <SortingOption
           name="Added at"
-          className="col-span-3 text-sm flex justify-center"
+          className="col-span-2 text-sm flex justify-center"
           order={sortBy === "date" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") => handleSortChange("date", order)}
         />
         <SortingOption
           name="Favorite"
-          className="col-span-2 text-sm flex justify-center"
+          className="col-span-1 text-sm flex justify-center"
           order={sortBy === "favorite" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") =>
             handleSortChange("favorite", order)
           }
         />
-        <h2 className="col-span-2 text-sm flex justify-center text-slate-500 dark:text-gray-100 font-semibold">
+        <h2 className="col-span-1 text-sm flex justify-center text-slate-500 dark:text-gray-100 font-semibold">
           ACTIONS
         </h2>
       </div>

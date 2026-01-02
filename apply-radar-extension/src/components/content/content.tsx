@@ -20,7 +20,7 @@ export const Content = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   return (
-    <main className="-mt-18 p-4 overflow-hidden">
+    <main className="-mt-16 p-4 overflow-hidden">
       <div className="flex flex-col gap-3 p-4 rounded-xl bg-white dark:bg-neutral-800 shadow-sm">
         <ListHeader
           sortBy={sortBy}

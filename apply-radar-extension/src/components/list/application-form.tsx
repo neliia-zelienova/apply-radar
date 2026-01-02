@@ -84,13 +84,13 @@ export const ApplicationForm = ({
   const notesCount = notes.length;
   const isFormValid = isCompanyNameValid && isPositionValid && isLinkValid;
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setCompanyName(app?.companyName || "");
     setPosition(app?.position || "");
     setLink(app?.link || "");
     setNotes(app?.notes || "");
     setTouched({ companyName: false, position: false, link: false });
-  };
+  }, [app]);
 
   const attemptCloseForm = useCallback(() => {
     // When attempting to close the form, check for unsaved changes
@@ -103,7 +103,7 @@ export const ApplicationForm = ({
       resetForm();
       onCancel?.();
     }
-  }, [isChanged, onCancel, resetForm]);
+  }, [isChanged, onCancel, resetForm, setIsFormOpen]);
 
   const handleDialogOpenChange = useCallback(
     (open: boolean) => {
@@ -161,7 +161,7 @@ export const ApplicationForm = ({
               placeholder="e.g. Google"
               value={companyName}
               onChange={(e) => {
-                setTouched((t) => ({ ...t, name: true }));
+                setTouched((t) => ({ ...t, companyName: true }));
                 setCompanyName(e.target.value);
               }}
               className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${

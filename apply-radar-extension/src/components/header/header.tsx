@@ -11,7 +11,7 @@ export const Header = () => {
   };
 
   return (
-    <div className="w-full h-[30vh] p-4 bg-teal-600 flex flex-col items-start gap-2 shadow-sm shadow-teal-100/30">
+    <div className="w-full min-h-[30vh] p-4 bg-teal-600 flex flex-col items-start gap-2 shadow-sm shadow-teal-100/30">
       <div className="flex flex-row gap-2 items-center justify-center">
         <img src="/logo.svg" alt="Logo" className="h-10" />
         <h1 className="w-full text-stone-50 text-sm font-normal font-momo-trust">

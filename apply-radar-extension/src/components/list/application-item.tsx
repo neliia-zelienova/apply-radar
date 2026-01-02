@@ -40,13 +40,13 @@ interface ApplicationItemProps {
 const getStatusContainerClassNames = (status?: ApplicationStatus) => {
   switch (status) {
     case ApplicationStatus.PENDING:
-      return "bg-yellow-100/20 text-yellow-900 dark:text-yellow-300 border-yellow-500/50 inset-ring-yellow-300/50";
+      return "bg-yellow-100/20 text-yellow-900 dark:text-yellow-300 border-yellow-500/50 ring-yellow-300/50";
     case ApplicationStatus.INTERVIEW:
-      return "bg-teal-100/20 text-teal-900 dark:text-teal-300 border-teal-500/50 inset-ring-teal-300/50";
+      return "bg-teal-100/20 text-teal-900 dark:text-teal-300 border-teal-500/50 ring-teal-300/50";
     case ApplicationStatus.OFFERED:
-      return "bg-green-100/20 text-green-900 dark:text-green-300 border-green-500/50 inset-ring-green-300/50";
+      return "bg-green-100/20 text-green-900 dark:text-green-300 border-green-500/50 ring-green-300/50";
     case ApplicationStatus.REJECTED:
-      return "bg-red-100/20 text-red-900 dark:text-red-300 border-red-500/50 inset-ring-red-300/50";
+      return "bg-red-100/20 text-red-900 dark:text-red-300 border-red-500/50 ring-red-300/50";
     default:
       return "";
   }
@@ -96,9 +96,9 @@ export const ApplicationItem = ({
   return (
     <div className="font-roboto flex flex-col gap-1 transition-scale ease-in-out duration-200 ease-in-out border-b border-b-gray-200 dark:border-b-gray-700 pb-4">
       <TooltipProvider>
-        <div className="relative grid grid-cols-13 items-center content-center gap-3">
-          <div className="col-span-3 pl-4 text-base font-semibold line-clamp-2 transition-all transition-100 ease-linear flex flex-col items-start">
-            <span className="text-left font-normal text-blue-950 dark:text-teal-400 text-lg font-semibold">
+        <div className="relative grid grid-cols-8 items-center content-center gap-3">
+          <div className="col-span-2 pl-4 text-base font-semibold line-clamp-2 transition-all duration-100 ease-linear flex flex-col items-start">
+            <span className="text-left text-blue-950 dark:text-teal-400 text-lg font-semibold">
               {app?.companyName}
             </span>
             <span className="text-left text-sm text-gray-400">
@@ -115,7 +115,7 @@ export const ApplicationItem = ({
             }}
           >
             <SelectTrigger
-              className={`flex gap-1.5 cursor-pointer py-2 px-4 bg-white dark:bg-neutral-600 rounded-4xl col-span-3 mx-auto border-1 inset-ring-2 ${getStatusContainerClassNames(
+              className={`flex gap-1.5 cursor-pointer py-2 px-4 bg-white dark:bg-neutral-600 rounded-3xl col-span-2 mx-auto border-1 ring-2 ring-inset ${getStatusContainerClassNames(
                 app?.status
               )}`}
             >
@@ -137,14 +137,14 @@ export const ApplicationItem = ({
               ))}
             </SelectContent>
           </SelectRoot>
-          <div className="col-span-3 text-sm text-gray-500 dark:text-gray-100 text-center">
+          <div className="col-span-2 text-sm text-gray-500 dark:text-gray-100 text-center">
             {new Date(app.createdAt).toLocaleDateString()}
           </div>
           <TooltipRoot>
             <TooltipTrigger asChild>
               <button
                 onClick={toggleFavorite}
-                className="col-span-2 mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20 h-fit"
+                className="col-span-1 mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20 h-fit"
                 aria-label={
                   app?.favorite
                     ? "Unfavorite this application"
@@ -164,7 +164,7 @@ export const ApplicationItem = ({
               {app?.favorite ? "Unfavorite" : "Favorite"} this application
             </TooltipContent>
           </TooltipRoot>
-          <div className="col-span-2 flex flex-row items-center justify-center gap-2">
+          <div className="col-span-1 flex flex-row items-center justify-center gap-2">
             <TooltipRoot>
               <TooltipTrigger asChild>
                 <a href={app?.link} target="_blank" rel="noopener noreferrer">
