@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Button } from "../ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -21,7 +22,15 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
   AlertDialogAction,
+  AlertDialogDescription,
 } from "../ui/alert-dialog";
+import {
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+} from "../ui/select";
+import { getStatusLabel } from "../../utils/status";
 
 export const ApplicationForm = ({
   triggerComponent,
@@ -43,6 +52,9 @@ export const ApplicationForm = ({
   const [position, setPosition] = useState<string>(app?.position || "");
   const [link, setLink] = useState<string>(app?.link || "");
   const [notes, setNotes] = useState<string>(app?.notes || "");
+  const [status, setStatus] = useState<ApplicationStatus | undefined>(
+    app?.status
+  );
   const [touched, setTouched] = useState<{
     companyName: boolean;
     position: boolean;
@@ -55,6 +67,8 @@ export const ApplicationForm = ({
   const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] =
     useState<boolean>(false);
   const hasOpenedRef = useRef<boolean>(false);
+  // When true, bypass the unsaved-changes confirmation on close (e.g., after Save)
+  const skipUnsavedCheckRef = useRef<boolean>(false);
   const isChanged = useMemo(() => {
     if (!app) {
       return (
@@ -68,9 +82,10 @@ export const ApplicationForm = ({
       companyName !== app?.companyName ||
       position !== app?.position ||
       link !== app?.link ||
-      notes !== app?.notes
+      notes !== app?.notes ||
+      status !== app?.status
     );
-  }, [companyName, position, link, notes, app]);
+  }, [companyName, position, link, notes, app, status]);
 
   // Simple validators
   const isCompanyNameValid = companyName.trim().length > 1;
@@ -84,6 +99,17 @@ export const ApplicationForm = ({
   const notesCount = notes.length;
   const isFormValid = isCompanyNameValid && isPositionValid && isLinkValid;
 
+  const allowedStatuses = useMemo(() => {
+    if (status !== undefined) {
+      return Object.values(ApplicationStatus).filter((s) => {
+        return s !== status;
+      });
+    }
+    return [];
+  }, [status]);
+
+  console.log("allowedStatuses", allowedStatuses);
+
   const resetForm = useCallback(() => {
     setCompanyName(app?.companyName || "");
     setPosition(app?.position || "");
@@ -92,7 +118,7 @@ export const ApplicationForm = ({
     setTouched({ companyName: false, position: false, link: false });
   }, [app]);
 
-  const attemptCloseForm = useCallback(() => {
+  const handleCloseWithUnsavedCheck = useCallback(() => {
     // When attempting to close the form, check for unsaved changes
     if (isChanged) {
       setShowUnsavedChangesDialog(true);
@@ -114,14 +140,21 @@ export const ApplicationForm = ({
       }
       // Only treat false as a close attempt if the dialog has been opened before
       if (hasOpenedRef.current) {
-        attemptCloseForm();
+        // If we intentionally closed (e.g., Save), bypass the unsaved-check dialog
+        if (skipUnsavedCheckRef.current) {
+          skipUnsavedCheckRef.current = false;
+          setIsFormOpen(false);
+          resetForm();
+        } else {
+          handleCloseWithUnsavedCheck();
+        }
       } else {
         // Initial closed state; ensure it's closed without triggering alerts
         setIsFormOpen(false);
         resetForm();
       }
     },
-    [attemptCloseForm]
+    [handleCloseWithUnsavedCheck, resetForm]
   );
 
   useEffect(() => {
@@ -130,7 +163,14 @@ export const ApplicationForm = ({
         hasOpenedRef.current = true;
         setIsFormOpen(true);
       } else {
-        attemptCloseForm();
+        // If closing is triggered externally right after a Save, bypass alert
+        if (skipUnsavedCheckRef.current) {
+          skipUnsavedCheckRef.current = false;
+          setIsFormOpen(false);
+          resetForm();
+        } else {
+          handleCloseWithUnsavedCheck();
+        }
       }
     }
   }, [externalOpen]);
@@ -143,10 +183,8 @@ export const ApplicationForm = ({
       <DialogContent>
         {/* Header */}
         <DialogHeader>
-          <DialogTitle>
-            <h3 className="text-lg font-semibold">
-              {app ? "Edit application" : "Add new application"}
-            </h3>
+          <DialogTitle className="text-lg font-semibold">
+            {app ? "Edit application" : "Add new application"}
           </DialogTitle>
           {/* Remove implicit close to control explicitly */}
         </DialogHeader>
@@ -161,9 +199,9 @@ export const ApplicationForm = ({
               placeholder="e.g. Google"
               value={companyName}
               onChange={(e) => {
-                setTouched((t) => ({ ...t, companyName: true }));
                 setCompanyName(e.target.value);
               }}
+              onBlur={() => setTouched((t) => ({ ...t, companyName: true }))}
               className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
                 !isCompanyNameValid && touched.companyName
                   ? "border-red-500"
@@ -185,9 +223,9 @@ export const ApplicationForm = ({
               placeholder="e.g. QA Engineer"
               value={position}
               onChange={(e) => {
-                setTouched((t) => ({ ...t, position: true }));
                 setPosition(e.target.value);
               }}
+              onBlur={() => setTouched((t) => ({ ...t, position: true }))}
               className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
                 !isPositionValid && touched.position
                   ? "border-red-500"
@@ -240,22 +278,30 @@ export const ApplicationForm = ({
                 )}
               </div>
             </label>
-            {app && (
-              <label className="flex flex-col gap-1 items-start w-full">
+            {app && status && (
+              <label className="flex flex-col col-span-1 gap-1 items-start w-full">
                 <span className="text-sm">Status</span>
-                <select
-                  aria-label="Application Status"
-                  value={app?.status || ApplicationStatus.PENDING}
-                  disabled
-                  className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors cursor-not-allowed"
+                <SelectRoot
+                  onValueChange={(value) => {
+                    setStatus(value as ApplicationStatus);
+                  }}
                 >
-                  <option value={ApplicationStatus.PENDING}>Pending</option>
-                  <option value={ApplicationStatus.INTERVIEW}>
-                    Interviewing
-                  </option>
-                  <option value={ApplicationStatus.OFFERED}>Offer</option>
-                  <option value={ApplicationStatus.REJECTED}>Rejected</option>
-                </select>
+                  <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left">
+                    <span className="w-full text-xs font-medium">
+                      {getStatusLabel(status)}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allowedStatuses.map((status) => (
+                      <SelectItem
+                        key={`app-form-${app.id}-status-option-${status}`}
+                        value={status}
+                      >
+                        {getStatusLabel(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </SelectRoot>
               </label>
             )}
           </div>
@@ -282,20 +328,24 @@ export const ApplicationForm = ({
         <DialogFooter>
           {/* Actions */}
           <div className="flex flex-row gap-2 justify-end pt-1">
-            <Button
-              aria-label="Cancel"
-              variant="secondary"
-              size="md"
-              onClick={attemptCloseForm}
-            >
-              Cancel
-            </Button>
+            <DialogClose asChild>
+              <Button
+                aria-label="Cancel"
+                variant="secondary"
+                size="md"
+                onClick={handleCloseWithUnsavedCheck}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
             <Button
               aria-label="Save"
               variant="primary"
               size="md"
               disabled={!isFormValid}
               onClick={() => {
+                // Mark that we're closing intentionally to skip unsaved-check
+                skipUnsavedCheckRef.current = true;
                 onSave(
                   app
                     ? {
@@ -304,6 +354,7 @@ export const ApplicationForm = ({
                         position,
                         link,
                         notes,
+                        status: status || app.status,
                         updatedAt: new Date().toISOString(),
                       }
                     : {
@@ -336,12 +387,12 @@ export const ApplicationForm = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
             {/* description */}
-            <p className="text-sm text-gray-600">
+            <AlertDialogDescription className="text-sm text-gray-600">
               You have unsaved changes. Are you sure you want to discard them?
-            </p>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction asChild>
+            <AlertDialogCancel asChild>
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -354,8 +405,8 @@ export const ApplicationForm = ({
               >
                 Discard Changes
               </Button>
-            </AlertDialogAction>
-            <AlertDialogCancel asChild>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
               <Button
                 variant="primary"
                 onClick={() => {
@@ -365,7 +416,7 @@ export const ApplicationForm = ({
               >
                 Keep Editing
               </Button>
-            </AlertDialogCancel>
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

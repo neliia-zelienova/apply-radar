@@ -25,7 +25,9 @@ import {
   SelectItem,
   SelectRoot,
   SelectTrigger,
+  SelectValue,
 } from "../ui/select";
+import { getStatusLabel } from "../../utils/status";
 
 interface ApplicationItemProps {
   app: ApplicationData;
@@ -121,8 +123,7 @@ export const ApplicationItem = ({
             >
               <ApplicationStatusIcon status={app?.status} />
               <span className="text-xs font-medium">
-                {app?.status.slice(0, 1).toUpperCase() +
-                  app?.status.slice(1).toLowerCase()}
+                {getStatusLabel(app?.status)}
               </span>
             </SelectTrigger>
             <SelectContent>
@@ -131,8 +132,7 @@ export const ApplicationItem = ({
                   key={`${app.id}-status-option-${status}`}
                   value={status}
                 >
-                  {status.slice(0, 1).toUpperCase() +
-                    status.slice(1).toLowerCase()}
+                  {getStatusLabel(status)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -164,7 +164,7 @@ export const ApplicationItem = ({
               {app?.favorite ? "Unfavorite" : "Favorite"} this application
             </TooltipContent>
           </TooltipRoot>
-          <div className="col-span-1 flex flex-row items-center justify-center gap-2">
+          <div className="col-span-1 flex flex-row items-center justify-center gap-0.5">
             <TooltipRoot>
               <TooltipTrigger asChild>
                 <a href={app?.link} target="_blank" rel="noopener noreferrer">

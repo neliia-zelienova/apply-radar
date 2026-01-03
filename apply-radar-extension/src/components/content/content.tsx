@@ -34,7 +34,9 @@ export const Content = () => {
           ref={scrollAreaRef}
           className="flex flex-col gap-3 overflow-y-auto"
           style={{
-            maxHeight: `calc(100vh - ${scrollAreaRef.current?.offsetTop}px - 2rem)`,
+            maxHeight: `calc(100vh - ${
+              scrollAreaRef.current?.offsetTop ?? 0
+            }px - 2rem)`,
           }}
         >
           {applications.length > 0 ? (
