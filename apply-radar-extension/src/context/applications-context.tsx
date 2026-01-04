@@ -4,11 +4,9 @@ import { type ApplicationData } from "../types/applications";
 interface ApplicationsContextType {
   applications: ApplicationData[];
   total: number;
+  search: string;
   setSearch: (search: string) => void;
   setFilterStatus: (status: string) => void;
-  newAppFormVisible: boolean;
-  showNewAppForm: () => void;
-  hideNewAppForm: () => void;
   createApplication: (app: ApplicationData) => void;
   deleteApplication: (id: string) => void;
   archiveApplication: (id: string) => void;
@@ -16,9 +14,9 @@ interface ApplicationsContextType {
     id: string,
     updater: (app: ApplicationData) => ApplicationData
   ) => void;
-  sortBy: "name" | "date" | "status" | "favorite";
+  sortBy: "companyName" | "date" | "status" | "favorite";
   sortOrder: "asc" | "desc";
-  setSortBy: (sortBy: "name" | "date" | "status" | "favorite") => void;
+  setSortBy: (sortBy: "companyName" | "date" | "status" | "favorite") => void;
   setSortOrder: (sortOrder: "asc" | "desc") => void;
 }
 

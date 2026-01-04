@@ -7,7 +7,8 @@ export enum ApplicationStatus {
 
 export interface ApplicationData {
   id: string;
-  name: string;
+  companyName: string;
+  position: string;
   status: ApplicationStatus;
   link: string;
   notes: string;

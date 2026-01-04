@@ -12,7 +12,7 @@ export const useApplications = ({
 }: {
   search: string;
   filterStatus: string;
-  sortBy: "name" | "date" | "status" | "favorite";
+  sortBy: "companyName" | "date" | "status" | "favorite";
   sortOrder: "asc" | "desc";
 }) => {
   const [applications, setApplications] = useState<ApplicationData[]>([]);
@@ -21,7 +21,7 @@ export const useApplications = ({
   const filteredApplications = useMemo(() => {
     return applications
       .filter((app) => {
-        const matchesSearch = app.name
+        const matchesSearch = app.companyName
           .toLowerCase()
           .includes(search.toLowerCase());
         const matchesStatus =
@@ -30,10 +30,10 @@ export const useApplications = ({
       })
       .sort((a, b) => {
         switch (sortBy) {
-          case "name":
+          case "companyName":
             return sortOrder === "asc"
-              ? a.name.localeCompare(b.name)
-              : b.name.localeCompare(a.name);
+              ? a.companyName.localeCompare(b.companyName)
+              : b.companyName.localeCompare(a.companyName);
           case "status":
             return sortOrder === "asc"
               ? a.status.localeCompare(b.status)

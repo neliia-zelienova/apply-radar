@@ -40,7 +40,7 @@ export const ItemContextMenu = ({ itemId, options }: ItemContextMenuProps) => {
                   }
                 )
               : option.icon}
-            <span className="text-sm">{option.label}</span>
+            {option.label && <span className="text-sm">{option.label}</span>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
