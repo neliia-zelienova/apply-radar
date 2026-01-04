@@ -5,6 +5,16 @@ export enum ApplicationStatus {
   REJECTED = "rejected",
 }
 
+export interface Interview {
+  id: string;
+  name?: string; // e.g., Screening, Technical, Onsite
+  date: string; // ISO string
+  locationLink?: string; // Zoom/Maps/office link
+  notes?: string;
+  notifyEnabled?: boolean; // whether to schedule a notification
+  notifyMinutesBefore?: number; // minutes before interview
+}
+
 export interface ApplicationData {
   id: string;
   companyName: string;
@@ -16,4 +26,5 @@ export interface ApplicationData {
   createdAt: string;
   updatedAt: string;
   archived?: boolean;
+  interviews?: Interview[];
 }
