@@ -1,0 +1,77 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ApplicationStatus {
+  PENDING
+  INTERVIEW
+  OFFERED
+  REJECTED
+}
+
+model Users {
+  id             String         @id @default(uuid())
+  email          String         @unique
+  name           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  userApplications UserApplications[]
+}
+
+model Applications {
+  id          String            @id @default(uuid())
+  name        String
+  description String?
+  status      ApplicationStatus @default(PENDING)
+  url         String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  interviews         ApplicationInterviews[]
+  userApplications   UserApplications[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Interviews {
+  id                    String                  @id @default(uuid())
+  notes                 String?
+  scheduledAt           DateTime
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  applicationInterviews ApplicationInterviews[]
+
+  @@index([scheduledAt])
+}
+
+model ApplicationInterviews {
+  applicationId String
+  interviewId   String
+
+  application Applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interview   Interviews   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@id([applicationId, interviewId])
+}
+
+model UserApplications {
+  userId        String
+  applicationId String
+
+  user          Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application   Applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, applicationId])
+}
