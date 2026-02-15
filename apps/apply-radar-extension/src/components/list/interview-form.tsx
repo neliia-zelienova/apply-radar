@@ -39,6 +39,8 @@ export const InterviewForm = ({
   const initial = initialInterview
     ? new Date(initialInterview.date)
     : undefined;
+  // Helper: format Date as local YYYY-MM-DD (avoid UTC shift from toISOString)
+  const formatLocalDate = (d: Date) => d.toLocaleDateString("en-CA");
   // Default: next day at 09:00 if creating new interview
   const computeDefaultDateTime = () => {
     const now = new Date();
@@ -49,30 +51,30 @@ export const InterviewForm = ({
       9,
       0,
       0,
-      0
+      0,
     );
-    const isoDate = nextDay.toISOString().slice(0, 10);
+    const isoDate = formatLocalDate(nextDay);
     const hhmm = nextDay.toTimeString().slice(0, 5);
     return { isoDate, hhmm };
   };
   const defaults = initial ? undefined : computeDefaultDateTime();
   const [date, setDate] = useState<string>(
-    initial ? initial.toISOString().slice(0, 10) : defaults?.isoDate || ""
+    initial ? formatLocalDate(initial) : defaults?.isoDate || "",
   );
   const [time, setTime] = useState<string>(
-    initial ? initial.toTimeString().slice(0, 5) : defaults?.hhmm || ""
+    initial ? initial.toTimeString().slice(0, 5) : defaults?.hhmm || "",
   );
   const [locationLink, setLocationLink] = useState<string>(
-    initialInterview?.locationLink || ""
+    initialInterview?.locationLink || "",
   );
   const [notes, setNotes] = useState<string>(initialInterview?.notes || "");
   const [name, setName] = useState<string>(initialInterview?.name || "");
   const [notifyEnabled, setNotifyEnabled] = useState<boolean>(
-    initialInterview?.notifyEnabled ?? true
+    initialInterview?.notifyEnabled ?? true,
   );
   const [notifyValue, setNotifyValue] = useState<number>(1);
   const [notifyUnit, setNotifyUnit] = useState<"minutes" | "hours" | "days">(
-    "hours"
+    "hours",
   );
   const hasOpenedRef = useRef<boolean>(false);
 
@@ -87,15 +89,14 @@ export const InterviewForm = ({
   };
   const isUrlSyntaxValid = (value: string) => {
     return /^(https?:\/\/)?[\w.-]+(\.[\w.-]+)+[\w\-._~:\/?#\[\]@!$&'()*+,;=]*$/.test(
-      value.trim()
+      value.trim(),
     );
   };
   const isLocationValid =
     !locationLink || // empty is allowed
     (!isProbablyUrl(locationLink) && locationLink.trim().length > 0) || // plain address
     isUrlSyntaxValid(locationLink); // valid URL
-  const isFormValid =
-    isDateValid && isTimeValid && (isLocationValid || name.trim().length > 0);
+  const isFormValid = isDateValid && isTimeValid && isLocationValid;
 
   // max value for notify depends on difference between interview time and now in selected unit
   const computeMaxForUnit = (unit: "minutes" | "hours" | "days") => {
@@ -120,7 +121,7 @@ export const InterviewForm = ({
     // ensure current unit is always included
     if (!units.includes(notifyUnit)) units.push(notifyUnit);
     return units;
-  }, [date, time, notifyUnit]);
+  }, [date, time, notifyUnit, isDateValid, isTimeValid, computeMaxForUnit]);
 
   const handleOpenChange = (value: boolean) => {
     if (value) {
@@ -139,8 +140,8 @@ export const InterviewForm = ({
       notifyUnit === "minutes"
         ? notifyValue
         : notifyUnit === "hours"
-        ? notifyValue * 60
-        : notifyValue * 1440;
+          ? notifyValue * 60
+          : notifyValue * 1440;
     const payload: Interview = {
       id: initialInterview?.id || uuidv4(),
       name,
@@ -187,14 +188,14 @@ export const InterviewForm = ({
       notifyUnit === "minutes"
         ? notifyValue
         : notifyUnit === "hours"
-        ? notifyValue * 60
-        : notifyValue * 1440;
+          ? notifyValue * 60
+          : notifyValue * 1440;
     const converted =
       nextUnit === "minutes"
         ? totalMinutes
         : nextUnit === "hours"
-        ? Math.floor(totalMinutes / 60)
-        : Math.floor(totalMinutes / 1440);
+          ? Math.floor(totalMinutes / 60)
+          : Math.floor(totalMinutes / 1440);
     setNotifyUnit(nextUnit);
     const newMax = computeMaxForUnit(nextUnit);
     setNotifyValue(Math.max(0, Math.min(converted, newMax)));
@@ -204,7 +205,7 @@ export const InterviewForm = ({
     if (initialInterview && hasOpenedRef.current) {
       // when initialInterview changes while open, update form fields
       const initialDate = new Date(initialInterview.date);
-      setDate(initialDate.toISOString().slice(0, 10));
+      setDate(formatLocalDate(initialDate));
       setTime(initialDate.toTimeString().slice(0, 5));
       setLocationLink(initialInterview.locationLink || "");
       setNotes(initialInterview.notes || "");
@@ -225,10 +226,13 @@ export const InterviewForm = ({
     }
   }, [initialInterview]);
 
-  // external control
-  if (externalOpen !== undefined && externalOpen !== open) {
-    handleOpenChange(externalOpen);
-  }
+  // external control: sync open state when externalOpen changes
+  useEffect(() => {
+    if (externalOpen !== undefined && externalOpen !== open) {
+      handleOpenChange(externalOpen);
+    }
+    // Only respond to externalOpen changes; open is included to avoid stale comparison
+  }, [externalOpen, open]);
 
   useEffect(() => {
     if (!open) {
@@ -328,7 +332,7 @@ export const InterviewForm = ({
                     max={maxNotifyValue}
                     onChange={(value: number) =>
                       setNotifyValue(
-                        Math.max(0, Math.min(value, maxNotifyValue))
+                        Math.max(0, Math.min(value, maxNotifyValue)),
                       )
                     }
                     inputClassName="w-16 p-1"

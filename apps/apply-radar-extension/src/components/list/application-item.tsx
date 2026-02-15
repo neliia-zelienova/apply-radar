@@ -46,7 +46,7 @@ interface ApplicationItemProps {
   deleteApp?: (id: string) => void;
   updateApp?: (
     id: string,
-    updater: (app: ApplicationData) => ApplicationData
+    updater: (app: ApplicationData) => ApplicationData,
   ) => void;
   archiveApp?: (id: string) => void;
 }
@@ -77,7 +77,7 @@ export const ApplicationItem = ({
 
   const [interviewFormOpen, setInterviewFormOpen] = useState<boolean>(false);
   const [interviewIdToEdit, setInterviewIdToEdit] = useState<string | null>(
-    null
+    null,
   );
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean;
@@ -163,7 +163,7 @@ export const ApplicationItem = ({
           <SelectRoot onValueChange={handleStatusChange}>
             <SelectTrigger
               className={`flex gap-1.5 cursor-pointer py-2 px-4 bg-white dark:bg-neutral-600 rounded-3xl col-span-2 mx-auto border-1 ring-2 ring-inset ${getStatusContainerClassNames(
-                app?.status
+                app?.status,
               )}`}
             >
               <ApplicationStatusIcon status={app?.status} />
@@ -255,7 +255,7 @@ export const ApplicationItem = ({
                   • Interviews ({app.interviews.length})
                 </span>
                 <button
-                  className="text-teal-500 hover:underline font-xs font-normal cursor-pointer"
+                  className="text-teal-500 hover:underline text-xs font-normal cursor-pointer"
                   onClick={() => setInterviewFormOpen(true)}
                 >
                   + Add interview
@@ -265,10 +265,11 @@ export const ApplicationItem = ({
                 {[...app.interviews]
                   .sort(
                     (a, b) =>
-                      new Date(a.date).getTime() - new Date(b.date).getTime()
+                      new Date(a.date).getTime() - new Date(b.date).getTime(),
                   )
                   .map((iv) => (
                     <InterviewCard
+                      key={iv.id}
                       interview={iv}
                       handleEdit={handleEditInterview}
                       handleDelete={handleDeleteInterview}
@@ -277,11 +278,9 @@ export const ApplicationItem = ({
               </ul>
             </div>
           ) : null}
-          {app.notes?.length > 0 && (
-            <div className="flex items-start bg-gray-100 dark:bg-white/20 p-2 rounded-md">
-              {app.notes}
-            </div>
-          )}
+          <div className="flex items-start bg-gray-100 dark:bg-white/20 p-2 rounded-md">
+            {app.notes ?? "No additional notes"}
+          </div>
         </div>
       )}
       <InterviewForm
@@ -340,7 +339,7 @@ export const ApplicationItem = ({
                       updateApp(app.id, (prevApp) => ({
                         ...prevApp,
                         interviews: (prevApp.interviews || []).filter(
-                          (i) => i.id !== deleteConfirm.interviewId
+                          (i) => i.id !== deleteConfirm.interviewId,
                         ),
                       }));
                     chrome.runtime.sendMessage({

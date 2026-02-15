@@ -24,6 +24,8 @@ export const InputNumber: React.FC<InputNumberProps> = ({
   inputClassName,
   buttonsClassName,
 }) => {
+  // Local string state to preserve user input (including empty) while typing
+  const [inputValue, setInputValue] = React.useState<string>(String(value));
   const holdIntervalRef = React.useRef<number | null>(null);
   const holdTimeoutRef = React.useRef<number | null>(null);
   const holdSpeedRef = React.useRef<number>(200); // ms between repeats, will accelerate
@@ -31,6 +33,8 @@ export const InputNumber: React.FC<InputNumberProps> = ({
 
   React.useEffect(() => {
     valueRef.current = value;
+    // Sync local string state when external value changes
+    setInputValue(String(value));
   }, [value]);
 
   const clamp = (v: number) => {
@@ -42,17 +46,10 @@ export const InputNumber: React.FC<InputNumberProps> = ({
   const applyChange = (delta: number) => {
     const current = valueRef.current;
     const next = clamp(current + delta);
-    console.log(
-      "applyChange called, current value:",
-      current,
-      "delta:",
-      delta,
-      "next value:",
-      next
-    );
     if (next !== current) {
       onChange(next);
       valueRef.current = next;
+      setInputValue(String(next));
     } else {
       // reached boundary; stop any ongoing hold
       stopHold();
@@ -61,22 +58,37 @@ export const InputNumber: React.FC<InputNumberProps> = ({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    // Allow empty to let user type
+    // Always update local string state, allow empty while typing
+    setInputValue(raw);
+    // Do not coerce or clamp on change; defer until blur/commit to avoid snapping
+  };
+
+  // Commit current inputValue on blur (coerce/clamp)
+  const commitOnBlur = () => {
+    const raw = inputValue;
     if (raw === "") {
-      onChange(typeof min === "number" ? min : 0);
+      const fallback = typeof min === "number" ? min : 0;
+      onChange(fallback);
+      valueRef.current = fallback;
+      setInputValue(String(fallback));
       return;
     }
     const parsed = Number(raw);
     if (!Number.isNaN(parsed)) {
-      onChange(clamp(parsed));
+      const next = clamp(parsed);
+      onChange(next);
+      valueRef.current = next;
+      setInputValue(String(next));
+    } else {
+      // Non-numeric: revert to last valid value
+      setInputValue(String(valueRef.current));
     }
   };
 
   const startHold = (
     direction: 1 | -1,
-    e?: React.PointerEvent | React.MouseEvent | React.TouchEvent
+    e?: React.PointerEvent | React.MouseEvent | React.TouchEvent,
   ) => {
-    console.log("startHold called");
     if (disabled) return;
     if (e && typeof (e as any).preventDefault === "function")
       (e as any).preventDefault();
@@ -106,7 +118,6 @@ export const InputNumber: React.FC<InputNumberProps> = ({
   };
 
   const stopHold = () => {
-    console.log("stopHold called");
     if (holdTimeoutRef.current) {
       window.clearTimeout(holdTimeoutRef.current);
       holdTimeoutRef.current = null;
@@ -129,6 +140,10 @@ export const InputNumber: React.FC<InputNumberProps> = ({
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       applyChange(-step);
+    } else if (e.key === "Enter") {
+      // Commit on Enter
+      e.preventDefault();
+      commitOnBlur();
     }
   };
 
@@ -140,10 +155,13 @@ export const InputNumber: React.FC<InputNumberProps> = ({
     >
       <input
         type="number"
-        value={value}
+        value={inputValue}
         onChange={handleInputChange}
         onKeyDown={onKeyDown}
-        onBlur={stopHold}
+        onBlur={() => {
+          stopHold();
+          commitOnBlur();
+        }}
         min={min}
         max={max}
         step={step}
@@ -151,7 +169,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
         role="spinbutton"
         aria-valuemin={typeof min === "number" ? min : undefined}
         aria-valuemax={typeof max === "number" ? max : undefined}
-        aria-valuenow={value}
+        aria-valuenow={valueRef.current}
         aria-disabled={disabled || undefined}
         inputMode="numeric"
         pattern="[0-9]*"

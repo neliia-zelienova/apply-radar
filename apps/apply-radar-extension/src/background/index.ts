@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener(
   (
     msg: ScheduleInterviewAlarmMessage | CancelInterviewAlarmMessage,
     _sender,
-    sendResponse
+    sendResponse,
   ) => {
     if (msg.type === "scheduleInterviewAlarm") {
       const when =
@@ -44,32 +44,66 @@ chrome.runtime.onMessage.addListener(
       const alarmName = `interview-${msg.interviewId}`;
       // MV3 alarms only support when or delayInMinutes; convert to minutes when needed
       const delayInMinutes = Math.ceil(delayMs / 60000);
-      chrome.alarms.create(alarmName, { delayInMinutes });
-      sendResponse({ ok: true });
+      // Persist metadata for notification: title and optional link
+      const meta = { title: msg.title, link: msg.link ?? null } as const;
+      chrome.storage.local.set({ [alarmName]: meta }, () => {
+        chrome.alarms.create(alarmName, { delayInMinutes });
+        sendResponse({ ok: true });
+      });
       return true;
     }
     if (msg.type === "cancelInterviewAlarm") {
       const alarmName = `interview-${msg.interviewId}`;
       chrome.alarms.clear(alarmName, (cleared) => {
-        sendResponse({ ok: cleared });
+        // Clean up persisted metadata
+        chrome.storage.local.remove(alarmName, () => {
+          sendResponse({ ok: cleared });
+        });
       });
       return true;
     }
-  }
+  },
 );
 
 // Show notification when alarm fires
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name.startsWith("interview-")) {
     const interviewId = alarm.name.replace("interview-", "");
-    chrome.notifications.create(alarm.name, {
-      type: "basic",
-      iconUrl: "logo.svg",
-      title: "Interview reminder",
-      message: "You have an upcoming interview",
-      priority: 2,
+    // Retrieve persisted metadata for the notification
+    chrome.storage.local.get(alarm.name, (result) => {
+      const meta = result?.[alarm.name] as
+        | { title?: string; link?: string | null }
+        | undefined;
+      const title = meta?.title || "Interview reminder";
+      const message = meta?.link
+        ? "Click to open interview link"
+        : "You have an upcoming interview";
+
+      chrome.notifications.create(alarm.name, {
+        type: "basic",
+        iconUrl: "logo.svg",
+        title,
+        message,
+        priority: 2,
+      });
+
+      console.log("Notification for interview", interviewId, meta);
     });
-    // Optional: store last notified ID or additional metadata
-    console.log("Notification for interview", interviewId);
+  }
+});
+
+// Handle notification clicks to open the stored link if present
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (notificationId.startsWith("interview-")) {
+    chrome.storage.local.get(notificationId, (result) => {
+      const meta = result?.[notificationId] as
+        | { link?: string | null }
+        | undefined;
+      const link = meta?.link;
+      if (link) {
+        // Open the link in a new tab
+        chrome.tabs.create({ url: link });
+      }
+    });
   }
 });
