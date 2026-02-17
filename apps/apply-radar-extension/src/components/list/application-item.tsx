@@ -14,6 +14,7 @@ import {
   Archive,
   ChevronDown,
   ExternalLink,
+  MessagesSquare,
   Pencil,
   Star,
   Trash2,
@@ -28,13 +29,24 @@ import {
   SelectValue,
 } from "../ui/select";
 import { getStatusLabel } from "../../utils/status";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
+import { InterviewForm } from "./interview-form";
+import { InterviewCard } from "./interview-card";
 
 interface ApplicationItemProps {
   app: ApplicationData;
   deleteApp?: (id: string) => void;
   updateApp?: (
     id: string,
-    updater: (app: ApplicationData) => ApplicationData
+    updater: (app: ApplicationData) => ApplicationData,
   ) => void;
   archiveApp?: (id: string) => void;
 }
@@ -63,12 +75,30 @@ export const ApplicationItem = ({
   const [editMode, setEditMode] = useState<boolean>(app === undefined);
   const [moreInfo, setMoreInfo] = useState<boolean>(false);
 
+  const [interviewFormOpen, setInterviewFormOpen] = useState<boolean>(false);
+  const [interviewIdToEdit, setInterviewIdToEdit] = useState<string | null>(
+    null,
+  );
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    open: boolean;
+    interviewId?: string;
+  }>({ open: false });
+
   const menuOptions = [
     {
       label: "Edit",
       icon: <Pencil />,
       action: () => setEditMode(true),
     },
+    ...(app.status === ApplicationStatus.INTERVIEW
+      ? [
+          {
+            label: "Add interview",
+            icon: <MessagesSquare />,
+            action: () => setInterviewFormOpen(true),
+          },
+        ]
+      : []),
     {
       label: "Delete",
       icon: <Trash2 />,
@@ -80,6 +110,29 @@ export const ApplicationItem = ({
       action: (itemId: string) => archiveApp && archiveApp(itemId),
     },
   ];
+
+  const handleStatusChange = (value: string) => {
+    if (value === ApplicationStatus.INTERVIEW) {
+      setInterviewFormOpen(true);
+    }
+    updateApp &&
+      updateApp(app.id, (prevApp) => ({
+        ...prevApp,
+        status: value as ApplicationStatus,
+      }));
+  };
+
+  const handleEditInterview = (id: string) => {
+    setInterviewIdToEdit(id);
+    setInterviewFormOpen(true);
+  };
+
+  const handleDeleteInterview = (id: string) => {
+    setDeleteConfirm({
+      open: true,
+      interviewId: id,
+    });
+  };
 
   const toggleFavorite = () => {
     updateApp &&
@@ -107,18 +160,10 @@ export const ApplicationItem = ({
               {app?.position}
             </span>
           </div>
-          <SelectRoot
-            onValueChange={(value) => {
-              updateApp &&
-                updateApp(app.id, (prevApp) => ({
-                  ...prevApp,
-                  status: value as ApplicationStatus,
-                }));
-            }}
-          >
+          <SelectRoot onValueChange={handleStatusChange}>
             <SelectTrigger
               className={`flex gap-1.5 cursor-pointer py-2 px-4 bg-white dark:bg-neutral-600 rounded-3xl col-span-2 mx-auto border-1 ring-2 ring-inset ${getStatusContainerClassNames(
-                app?.status
+                app?.status,
               )}`}
             >
               <ApplicationStatusIcon status={app?.status} />
@@ -144,7 +189,9 @@ export const ApplicationItem = ({
             <TooltipTrigger asChild>
               <button
                 onClick={toggleFavorite}
-                className="col-span-1 mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20 h-fit"
+                className={`col-span-1 mx-auto cursor-pointer rounded-lg p-2 hover:bg-teal-300/20 h-fit ${
+                  app?.favorite ? "bg-yellow-200/20" : ""
+                }`}
                 aria-label={
                   app?.favorite
                     ? "Unfavorite this application"
@@ -194,14 +241,121 @@ export const ApplicationItem = ({
               <ChevronDown className="h-4 w-4" />
             </button>
           </TooltipTrigger>
-          <TooltipContent align="center">Show more info</TooltipContent>
+          <TooltipContent align="center">
+            {moreInfo ? "Hide more info" : "Show more info"}
+          </TooltipContent>
         </TooltipRoot>
       </TooltipProvider>
       {moreInfo && (
-        <div className="mt-2 p-2 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-          {app.notes || "No additional notes."}
+        <div className="flex flex-col gap-2 mt-2 p-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-neutral-800 rounded-md">
+          {app.interviews && app.interviews.length > 0 ? (
+            <div className="flex flex-col gap-2 mb-2">
+              <div className="flex flex-row items-center justify-between">
+                <span className="text-teal-400 font-momo-trust">
+                  • Interviews ({app.interviews.length})
+                </span>
+                <button
+                  className="text-teal-500 hover:underline text-xs font-normal cursor-pointer"
+                  onClick={() => setInterviewFormOpen(true)}
+                >
+                  + Add interview
+                </button>
+              </div>
+              <ul className="flex flex-col gap-2">
+                {[...app.interviews]
+                  .sort(
+                    (a, b) =>
+                      new Date(a.date).getTime() - new Date(b.date).getTime(),
+                  )
+                  .map((iv) => (
+                    <InterviewCard
+                      key={iv.id}
+                      interview={iv}
+                      handleEdit={handleEditInterview}
+                      handleDelete={handleDeleteInterview}
+                    />
+                  ))}
+              </ul>
+            </div>
+          ) : null}
+          <div className="flex items-start bg-gray-100 dark:bg-white/20 p-2 rounded-md">
+            {app.notes ?? "No additional notes"}
+          </div>
         </div>
       )}
+      <InterviewForm
+        externalOpen={interviewFormOpen}
+        initialInterview={
+          interviewIdToEdit
+            ? (app.interviews || []).find((i) => i.id === interviewIdToEdit)
+            : undefined
+        }
+        onSave={(interview) => {
+          updateApp &&
+            updateApp(app.id, (prevApp) => {
+              const list = prevApp.interviews || [];
+              const exists = list.findIndex((i) => i.id === interview.id);
+              const newList =
+                exists >= 0
+                  ? list.map((i) => (i.id === interview.id ? interview : i))
+                  : [...list, interview];
+              return {
+                ...prevApp,
+                interviews: newList,
+              };
+            });
+          setInterviewFormOpen(false);
+          setInterviewIdToEdit(null);
+        }}
+        onCancel={() => {
+          setInterviewFormOpen(false);
+          setInterviewIdToEdit(null);
+        }}
+      />
+      {/* Delete confirmation dialog */}
+      <AlertDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm((d) => ({ ...d, open }))}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete interview?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <button
+                className="px-3 py-2 rounded-md bg-gray-200 dark:bg-neutral-700 text-sm"
+                onClick={() => setDeleteConfirm({ open: false })}
+              >
+                Cancel
+              </button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <button
+                className="px-3 py-2 rounded-md bg-red-600 text-white text-sm"
+                onClick={() => {
+                  if (deleteConfirm.interviewId) {
+                    updateApp &&
+                      updateApp(app.id, (prevApp) => ({
+                        ...prevApp,
+                        interviews: (prevApp.interviews || []).filter(
+                          (i) => i.id !== deleteConfirm.interviewId,
+                        ),
+                      }));
+                    chrome.runtime.sendMessage({
+                      type: "cancelInterviewAlarm",
+                      interviewId: deleteConfirm.interviewId,
+                    });
+                  }
+                  setDeleteConfirm({ open: false });
+                }}
+              >
+                Delete
+              </button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <ApplicationForm
         app={app}
         externalOpen={editMode}

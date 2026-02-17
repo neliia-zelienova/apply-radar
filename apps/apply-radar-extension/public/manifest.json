@@ -27,7 +27,16 @@
   },
   "background": {
     "service_worker": "background.js"
-},
-  "permissions": ["scripting", "tabs", "sidePanel", "commands", "contextMenus", "storage"],
+  },
+  "permissions": [
+    "scripting",
+    "tabs",
+    "sidePanel",
+    "commands",
+    "contextMenus",
+    "storage",
+    "notifications",
+    "alarms"
+  ],
   "host_permissions": ["http://*/*", "https://*/*"]
 }
