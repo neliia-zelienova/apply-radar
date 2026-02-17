@@ -97,19 +97,27 @@ export const InputNumber: React.FC<InputNumberProps> = ({
     // after short delay, start repeating
     holdSpeedRef.current = 200;
     holdTimeoutRef.current = window.setTimeout(() => {
-      holdIntervalRef.current = window.setInterval(() => {
+      const repeatStep = () => {
+        // if we've been stopped, don't schedule further repeats
+        if (holdIntervalRef.current === null) {
+          return;
+        }
         applyChange(direction * step);
         // accelerate down to a floor
         if (holdSpeedRef.current > 60) {
           holdSpeedRef.current = Math.max(60, holdSpeedRef.current - 20);
-          if (holdIntervalRef.current) {
-            window.clearInterval(holdIntervalRef.current);
-            holdIntervalRef.current = window.setInterval(() => {
-              applyChange(direction * step);
-            }, holdSpeedRef.current);
-          }
         }
-      }, holdSpeedRef.current);
+        // schedule next repeat with current speed
+        holdIntervalRef.current = window.setTimeout(
+          repeatStep,
+          holdSpeedRef.current,
+        );
+      };
+      // start the repeating loop
+      holdIntervalRef.current = window.setTimeout(
+        repeatStep,
+        holdSpeedRef.current,
+      );
     }, 250);
     // stop on global pointer up/cancel to ensure reliability
     const stopOnGlobal = () => stopHold();

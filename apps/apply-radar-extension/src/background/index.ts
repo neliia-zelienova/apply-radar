@@ -40,14 +40,12 @@ chrome.runtime.onMessage.addListener(
       const when =
         new Date(msg.dateISO).getTime() - msg.notifyMinutesBefore * 60000;
       const now = Date.now();
-      const delayMs = Math.max(0, when - now);
+      const effectiveWhen = when > now ? when : now + 1000;
       const alarmName = `interview-${msg.interviewId}`;
-      // MV3 alarms only support when or delayInMinutes; convert to minutes when needed
-      const delayInMinutes = Math.ceil(delayMs / 60000);
       // Persist metadata for notification: title and optional link
       const meta = { title: msg.title, link: msg.link ?? null } as const;
       chrome.storage.local.set({ [alarmName]: meta }, () => {
-        chrome.alarms.create(alarmName, { delayInMinutes });
+        chrome.alarms.create(alarmName, { when: effectiveWhen });
         sendResponse({ ok: true });
       });
       return true;
@@ -99,11 +97,36 @@ chrome.notifications.onClicked.addListener((notificationId) => {
       const meta = result?.[notificationId] as
         | { link?: string | null }
         | undefined;
-      const link = meta?.link;
-      if (link) {
-        // Open the link in a new tab
-        chrome.tabs.create({ url: link });
+      const rawLink = meta?.link?.trim();
+      if (rawLink) {
+        // Normalize: ensure scheme present when it looks like a domain or URL-like
+        const hasScheme = /^(https?:)\/\//i.test(rawLink);
+        const looksLikeDomain =
+          /\.[a-z]{2,}$/i.test(rawLink) || /\//.test(rawLink);
+        const normalized = hasScheme
+          ? rawLink
+          : looksLikeDomain
+            ? `https://${rawLink}`
+            : rawLink;
+        try {
+          // Validate with URL constructor; falls back to not opening if invalid
+          const u = new URL(normalized);
+          chrome.tabs.create({ url: u.toString() });
+        } catch (e) {
+          // If it's not a valid URL, attempt a best-effort fallback: search query
+          const q = encodeURIComponent(rawLink);
+          chrome.tabs.create({ url: `https://www.google.com/search?q=${q}` });
+        }
       }
+      // Cleanup: remove stored metadata after interaction
+      chrome.storage.local.remove(notificationId);
     });
+  }
+});
+
+// Also cleanup metadata if the notification is closed without being clicked
+chrome.notifications.onClosed.addListener((notificationId) => {
+  if (notificationId.startsWith("interview-")) {
+    chrome.storage.local.remove(notificationId);
   }
 });

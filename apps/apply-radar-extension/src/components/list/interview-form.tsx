@@ -72,9 +72,28 @@ export const InterviewForm = ({
   const [notifyEnabled, setNotifyEnabled] = useState<boolean>(
     initialInterview?.notifyEnabled ?? true,
   );
-  const [notifyValue, setNotifyValue] = useState<number>(1);
+  // Initialize notify value/unit from initialInterview if present
+  const initialMinutesBefore = initialInterview?.notifyMinutesBefore ?? null;
+  const initialNotify = (() => {
+    if (typeof initialMinutesBefore === "number") {
+      if (initialMinutesBefore < 60) {
+        return { value: initialMinutesBefore, unit: "minutes" as const };
+      } else if (initialMinutesBefore < 1440) {
+        return {
+          value: Math.floor(initialMinutesBefore / 60),
+          unit: "hours" as const,
+        };
+      }
+      return {
+        value: Math.floor(initialMinutesBefore / 1440),
+        unit: "days" as const,
+      };
+    }
+    return { value: 1, unit: "hours" as const };
+  })();
+  const [notifyValue, setNotifyValue] = useState<number>(initialNotify.value);
   const [notifyUnit, setNotifyUnit] = useState<"minutes" | "hours" | "days">(
-    "hours",
+    initialNotify.unit,
   );
   const hasOpenedRef = useRef<boolean>(false);
 
@@ -99,15 +118,18 @@ export const InterviewForm = ({
   const isFormValid = isDateValid && isTimeValid && isLocationValid;
 
   // max value for notify depends on difference between interview time and now in selected unit
-  const computeMaxForUnit = (unit: "minutes" | "hours" | "days") => {
-    if (!isDateValid || !isTimeValid) return 0;
-    const interviewMs = new Date(`${date}T${time}:00`).getTime();
-    const nowMs = Date.now();
-    const diffMs = Math.max(0, interviewMs - nowMs);
-    if (unit === "minutes") return Math.floor(diffMs / 60000);
-    if (unit === "hours") return Math.floor(diffMs / 3600000);
-    return Math.floor(diffMs / 86400000);
-  };
+  const computeMaxForUnit = useCallback(
+    (unit: "minutes" | "hours" | "days") => {
+      if (!isDateValid || !isTimeValid) return 0;
+      const interviewMs = new Date(`${date}T${time}:00`).getTime();
+      const nowMs = Date.now();
+      const diffMs = Math.max(0, interviewMs - nowMs);
+      if (unit === "minutes") return Math.floor(diffMs / 60000);
+      if (unit === "hours") return Math.floor(diffMs / 3600000);
+      return Math.floor(diffMs / 86400000);
+    },
+    [date, time, isDateValid, isTimeValid],
+  );
   const maxNotifyValue = computeMaxForUnit(notifyUnit);
 
   const allowedUnits = useMemo(() => {
@@ -121,7 +143,7 @@ export const InterviewForm = ({
     // ensure current unit is always included
     if (!units.includes(notifyUnit)) units.push(notifyUnit);
     return units;
-  }, [date, time, notifyUnit, isDateValid, isTimeValid, computeMaxForUnit]);
+  }, [date, time, notifyUnit, isDateValid, isTimeValid]);
 
   const handleOpenChange = (value: boolean) => {
     if (value) {
@@ -182,7 +204,13 @@ export const InterviewForm = ({
   ]);
 
   const handleUnitsChanged = (value: string) => {
-    const nextUnit = value as any;
+    const isValidUnit = (v: string): v is "minutes" | "hours" | "days" =>
+      v === "minutes" || v === "hours" || v === "days";
+    if (!isValidUnit(value)) {
+      // Ignore unexpected values to preserve type safety
+      return;
+    }
+    const nextUnit = value;
     // preserve the total minutes when switching unit
     const totalMinutes =
       notifyUnit === "minutes"
@@ -225,6 +253,23 @@ export const InterviewForm = ({
       }
     }
   }, [initialInterview]);
+
+  // When opening the dialog for editing, derive notify value/unit from initialInterview
+  useEffect(() => {
+    if (open && initialInterview) {
+      const minutesBefore = initialInterview.notifyMinutesBefore || 0;
+      if (minutesBefore < 60) {
+        setNotifyUnit("minutes");
+        setNotifyValue(minutesBefore);
+      } else if (minutesBefore < 1440) {
+        setNotifyUnit("hours");
+        setNotifyValue(Math.floor(minutesBefore / 60));
+      } else {
+        setNotifyUnit("days");
+        setNotifyValue(Math.floor(minutesBefore / 1440));
+      }
+    }
+  }, [open, initialInterview]);
 
   // external control: sync open state when externalOpen changes
   useEffect(() => {
