@@ -6,7 +6,10 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
+
+  previewFeatures = ["relationJoins", "driverAdapters", "queryCompiler"]
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -34,11 +37,13 @@ model Users {
 model Applications {
   id          String            @id @default(uuid())
   name        String
-  description String?
+  description String            @default("")
   status      ApplicationStatus @default(PENDING)
   url         String
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")
+  notes       String             @default("")
+  archived    Boolean           @default(false)
 
   interviews       ApplicationInterviews[]
   userApplications UserApplications[]

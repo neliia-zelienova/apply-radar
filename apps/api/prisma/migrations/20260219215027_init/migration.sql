@@ -16,11 +16,13 @@ CREATE TABLE "users" (
 CREATE TABLE "applications" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "description" TEXT,
+    "description" TEXT NOT NULL DEFAULT '',
     "status" "ApplicationStatus" NOT NULL DEFAULT 'PENDING',
     "url" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
+    "notes" TEXT NOT NULL DEFAULT '',
+    "archived" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "applications_pkey" PRIMARY KEY ("id")
 );
