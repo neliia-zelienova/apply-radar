@@ -1,34 +1,66 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  Query,
+  HttpCode,
+} from '@nestjs/common';
 import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { PaginationQueryDto } from 'src/common';
 
 @Controller('application')
 export class ApplicationController {
   constructor(private readonly applicationService: ApplicationService) {}
 
   @Post()
-  create(@Body() createApplicationDto: CreateApplicationDto) {
-    return this.applicationService.create(createApplicationDto);
+  async create(@Body() body: CreateApplicationDto) {
+    const userId = '';
+    return this.applicationService.create(userId, body);
   }
 
   @Get()
-  findAll() {
-    return this.applicationService.findAll();
+  async findAll(
+    @Query() paginationQuery: PaginationQueryDto,
+    @Query('include') include?: string,
+    @Query('archived') archived?: string,
+  ) {
+    const userId = '';
+    const includeInterviews = include === 'interviews';
+    const listArchived = archived === 'true';
+    return this.applicationService.findAll(
+      userId,
+      paginationQuery,
+      includeInterviews,
+      listArchived,
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.applicationService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    const userId = '';
+    return this.applicationService.findOne(id, userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateApplicationDto: UpdateApplicationDto) {
-    return this.applicationService.update(+id, updateApplicationDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateApplicationDto,
+  ) {
+    const userId = '';
+    return this.applicationService.update(id, userId, body);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.applicationService.remove(+id);
+  @HttpCode(200)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    const userId = '';
+    return this.applicationService.remove(id, userId);
   }
 }

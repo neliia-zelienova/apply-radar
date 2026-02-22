@@ -6,7 +6,10 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../src/generated/prisma"
+
+  previewFeatures = ["relationJoins", "driverAdapters", "queryCompiler"]
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -21,57 +24,65 @@ enum ApplicationStatus {
 }
 
 model Users {
-  id             String         @id @default(uuid())
-  email          String         @unique
+  id             String   @id @default(uuid())
+  email          String   @unique
   name           String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
   userApplications UserApplications[]
+
+  @@map("users")
 }
 
 model Applications {
   id          String            @id @default(uuid())
   name        String
-  description String?
+  description String            @default("")
   status      ApplicationStatus @default(PENDING)
   url         String
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  notes       String             @default("")
+  archived    Boolean           @default(false)
 
-  interviews         ApplicationInterviews[]
-  userApplications   UserApplications[]
+  interviews       ApplicationInterviews[]
+  userApplications UserApplications[]
 
   @@index([status])
   @@index([createdAt])
+  @@map("applications")
 }
 
 model Interviews {
-  id                    String                  @id @default(uuid())
+  id                    String   @id @default(uuid())
   notes                 String?
-  scheduledAt           DateTime
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
+  scheduledAt           DateTime @map("scheduled_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
   applicationInterviews ApplicationInterviews[]
 
   @@index([scheduledAt])
+  @@map("interviews")
 }
 
 model ApplicationInterviews {
-  applicationId String
-  interviewId   String
+  applicationId String @map("application_id")
+  interviewId   String @map("interview_id")
 
   application Applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
   interview   Interviews   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
   @@id([applicationId, interviewId])
+  @@map("application_interviews")
 }
 
 model UserApplications {
-  userId        String
-  applicationId String
+  userId        String @map("user_id")
+  applicationId String @map("application_id")
 
-  user          Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  application   Applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  user        Users        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  application Applications @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
   @@id([userId, applicationId])
+  @@map("user_applications")
 }

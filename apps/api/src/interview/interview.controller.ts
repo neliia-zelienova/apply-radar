@@ -1,34 +1,57 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  HttpCode,
+} from '@nestjs/common';
 import { InterviewService } from './interview.service';
 import { CreateInterviewDto } from './dto/create-interview.dto';
 import { UpdateInterviewDto } from './dto/update-interview.dto';
+import { Interview } from './entities/interview.entity';
 
 @Controller('interview')
 export class InterviewController {
   constructor(private readonly interviewService: InterviewService) {}
 
-  @Post()
-  create(@Body() createInterviewDto: CreateInterviewDto) {
-    return this.interviewService.create(createInterviewDto);
+  @Post('application/:applicationId')
+  create(
+    @Param('applicationId', ParseUUIDPipe) applicationId: string,
+    @Body() body: CreateInterviewDto,
+  ): Promise<Interview> {
+    const userId = '';
+    return this.interviewService.create(applicationId, userId, body);
   }
 
   @Get()
-  findAll() {
-    return this.interviewService.findAll();
+  async findAll(): Promise<Interview[]> {
+    const userId = '';
+    return this.interviewService.findAll(userId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.interviewService.findOne(+id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Interview> {
+    const userId = '';
+    return this.interviewService.findOne(id, userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateInterviewDto: UpdateInterviewDto) {
-    return this.interviewService.update(+id, updateInterviewDto);
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateInterviewDto: UpdateInterviewDto,
+  ): Promise<Interview> {
+    const userId = '';
+    return this.interviewService.update(id, userId, updateInterviewDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.interviewService.remove(+id);
+  @HttpCode(200)
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    const userId = '';
+    return this.interviewService.remove(id, userId);
   }
 }
