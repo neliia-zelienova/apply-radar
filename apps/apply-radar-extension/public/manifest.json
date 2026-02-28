@@ -36,7 +36,14 @@
     "contextMenus",
     "storage",
     "notifications",
-    "alarms"
+    "alarms",
+    "identity"
   ],
-  "host_permissions": ["http://*/*", "https://*/*"]
+  "host_permissions": [
+    "https://accounts.google.com/*",
+    "https://oauth2.googleapis.com/*",
+    "https://www.googleapis.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ]
 }
