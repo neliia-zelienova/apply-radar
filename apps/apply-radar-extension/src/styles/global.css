@@ -131,6 +131,16 @@
   }
 }
 
+/** highlight animation */
+@keyframes highlight-ring {
+  0% {
+    box-shadow: 0 0 8px oklch(70.4% 0.14 182.503);
+  }
+  100% {
+    box-shadow: 0 0 8px transparent;
+  }
+}
+
 /* -----------------------------------------------------------
    THEME TOKENS
 ----------------------------------------------------------- */
@@ -149,16 +159,7 @@
   --glow-offered: rgba(16, 185, 129, 0.28);
   --glow-lost: rgba(255, 60, 60, 0.35);
 
-  --animate-highlight-ring: highlight-ring 2s ease-in-out infinite;
-  /** highlight animation */
-  @keyframes highlight-ring {
-    0% {
-      box-shadow: 0 0 8px oklch(70.4% 0.14 182.503);
-    }
-    100% {
-      box-shadow: 0 0 8px transparent;
-    }
-  }
+  --animate-highlight-ring: highlight-ring 5s ease-in-out infinite;
 }
 
 /* -----------------------------------------------------------
@@ -326,20 +327,6 @@
   --pending-color: rgba(250, 204, 21, 0.6);
   --offer-color: rgba(56, 211, 153, 0.6);
   --bg-color: rgb(38, 38, 38);
-
-  --animate-highlight-ring: highlight-ring 5s ease-in infinite;
-  /** highlight animation */
-  @keyframes highlight-ring {
-    0% {
-      box-shadow: 0 0 2px oklch(70.4% 0.14 182.503);
-    }
-    50% {
-      box-shadow: 0 0 6px oklch(70.4% 0.14 182.503);
-    }
-    100% {
-      box-shadow: 0 0 2px oklch(70.4% 0.14 182.503);
-    }
-  }
 }
 
 /* Hide native number input spinners */

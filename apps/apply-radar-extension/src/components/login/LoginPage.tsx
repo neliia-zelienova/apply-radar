@@ -50,10 +50,7 @@ const LoginPage = () => {
                 <button
                   type="button"
                   className="border border-black/10 w-fit relative cursor-pointer rounded-xl px-3 py-2.5 text-[13px] font-bold transition shadow-[0_10px_30px_rgba(0,0,0,0.06)] backdrop-blur-md transition hover:-translate-y-[1px] hover:shadow-[0_16px_36px_rgba(0,0,0,0.10)] dark:border-white/10 dark:bg-white/5 dark:text-white dark:shadow-[0_10px_30px_rgba(0,0,0,0.25)] dark:hover:shadow-[0_16px_36px_rgba(0,0,0,0.32)] active:translate-y-px dark:text-inherit"
-                  onClick={() => {
-                    console.log("Google sign-in initiated");
-                    signInWithGoogle();
-                  }}
+                  onClick={signInWithGoogle}
                 >
                   <img
                     src={googleLogo}

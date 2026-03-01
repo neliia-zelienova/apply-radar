@@ -31,7 +31,6 @@ function App() {
     name,
     picture,
     setAuthType,
-    setJwt,
     getJwt,
     signInWithGoogle,
   } = useAuth();
@@ -59,7 +58,6 @@ function App() {
     name,
     picture,
     setAuthType,
-    setJwt,
     getJwt,
     signInWithGoogle,
   };

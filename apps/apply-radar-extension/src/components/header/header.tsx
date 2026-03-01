@@ -14,7 +14,8 @@ export const Header = () => {
 
   return (
     <div
-      className={`w-full min-h-[${authType !== null ? 30 : 15}vh] p-4 bg-teal-600 flex flex-col items-start gap-2 shadow-sm shadow-teal-100/30`}
+      className="w-full p-4 bg-teal-600 flex flex-col items-start gap-2 shadow-sm shadow-teal-100/30"
+      style={{ minHeight: `${authType !== null ? 30 : 15}vh` }}
     >
       <div className="flex flex-row gap-2 items-center justify-center">
         <img src="/logo.svg" alt="Logo" className="h-10" />

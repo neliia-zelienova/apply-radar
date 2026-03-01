@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt/dist/jwt.service';
+import { JwtService } from '@nestjs/jwt';
 import { google } from 'googleapis';
 import { UsersService } from 'src/users/users.service';
 import { ConfigService } from '@nestjs/config';
@@ -8,12 +8,24 @@ import type { StringValue } from 'ms';
 
 @Injectable()
 export class AuthService {
-  private client = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID);
+  private client: InstanceType<typeof google.auth.OAuth2>;
   constructor(
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
-  ) {}
+  ) {
+    // Fail fast so misconfiguration is obvious at startup, not at first login.
+    this.client = new google.auth.OAuth2(this.getGoogleClientId());
+  }
+
+  private getGoogleClientId() {
+    // Prefer ConfigService (keeps behavior consistent across env sources).
+    const clientId = this.configService.get<string>('GOOGLE_CLIENT_ID');
+    if (!clientId) {
+      throw new Error('Missing GOOGLE_CLIENT_ID env var');
+    }
+    return clientId;
+  }
 
   private get cookieName() {
     return this.configService.get<string>('REFRESH_COOKIE_NAME') ?? 'ar_rt';
@@ -105,7 +117,7 @@ export class AuthService {
     try {
       const ticket = await this.client.verifyIdToken({
         idToken: idToken,
-        audience: process.env.GOOGLE_CLIENT_ID,
+        audience: this.getGoogleClientId(),
       });
       const payload = ticket.getPayload();
       if (!payload) {

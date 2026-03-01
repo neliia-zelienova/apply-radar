@@ -7,6 +7,33 @@ import {
 import { ApplyRadarApi } from "../services/app-radar-api";
 import { getGoogleIdTokenViaIdentity } from "../services/google-identity-auth";
 
+type JwtPayload = {
+  sub?: string;
+  userId?: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+};
+
+function decodeJwtPayload(token: string): JwtPayload | null {
+  // JWT: header.payload.signature
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+
+  // base64url -> base64
+  const b64url = parts[1];
+  const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/");
+  const padLen = (4 - (b64.length % 4)) % 4;
+  const padded = b64 + "=".repeat(padLen);
+
+  try {
+    const json = atob(padded);
+    return JSON.parse(json) as JwtPayload;
+  } catch {
+    return null;
+  }
+}
+
 export const useAuth = () => {
   const [authType, setAuthType] = useState<"google" | "local" | null>(null);
   const [userId, setUserId] = useState<string>("");
@@ -14,16 +41,25 @@ export const useAuth = () => {
   const [name, setName] = useState<string>("");
   const [picture, setPicture] = useState<string>("");
 
-  const handleJwt = (token: string | null) => {
+  const handleJwt = async (token: string | null) => {
     if (token) {
-      // Decode JWT to extract user info (this is a simple example, consider using a library like jwt-decode)
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      setUserId(payload.userId);
-      setEmail(payload.email);
-      setName(payload.name);
-      setPicture(payload.picture);
+      const payload = decodeJwtPayload(token);
+      if (!payload) {
+        console.warn("Failed to decode JWT payload; clearing auth state");
+        await handleAuthTypeChange(null);
+        await setExtensionStorage("jwt", null);
+        await removeExtensionStorage("jwt");
+        return;
+      }
+
+      // Backend uses `sub` as the user id. Keep a fallback for older tokens.
+      setUserId(payload.sub ?? payload.userId ?? "");
+      setEmail(payload.email ?? "");
+      setName(payload.name ?? "");
+      setPicture(payload.picture ?? "");
+      await handleAuthTypeChange("google");
     }
-    setExtensionStorage("jwt", token);
+    await setExtensionStorage("jwt", token);
   };
 
   //   const { signInWithGoogle } = useGoogleAuth({ handleJwt });
@@ -52,8 +88,7 @@ export const useAuth = () => {
 
       // Validate token with backend and get JWT
       const response = await ApplyRadarApi.googleSignIn(idToken);
-      handleJwt(response.access_token);
-      await handleAuthTypeChange("google");
+      await handleJwt(response.access_token);
     } catch (error) {
       console.error("Google sign-in failed:", error);
     }
@@ -79,7 +114,6 @@ export const useAuth = () => {
     name,
     picture,
     setAuthType: handleAuthTypeChange,
-    setJwt: handleJwt,
     getJwt: extractedJwt,
     signInWithGoogle,
   };

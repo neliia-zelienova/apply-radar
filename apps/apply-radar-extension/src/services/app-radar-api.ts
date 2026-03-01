@@ -1,8 +1,4 @@
-import axios, {
-  isCancel,
-  AxiosError,
-  type InternalAxiosRequestConfig,
-} from "axios";
+import axios, { isCancel, type InternalAxiosRequestConfig } from "axios";
 import {
   getExtensionStorage,
   setExtensionStorage,
@@ -81,8 +77,11 @@ export class ApplyRadarApi {
     } catch (error) {
       if (isCancel(error)) {
         console.log("Request cancelled:", error.message);
-      } else if (error instanceof AxiosError) {
-        console.error("Axios error:", error.response?.data || error.message);
+      } else if (axios.isAxiosError(error)) {
+        console.error(
+          "Axios error:",
+          (error.response?.data as any) ?? error.message,
+        );
       } else {
         console.error("Unexpected error:", error);
       }
