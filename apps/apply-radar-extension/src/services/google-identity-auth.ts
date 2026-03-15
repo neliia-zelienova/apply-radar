@@ -70,7 +70,7 @@ export async function getGoogleAccessTokenViaIdentity(): Promise<string> {
   // Debug help for redirect_uri_mismatch.
   // This log should show something like:
   // https://<EXTENSION_ID>.chromiumapp.org/oauth2
-  // Make sure the OAuth client is created as "Chrome Extension" and uses the same Item ID.
+  // Make sure the OAuth client is created as "Web application" and includes this redirect URI.
   console.log("[oauth] redirectUri:", redirectUri);
 
   // Minimal scopes for basic profile + email.

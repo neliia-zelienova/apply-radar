@@ -100,7 +100,9 @@ export const useAuth = () => {
       const storedType = await getExtensionStorage<string>("loginType");
       const storedJwt = await getExtensionStorage<string>("jwt");
       if (storedType === "google" && storedJwt) {
-        setAuthType("google");
+        // Rehydrate user state from the stored JWT.
+        // handleJwt() also persists authType/jwt to storage; that's fine on mount.
+        await handleJwt(storedJwt);
       } else if (storedType === "local") {
         setAuthType("local");
       }

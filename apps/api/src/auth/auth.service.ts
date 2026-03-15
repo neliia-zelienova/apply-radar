@@ -63,8 +63,6 @@ export class AuthService {
 
   private buildRefreshCookie(token: string) {
     // Extension + API are different origins, so we need SameSite=None.
-    const secure =
-      (this.configService.get<string>('NODE_ENV') ?? '') === 'production';
     const maxAgeSeconds = this.parseDurationToSeconds(
       this.getRefreshExpiresIn(),
     );
@@ -74,11 +72,12 @@ export class AuthService {
       'HttpOnly',
       'Path=/',
       'SameSite=None',
+      // Browsers require Secure when SameSite=None.
+      // This means refresh cookies won't be set over plain HTTP in dev.
+      // Use HTTPS locally (see README) or a reverse proxy.
+      'Secure',
       `Max-Age=${maxAgeSeconds}`,
     ];
-
-    // Browsers require Secure when SameSite=None.
-    if (secure) parts.push('Secure');
 
     return parts.join('; ');
   }
@@ -157,7 +156,7 @@ export class AuthService {
     });
 
     const refresh_token = this.jwtService.sign(
-      { sub: user.id, type: 'refresh' },
+      { sub: user.oauthId, type: 'refresh' },
       {
         secret: this.getRefreshSecret(),
         expiresIn: this.getRefreshExpiresIn(),

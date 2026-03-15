@@ -64,22 +64,31 @@ export function setExtensionStorage(key: string, value: any): Promise<void> {
   const data: Record<string, any> = { [key]: value };
 
   try {
-    const maybe = extensionStorage.set(data, () => {
-      // Callback path (chrome.storage)
-    });
-
-    if (isPromise<void>(maybe)) {
-      // Promise path (browser.storage)
-      return maybe;
-    }
-
-    // Callback path (chrome.storage)
     return new Promise<void>((resolve, reject) => {
-      extensionStorage.set(data, () => {
+      let completedSync = false;
+
+      const onDone = () => {
         const lastError = getChromeLastError();
-        if (lastError) reject(lastError);
+        if (lastError) reject(toError(lastError));
         else resolve();
+      };
+
+      const maybe = extensionStorage.set(data, () => {
+        // Callback-based implementations (chrome.storage) will invoke this.
+        // Promise-based implementations (browser.storage) generally ignore it.
+        completedSync = true;
+        onDone();
       });
+
+      // Promise path (browser.storage)
+      if (isPromise<void>(maybe)) {
+        maybe.then(resolve, (err) => reject(toError(err)));
+        return;
+      }
+
+      // Callback path (chrome.storage): if the callback was not invoked
+      // synchronously, it will resolve/reject later.
+      if (completedSync) return;
     });
   } catch (e) {
     return Promise.reject(toError(e));
@@ -100,7 +109,7 @@ export function getExtensionStorage<T = any>(key: string): Promise<T | null> {
     return new Promise<T | null>((resolve, reject) => {
       extensionStorage.get([key], (result: Record<string, T>) => {
         const lastError = getChromeLastError();
-        if (lastError) reject(lastError);
+        if (lastError) reject(toError(lastError));
         else resolve(result?.[key] ?? null);
       });
     });
@@ -123,7 +132,7 @@ export function removeExtensionStorage(key: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       extensionStorage.remove(key, () => {
         const lastError = getChromeLastError();
-        if (lastError) reject(lastError);
+        if (lastError) reject(toError(lastError));
         else resolve();
       });
     });

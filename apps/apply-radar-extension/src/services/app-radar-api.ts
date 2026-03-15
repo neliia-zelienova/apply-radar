@@ -3,7 +3,19 @@ import {
   getExtensionStorage,
   setExtensionStorage,
 } from "../utils/extensionStorage";
-const API_URL = import.meta.env.VITE_API_URL;
+
+const API_URL = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+if (!API_URL) {
+  throw new Error(
+    [
+      "Missing VITE_API_URL.",
+      "Axios would otherwise treat requests as relative to the extension origin, leading to confusing failures.",
+      "Fix:",
+      "- add VITE_API_URL to apps/apply-radar-extension/.env (e.g. http://localhost:3000)",
+      "- restart the dev server / rebuild the extension",
+    ].join("\n"),
+  );
+}
 
 const api = axios.create({
   baseURL: API_URL,
