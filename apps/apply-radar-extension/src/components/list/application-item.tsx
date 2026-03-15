@@ -26,7 +26,6 @@ import {
   SelectItem,
   SelectRoot,
   SelectTrigger,
-  SelectValue,
 } from "../ui/select";
 import { getStatusLabel } from "../../utils/status";
 import {
