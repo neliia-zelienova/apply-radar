@@ -25,8 +25,7 @@ enum ApplicationStatus {
 
 model Users {
   id             String   @id @default(uuid())
-  email          String   @unique
-  name           String?
+  oauthId        String   @unique @map("oauth_id")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   userApplications UserApplications[]

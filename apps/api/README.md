@@ -44,6 +44,13 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Local HTTPS (needed for refresh cookies)
+
+If you’re using the Chrome extension flow, the API sets a refresh cookie with `SameSite=None`.
+Chromium requires such cookies to also have `Secure`, which means you must run HTTPS locally.
+
+See `DEV_HTTPS.md`.
+
 ## Run tests
 
 ```bash
