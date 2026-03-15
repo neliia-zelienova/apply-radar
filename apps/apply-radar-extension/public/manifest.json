@@ -44,6 +44,8 @@
     "https://oauth2.googleapis.com/*",
     "https://www.googleapis.com/*",
     "http://localhost/*",
-    "http://127.0.0.1/*"
+    "http://127.0.0.1/*",
+    "https://localhost/*",
+    "https://127.0.0.1/*"
   ]
 }

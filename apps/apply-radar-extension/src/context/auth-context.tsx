@@ -6,7 +6,7 @@ interface AuthContextType {
   email: string;
   name: string;
   picture: string;
-  setAuthType: (type: "google" | "local" | null) => void;
+  setAuthType: (type: "google" | "local" | null) => Promise<void>;
   getJwt: () => Promise<string | null>;
   signInWithGoogle: () => Promise<void>;
 }

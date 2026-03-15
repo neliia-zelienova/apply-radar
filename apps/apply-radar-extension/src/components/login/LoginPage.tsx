@@ -1,8 +1,4 @@
 import { useAuthContext } from "../../context/auth-context";
-import {
-  removeExtensionStorage,
-  setExtensionStorage,
-} from "../../utils/extensionStorage";
 import googleLogo from "../../assets/google-logo.svg";
 
 const LoginPage = () => {
@@ -10,9 +6,7 @@ const LoginPage = () => {
 
   // Local login handler
   const handleLocalLogin = async () => {
-    setAuthType("local");
-    await setExtensionStorage("loginType", "local");
-    await removeExtensionStorage("jwt");
+    await setAuthType("local");
   };
   return (
     <div className="min-h-full px-6 py-8">
@@ -59,7 +53,7 @@ const LoginPage = () => {
                   />
                   Sign in with Google
                   <div className="pointer-events-none absolute overflow-hidden inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    <div className="absolute -top-12 -right-12 h-22 w-22 rounded-full bg-teal-400/20 blur-sm dark:bg-teal-400/10" />
+                    <div className="absolute -top-12 -right-12 h-24 w-24 rounded-full bg-teal-400/20 blur-sm dark:bg-teal-400/10" />
                   </div>
                 </button>
               </div>
@@ -81,7 +75,7 @@ const LoginPage = () => {
                   Continue locally
                 </button>
                 <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  <div className="absolute -bottom-12 -left-10 h-25 w-25 rounded-full bg-black/8 blur-2xl dark:bg-white/6" />
+                  <div className="absolute -bottom-12 -left-10 h-24 w-24 rounded-full bg-black/8 blur-2xl dark:bg-white/6" />
                 </div>
               </div>
             </section>
