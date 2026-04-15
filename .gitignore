@@ -12,3 +12,7 @@ yarn-error.log*
 
 # OS
 .DS_Store
+
+
+CLAUDE.md
+.claude/**
