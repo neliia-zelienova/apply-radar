@@ -16,3 +16,6 @@ yarn-error.log*
 
 CLAUDE.md
 .claude/**
+
+# generated / build outputs                                                                                
+packages/shared/dist/  
