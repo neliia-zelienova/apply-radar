@@ -56,7 +56,7 @@ export const ItemContextMenu = ({ itemId, options }: ItemContextMenuProps) => {
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLElement).style.background = "transparent";
             }}
-            onClick={() => option.action(itemId)}
+            onSelect={() => option.action(itemId)}
           >
             {React.isValidElement(option.icon)
               ? React.cloneElement(
