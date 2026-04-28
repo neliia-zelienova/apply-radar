@@ -73,7 +73,7 @@ export const SettingsDropdown = () => {
         {!isGoogleAuth && (
           <DropdownMenuItem
             className="flex items-center gap-2 hover:bg-teal-500/20 outline-none p-2 rounded-md cursor-pointer text-stone-50"
-            onSelect={() => signInWithGoogle()}
+            onSelect={signInWithGoogle}
           >
             <LogIn className="h-4 w-4 text-teal-400" />
             <span className="text-sm">Log in with Google</span>
@@ -83,7 +83,7 @@ export const SettingsDropdown = () => {
         {isGoogleAuth && (
           <DropdownMenuItem
             className="flex items-center gap-2 hover:bg-teal-500/20 outline-none p-2 rounded-md cursor-pointer text-stone-50"
-            onSelect={() => signOut()}
+            onSelect={signOut}
           >
             <LogOut className="h-4 w-4 text-teal-400" />
             <span className="text-sm">Log out</span>
@@ -120,7 +120,7 @@ export const SettingsDropdown = () => {
 
         <DropdownMenuItem
           className="flex items-center gap-2 hover:bg-teal-500/20 outline-none p-2 rounded-md cursor-pointer text-stone-50"
-          onSelect={() => toggleTheme()}
+          onSelect={toggleTheme}
         >
           {theme === "dark"
             ? <Sun className="h-4 w-4 text-teal-400" />
