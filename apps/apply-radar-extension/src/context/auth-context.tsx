@@ -9,6 +9,7 @@ interface AuthContextType {
   setAuthType: (type: "google" | "local" | null) => Promise<void>;
   getJwt: () => Promise<string | null>;
   signInWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
