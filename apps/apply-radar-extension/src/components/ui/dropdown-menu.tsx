@@ -6,12 +6,15 @@ export const DropdownMenuTrigger = DropdownMenu.Trigger;
 export const DropdownMenuContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof DropdownMenu.Content>
->(({ children, ...props }, forwardedRef) => {
+>(({ children, className, ...props }, forwardedRef) => {
   return (
     <DropdownMenu.Portal>
-      <DropdownMenu.Content {...props} ref={forwardedRef}>
+      <DropdownMenu.Content
+        {...props}
+        ref={forwardedRef}
+        className={["z-50", className].filter(Boolean).join(" ")}
+      >
         {children}
-        <DropdownMenu.Arrow />
       </DropdownMenu.Content>
     </DropdownMenu.Portal>
   );

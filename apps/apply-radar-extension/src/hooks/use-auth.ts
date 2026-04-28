@@ -82,6 +82,12 @@ export const useAuth = () => {
     }
   };
 
+  const signOut = async () => {
+    await handleAuthTypeChange(null);
+    await removeExtensionStorage("jwt");
+    await removeExtensionStorage("loginType");
+  };
+
   const signInWithGoogle = async () => {
     try {
       const idToken = await getGoogleIdTokenViaIdentity();
@@ -118,5 +124,6 @@ export const useAuth = () => {
     setAuthType: handleAuthTypeChange,
     getJwt: extractedJwt,
     signInWithGoogle,
+    signOut,
   };
 };
