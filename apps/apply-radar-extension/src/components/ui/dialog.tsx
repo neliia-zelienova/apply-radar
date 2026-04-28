@@ -42,7 +42,7 @@ export const DialogContent = React.forwardRef<
     <DialogPortal>
       <DialogPrimitive.Overlay
         className={classNames(
-          "fixed inset-0 z-50 bg-white/40 dark:bg-neutral-800/60",
+          "fixed inset-0 z-[100] bg-black/40 dark:bg-black/60",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
         )}
@@ -50,10 +50,10 @@ export const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={classNames(
-          "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-md -translate-x-1/2 -translate-y-1/2",
-          "rounded-lg border border-gray-200 bg-white p-6 shadow-md outline-none",
+          "fixed left-1/2 top-1/2 z-[110] w-[95vw] max-w-md -translate-x-1/2 -translate-y-1/2",
+          "rounded-2xl border border-black/8 bg-white p-6 shadow-2xl outline-none",
           // Dark mode variants
-          "dark:border-white/20 dark:shadow-white/5 dark:bg-neutral-800",
+          "dark:border-white/10 dark:bg-[#0f1829]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
           "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",

@@ -7,7 +7,7 @@ export const SelectTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Select.Trigger>
 >(({ children, ...props }, forwardedRef) => {
   const defaultTriggerClasses =
-    "flex items-center justify-between focus:outline-none";
+    "flex items-center gap-1.5 focus:outline-none";
   const classNameCombined = [defaultTriggerClasses, (props as any).className]
     .filter(Boolean)
     .join(" ");
@@ -25,7 +25,7 @@ export const SelectContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Select.Content>
 >(({ children, ...props }, forwardedRef) => {
   const defaultContentClasses =
-    "z-[60] flex flex-col bg-white gap-2 dark:bg-neutral-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-md p-2";
+    "z-[60] flex flex-col bg-white gap-0.5 dark:bg-[#0f1829] border border-black/10 dark:border-white/10 rounded-[10px] p-1";
   const classNameCombined = [defaultContentClasses, (props as any).className]
     .filter(Boolean)
     .join(" ");
@@ -39,9 +39,9 @@ export const SelectContent = React.forwardRef<
         {...props}
         ref={forwardedRef}
         className={classNameCombined}
+        style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.35)", ...(props as any).style }}
       >
         {children}
-        <Select.Arrow />
       </Select.Content>
     </Select.Portal>
   );
@@ -52,7 +52,7 @@ export const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Select.Item>
 >(({ children, ...props }, forwardedRef) => {
   const defaultItemClasses =
-    "grid grid-cols-[auto_1fr] items-center gap-2 hover:bg-teal-300/20 border-none outline-none p-2 rounded-md cursor-pointer";
+    "flex items-center gap-2 border-none outline-none px-2 py-1.5 rounded-md cursor-pointer text-gray-800 dark:text-slate-200 text-xs font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.06]";
   const classNameCombined = [defaultItemClasses, (props as any).className]
     .filter(Boolean)
     .join(" ");

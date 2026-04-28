@@ -101,6 +101,10 @@ export class ApplyRadarApi {
     }
   }
 
+  static async deleteAccount(): Promise<void> {
+    await api.delete("/users/me");
+  }
+
   // Expose the axios instance for other API calls you add later.
   static client = api;
 }

@@ -9,13 +9,13 @@ export const ApplicationStatusIcon = ({
   const buttonClassName = (status?: ApplicationStatus) => {
     switch (status) {
       case ApplicationStatus.PENDING:
-        return "radar-no-target m-auto";
+        return "radar-no-target flex-shrink-0";
       case ApplicationStatus.INTERVIEW:
-        return "radar-weak-lock m-auto";
+        return "radar-weak-lock flex-shrink-0";
       case ApplicationStatus.OFFERED:
-        return "radar-strong-lock m-auto";
+        return "radar-strong-lock flex-shrink-0";
       case ApplicationStatus.REJECTED:
-        return "radar-lost m-auto";
+        return "radar-lost flex-shrink-0";
       default:
         return "";
     }

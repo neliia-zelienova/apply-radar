@@ -1,5 +1,5 @@
-import { Calendar, Clock, Edit, Link, MapPin, X } from "lucide-react";
 import type { Interview } from "../../types/applications";
+import { useThemeContext } from "../../context/theme-context";
 
 interface InterviewCardProps {
   interview: Interview;
@@ -7,108 +7,230 @@ interface InterviewCardProps {
   handleDelete: (id: string) => void;
 }
 
+const formatRelative = (dateStr: string) => {
+  const target = new Date(dateStr).getTime();
+  const now = Date.now();
+  const diff = target - now;
+  const abs = Math.abs(diff);
+  const minutes = Math.round(abs / 60000);
+  const hours = Math.round(abs / 3600000);
+  const days = Math.round(abs / 86400000);
+  if (minutes < 60) return diff >= 0 ? `in ${minutes}m` : `${minutes}m ago`;
+  if (hours < 24) return diff >= 0 ? `in ${hours}h` : `${hours}h ago`;
+  return diff >= 0 ? `in ${days}d` : `${days}d ago`;
+};
+
+const isProbablyUrl = (value: string) => {
+  const v = value.trim();
+  if (!v) return false;
+  return /^(https?:\/\/)/.test(v) || /\.[a-z]{2,}$/i.test(v) || /\//.test(v);
+};
+
+const ensureHref = (value: string) => {
+  const v = value.trim();
+  if (/^(https?:\/\/)/.test(v)) return v;
+  return isProbablyUrl(v) ? `https://${v}` : v;
+};
+
 export const InterviewCard = ({
   interview,
   handleEdit,
   handleDelete,
 }: InterviewCardProps) => {
+  const { theme } = useThemeContext();
+  const dark = theme === "dark";
+
   const isUpcoming = new Date(interview.date).getTime() >= Date.now();
-
-  const formatRelative = (dateStr: string) => {
-    const target = new Date(dateStr).getTime();
-    const now = Date.now();
-    const diff = target - now;
-    const abs = Math.abs(diff);
-    const minutes = Math.round(abs / 60000);
-    const hours = Math.round(abs / 3600000);
-    const days = Math.round(abs / 86400000);
-    if (minutes < 60)
-      return diff >= 0 ? `in ${minutes} min` : `${minutes} min ago`;
-    if (hours < 24) return diff >= 0 ? `in ${hours} h` : `${hours} h ago`;
-    return diff >= 0 ? `in ${days} d` : `${days} d ago`;
-  };
-
-  // Heuristics to detect and validate URLs for interview location/link
-  const isProbablyUrl = (value: string) => {
-    const v = value.trim();
-    if (!v) return false;
-    return /^(https?:\/\/)/.test(v) || /\.[a-z]{2,}$/i.test(v) || /\//.test(v);
-  };
-  const ensureHref = (value: string) => {
-    const v = value.trim();
-    if (/^(https?:\/\/)/.test(v)) return v;
-    // If it looks like a URL but lacks protocol, default to https
-    return isProbablyUrl(v) ? `https://${v}` : v;
-  };
+  const cfg = isUpcoming
+    ? {
+        label: "UPCOMING",
+        color: "#14b8a6",
+        border: "rgba(20,184,166,0.4)",
+        bg: "rgba(20,184,166,0.06)",
+      }
+    : {
+        label: "PAST",
+        color: "#64748b",
+        border: "rgba(100,116,139,0.3)",
+        bg: "rgba(100,116,139,0.04)",
+      };
 
   return (
     <li
-      key={interview.id}
-      className="flex flex-col relative gap-1 p-3 rounded-lg border border-teal-400 dark:border-gray-100/20 overflow-hidden"
+      style={{
+        position: "relative",
+        borderRadius: "8px",
+        overflow: "hidden",
+        border: `1px solid ${dark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)"}`,
+        background: dark ? "rgba(255,255,255,0.02)" : "#fff",
+        padding: "10px 12px 10px 16px",
+        animation: "fade-in 0.2s ease",
+        listStyle: "none",
+      }}
     >
-      <div className="absolute top-0 left-0 w-1 h-full bg-neutral-800/30 dark:bg-teal-500/30"></div>
-      <div className="flex flex-col gap-2 items-start">
-        <div className="text-base flex items-center gap-2">
-          {interview.name ? `${interview.name}` : ""}
-          <span
-            className={`text-xs border-2 px-1 rounded-md ${
-              isUpcoming
-                ? "border-teal-500 text-teal-500"
-                : "border-gray-200 text-gray-100"
-            }`}
+      {/* Left accent bar */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "3px",
+          height: "100%",
+          background: cfg.color,
+          opacity: isUpcoming ? 0.8 : 0.3,
+        }}
+      />
+
+      {/* Header row */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          marginBottom: "6px",
+        }}
+      >
+        <span
+          style={{
+            fontSize: "12px",
+            fontWeight: 600,
+            color: dark ? "#e2e8f0" : "#0f172a",
+          }}
+        >
+          {interview.name || "Interview"}
+        </span>
+        <span
+          style={{
+            fontSize: "10px",
+            fontWeight: 700,
+            letterSpacing: "0.06em",
+            padding: "1px 6px",
+            borderRadius: "4px",
+            border: `1px solid ${cfg.border}`,
+            color: cfg.color,
+            background: cfg.bg,
+          }}
+        >
+          {cfg.label}
+        </span>
+        <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+          <button
+            onClick={() => handleEdit(interview.id)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "11px",
+              color: dark ? "#475569" : "#94a3b8",
+              padding: "0",
+              fontFamily: "Roboto, sans-serif",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "#14b8a6";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = dark
+                ? "#475569"
+                : "#94a3b8";
+            }}
           >
-            {isUpcoming ? "UPCOMING" : "PAST"}
-          </span>
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(interview.id)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "11px",
+              color: dark ? "#475569" : "#94a3b8",
+              padding: "0",
+              fontFamily: "Roboto, sans-serif",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.color = "#ef4444";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.color = dark
+                ? "#475569"
+                : "#94a3b8";
+            }}
+          >
+            Delete
+          </button>
         </div>
-        <div className="text-sm flex items-start gap-2 text-sm font-roboto">
-          <Calendar className="inline-block h-4 w-4 mr-1 text-gray-400" />
-          {new Date(interview.date).toLocaleString()}
-        </div>
-        <div className="flex items-center gap-2 text-sm font-roboto">
-          <Clock className="inline-block h-4 w-4 mr-1 text-gray-400" />
-          {formatRelative(interview.date)}
-        </div>
-        {interview.locationLink &&
-          (isProbablyUrl(interview.locationLink) ? (
-            <div className="flex items-start gap-2">
-              <Link className="inline-block h-4 w-4 mr-1 text-gray-400" />
-              <a
-                href={ensureHref(interview.locationLink)}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs text-teal-500 hover:underline"
-              >
-                {interview.locationLink}
-              </a>
-            </div>
+      </div>
+
+      {/* Date + relative time */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          fontSize: "11px",
+          color: "#64748b",
+          marginBottom: "4px",
+        }}
+      >
+        <span>
+          📅{" "}
+          {new Date(interview.date).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </span>
+        <span
+          style={{
+            color: isUpcoming ? "#14b8a6" : "#64748b",
+            fontWeight: 500,
+          }}
+        >
+          · {formatRelative(interview.date)}
+        </span>
+      </div>
+
+      {/* Location / link */}
+      {interview.locationLink && (
+        <div style={{ fontSize: "11px", marginBottom: "4px" }}>
+          {isProbablyUrl(interview.locationLink) ? (
+            <a
+              href={ensureHref(interview.locationLink)}
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: "#14b8a6", textDecoration: "none" }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.textDecoration =
+                  "underline";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.textDecoration = "none";
+              }}
+            >
+              🔗 {interview.locationLink}
+            </a>
           ) : (
-            <div className="flex items-start gap-2">
-              <MapPin className="inline-block h-4 w-4 mr-1 text-gray-400" />
-              <span className="text-xs text-gray-600 dark:text-gray-300">
-                {interview.locationLink}
-              </span>
-            </div>
-          ))}
-        {interview.notes && (
-          <span className="text-xs text-gray-500 text-left w-full">
-            {interview.notes}
-          </span>
-        )}
-      </div>
-      <div className="w-full flex flex-row justify-end gap-2 mt-1 transition-opacity duration-150 ease-in-out">
-        <button
-          className="text-xs text-gray-500 hover:text-teal-600 flex items-center gap-1"
-          onClick={() => handleEdit(interview.id)}
+            <span style={{ color: dark ? "#64748b" : "#475569" }}>
+              📍 {interview.locationLink}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Notes */}
+      {interview.notes && (
+        <div
+          style={{
+            fontSize: "11px",
+            color: dark ? "#475569" : "#94a3b8",
+            lineHeight: 1.5,
+            marginTop: "4px",
+          }}
         >
-          <Edit className="h-3 w-3" /> Edit
-        </button>
-        <button
-          className="text-xs text-gray-500 hover:text-red-600 flex items-center gap-1"
-          onClick={() => handleDelete(interview.id)}
-        >
-          <X className="h-3 w-3" /> Delete
-        </button>
-      </div>
+          {interview.notes}
+        </div>
+      )}
     </li>
   );
 };

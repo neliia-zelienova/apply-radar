@@ -1,0 +1,21 @@
+# node
+node_modules/
+
+# pnpm
+pnpm-lock.yaml
+pnpm-debug.log*
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+
+
+CLAUDE.md
+.claude/**
+
+# generated / build outputs                                                                                
+packages/shared/dist/  
