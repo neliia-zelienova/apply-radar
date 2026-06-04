@@ -13,6 +13,7 @@ import {
 import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
+import { ParseApplicationFromTextDto } from './dto/parse-application-from-text.dto';
 import { PaginationQueryDto } from 'src/common';
 
 @Controller('application')
@@ -23,6 +24,12 @@ export class ApplicationController {
   async create(@Body() body: CreateApplicationDto) {
     const userId = '';
     return this.applicationService.create(userId, body);
+  }
+
+  @Post('from-text')
+  async createFromText(@Body() body: ParseApplicationFromTextDto) {
+    const userId = '';
+    return await this.applicationService.createFromText(userId, body);
   }
 
   @Get()

@@ -8,12 +8,20 @@ import {
   PaginationQueryDto,
   PaginationResultDto,
 } from 'src/common';
+import { AiService } from './ai.service';
+import { ParseApplicationFromTextDto } from './dto/parse-application-from-text.dto';
+import {
+  ApplicationResult,
+  UserApplicationDbRow,
+  UserApplicationResult,
+} from './application.types';
 
 @Injectable()
 export class ApplicationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paginationService: PaginationService,
+    private readonly aiService: AiService,
   ) {}
 
   async create(
@@ -31,12 +39,39 @@ export class ApplicationService {
     });
   }
 
+  async createFromText(
+    userId: string,
+    body: ParseApplicationFromTextDto,
+  ): Promise<Application | null> {
+    const parsed = await this.aiService.parseJobApplication(body.text);
+    if (!parsed) {
+      return null;
+    }
+
+    const { name, description, notes } = parsed;
+
+    return await this.prisma.$transaction(async (tx) => {
+      const application = await (tx as PrismaService).applications.create({
+        data: {
+          name,
+          description: description ?? '',
+          url: body.url,
+          notes: notes ?? '',
+        },
+      });
+      await (tx as PrismaService).userApplications.create({
+        data: { userId, applicationId: application.id },
+      });
+      return application;
+    });
+  }
+
   async findAll(
     userId: string,
     query: PaginationQueryDto,
     includeInterviews: boolean = false,
     listArchived: boolean = false,
-  ): Promise<PaginationResultDto<Application[]>> {
+  ): Promise<PaginationResultDto<UserApplicationResult>> {
     return await this.paginationService.paginateNested(
       {
         nestedModel: this.prisma.userApplications,
@@ -66,23 +101,22 @@ export class ApplicationService {
         searchFields: ['name', 'description'],
         defaultSortBy: 'createdAt',
         defaultSortOrder: 'desc',
-        transform: (userApp: any) => {
-          const application = {
-            ...userApp.application,
-            interviewCount: userApp.application._count.interviews,
+        transform: (userApp: UserApplicationDbRow): UserApplicationResult => {
+          const { _count, interviews, ...rest } = userApp.application;
+
+          const application: ApplicationResult = {
+            ...rest,
+            interviewCount: _count.interviews,
+            ...(includeInterviews && {
+              interviews: interviews.map(
+                (appInterview) => appInterview.interview,
+              ),
+            }),
           };
 
-          // Remove _count from the response
-          delete (application as any)._count;
-
-          if (includeInterviews) {
-            application.interviews = userApp.application.interviews.map(
-              (appInterview: any) => appInterview.interview,
-            );
-          }
-
           return {
-            ...userApp,
+            userId: userApp.userId,
+            applicationId: userApp.applicationId,
             application,
           };
         },
@@ -124,16 +158,12 @@ export class ApplicationService {
     }
 
     // Flatten the nested interview structure and add interviewCount
-    const application = {
-      ...userApplication.application,
-      interviewCount: userApplication.application._count.interviews,
-      interviews: userApplication.application.interviews.map(
-        (appInterview) => appInterview.interview,
-      ),
+    const { _count, interviews, ...rest } = userApplication.application;
+    const application: Application = {
+      ...rest,
+      interviewCount: _count.interviews,
+      interviews: interviews.map((appInterview) => appInterview.interview),
     };
-
-    // Remove _count from the response
-    delete (application as any)._count;
 
     return application;
   }
