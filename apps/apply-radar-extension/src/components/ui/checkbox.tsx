@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as RadixCheckbox from "@radix-ui/react-checkbox";
+import { Checkbox as RadixCheckbox } from "radix-ui";
 
 type CheckboxProps = {
   checked: boolean;

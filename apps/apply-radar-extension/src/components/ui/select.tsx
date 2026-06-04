@@ -1,4 +1,4 @@
-import * as Select from "@radix-ui/react-select";
+import { Select } from "radix-ui";
 import * as React from "react";
 
 export const SelectRoot = Select.Root;
