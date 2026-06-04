@@ -10,6 +10,7 @@ import {
 } from 'src/common';
 import { AiService } from './ai.service';
 import { ParseApplicationFromTextDto } from './dto/parse-application-from-text.dto';
+import { ParseApplicationFromUrlDto } from './dto/parse-application-from-url.dto';
 import {
   ApplicationResult,
   UserApplicationDbRow,
@@ -44,6 +45,34 @@ export class ApplicationService {
     body: ParseApplicationFromTextDto,
   ): Promise<Application | null> {
     const parsed = await this.aiService.parseJobApplication(body.text);
+    if (!parsed) {
+      return null;
+    }
+
+    const { name, description, notes } = parsed;
+
+    return await this.prisma.$transaction(async (tx) => {
+      const application = await (tx as PrismaService).applications.create({
+        data: {
+          name,
+          description: description ?? '',
+          url: body.url,
+          notes: notes ?? '',
+        },
+      });
+      await (tx as PrismaService).userApplications.create({
+        data: { userId, applicationId: application.id },
+      });
+      return application;
+    });
+  }
+
+  async createFromUrl(
+    userId: string,
+    body: ParseApplicationFromUrlDto,
+  ): Promise<Application | null> {
+    const pageText = await this.aiService.fetchPageText(body.url);
+    const parsed = await this.aiService.parseJobApplication(pageText);
     if (!parsed) {
       return null;
     }

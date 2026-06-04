@@ -14,6 +14,7 @@ import { ApplicationService } from './application.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ParseApplicationFromTextDto } from './dto/parse-application-from-text.dto';
+import { ParseApplicationFromUrlDto } from './dto/parse-application-from-url.dto';
 import { PaginationQueryDto } from 'src/common';
 
 @Controller('application')
@@ -30,6 +31,12 @@ export class ApplicationController {
   async createFromText(@Body() body: ParseApplicationFromTextDto) {
     const userId = '';
     return await this.applicationService.createFromText(userId, body);
+  }
+
+  @Post('from-url')
+  async createFromUrl(@Body() body: ParseApplicationFromUrlDto) {
+    const userId = '';
+    return await this.applicationService.createFromUrl(userId, body);
   }
 
   @Get()

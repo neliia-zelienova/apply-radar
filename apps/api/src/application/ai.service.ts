@@ -7,6 +7,52 @@ export interface ParsedApplicationData {
   notes?: string;
 }
 
+/** Max characters of page text forwarded to the AI to stay within token limits. */
+const MAX_PAGE_TEXT_LENGTH = 15_000;
+
+/**
+ * Extracts readable text from raw HTML.
+ * If `fragment` is provided, narrows to the subtree rooted at id="fragment"
+ * before stripping tags.
+ */
+function extractTextFromHtml(html: string, fragment?: string): string {
+  let source = html;
+
+  // Remove <script> and <style> blocks entirely (including content).
+  source = source.replace(/<script[\s\S]*?<\/script>/gi, ' ');
+  source = source.replace(/<style[\s\S]*?<\/style>/gi, ' ');
+
+  if (fragment) {
+    // Find the element carrying id="fragment" (single or double quotes).
+    const anchorRe = new RegExp(
+      `id=["']${fragment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']`,
+      'i',
+    );
+    const anchorMatch = anchorRe.exec(source);
+    if (anchorMatch) {
+      // Narrow to everything from the anchor onward.
+      source = source.slice(anchorMatch.index);
+    }
+  }
+
+  // Strip all remaining HTML tags.
+  source = source.replace(/<[^>]+>/g, ' ');
+
+  // Decode common HTML entities.
+  source = source
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&nbsp;/gi, ' ');
+
+  // Collapse whitespace.
+  source = source.replace(/\s+/g, ' ').trim();
+
+  return source.slice(0, MAX_PAGE_TEXT_LENGTH);
+}
+
 const SYSTEM_PROMPT = `You are a job application data extractor.
 
 Your task is to analyse the provided text and determine whether it describes a job application, job posting, or job offer directed at a candidate.
@@ -41,6 +87,39 @@ export class AiService {
   private readonly logger = new Logger(AiService.name);
 
   constructor(private readonly configService: ConfigService) {}
+
+  /**
+   * Fetches the page at `url`, strips HTML tags, and returns plain text.
+   * If the URL contains a hash fragment, only the subtree of the matching
+   * element is used so that multi-listing pages are scoped correctly.
+   */
+  async fetchPageText(url: string): Promise<string> {
+    const parsed = new URL(url);
+    const fragment = parsed.hash ? parsed.hash.slice(1) : undefined;
+
+    // Fetch without the fragment (browsers don't send # to servers).
+    const pageUrl = `${parsed.origin}${parsed.pathname}${parsed.search}`;
+
+    const response = await fetch(pageUrl, {
+      headers: {
+        // Mimic a browser so pages don't return a bot-detection block page.
+        'User-Agent':
+          'Mozilla/5.0 (compatible; ApplyRadarBot/1.0; +https://apply-radar.app)',
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch URL ${pageUrl}: HTTP ${response.status}`,
+      );
+    }
+
+    const html = await response.text();
+    return extractTextFromHtml(html, fragment);
+  }
 
   async parseJobApplication(
     text: string,
