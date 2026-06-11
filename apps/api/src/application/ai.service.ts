@@ -53,11 +53,25 @@ export class AiService {
     const model =
       this.configService.get<string>('ANTHROPIC_MODEL') ?? 'claude-haiku-4-5';
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: text }],
+        temperature: 0,
+        max_tokens: 600,
+      }),
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
