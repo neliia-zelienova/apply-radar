@@ -69,7 +69,7 @@ export class ApplicationService {
           notes: safeNotes,
         },
       });
-      await (tx as PrismaService).userApplications.create({
+      await tx.userApplications.create({
         data: { userId, applicationId: application.id },
       });
       return application;
