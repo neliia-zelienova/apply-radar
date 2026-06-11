@@ -63,10 +63,10 @@ export class ApplicationService {
     return await this.prisma.$transaction(async (tx) => {
       const application = await (tx as PrismaService).applications.create({
         data: {
-          name,
-          description: description ?? '',
-          url: body.url,
-          notes: notes ?? '',
+          name: safeName,
+          description: safeDescription,
+          url: body.url ?? '',
+          notes: safeNotes,
         },
       });
       await (tx as PrismaService).userApplications.create({
