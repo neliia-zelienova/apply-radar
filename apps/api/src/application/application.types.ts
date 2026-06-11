@@ -5,7 +5,7 @@ import { Interview } from 'src/interview/entities/interview.entity';
 export interface ApplicationDbRow
   extends Omit<Application, 'interviews' | 'interviewCount'> {
   _count: { interviews: number };
-  interviews: Array<{ interview: Interview }>;
+  interviews?: Array<{ interview: Interview }>;
 }
 
 /** Raw Prisma join row before flattening. */
