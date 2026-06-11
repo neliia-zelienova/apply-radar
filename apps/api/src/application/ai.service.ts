@@ -100,7 +100,12 @@ export class AiService {
       throw new Error('AI service returned an empty response');
     }
 
-    const raw = JSON.parse(content) as unknown;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(content) as unknown;
+    } catch {
+      throw new Error('AI service returned invalid JSON');
+    }
 
     if (
       typeof raw !== 'object' ||
