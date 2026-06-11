@@ -25,6 +25,13 @@ export class ParseApplicationFromTextDto {
   })
   @IsString()
   @MaxLength(2048)
-  @IsUrl()
-  url!: string;
+  @IsOptional()
+  @IsUrl(
+    { require_protocol: true },
+    { message: 'URL must be a valid URL with protocol (http:// or https://)' },
+  )
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  url?: string;
 }
