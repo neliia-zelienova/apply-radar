@@ -1,4 +1,4 @@
-# compiled output
+/.cert
 /dist
 /node_modules
 /build
@@ -7,6 +7,8 @@
 logs
 *.log
 npm-debug.log*
+npm-shrinkwrap.json
+package-lock.json
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*

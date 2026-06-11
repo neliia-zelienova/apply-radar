@@ -1,9 +1,14 @@
 import { useState } from "react";
+import LoginPage from "./components/login/LoginPage";
 import "./App.css";
 import { Content } from "./components/content/content";
 import { Header } from "./components/header/header";
 import { useApplications } from "./hooks/use-applications";
 import { ApplicationsContext } from "./context/applications-context";
+import { AuthContext } from "./context/auth-context";
+import { useAuth } from "./hooks/use-auth";
+import { useTheme } from "./hooks/use-theme";
+import { ThemeContext } from "./context/theme-context";
 
 function App() {
   const [search, setSearch] = useState("");
@@ -21,6 +26,20 @@ function App() {
     updateApplication,
   } = useApplications({ search, filterStatus, sortBy, sortOrder });
 
+  const { theme, toggleTheme } = useTheme();
+
+  const {
+    authType,
+    userId,
+    email,
+    name,
+    picture,
+    setAuthType,
+    getJwt,
+    signInWithGoogle,
+    signOut,
+  } = useAuth();
+
   const contextInput = {
     applications,
     total,
@@ -37,13 +56,27 @@ function App() {
     setSortOrder,
   };
 
+  const authContextInput = {
+    authType,
+    userId,
+    email,
+    name,
+    picture,
+    setAuthType,
+    getJwt,
+    signInWithGoogle,
+    signOut,
+  };
+
   return (
-    <ApplicationsContext.Provider value={contextInput}>
-      {/** Header */}
-      <Header />
-      {/** Content */}
-      <Content />
-    </ApplicationsContext.Provider>
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      <AuthContext.Provider value={authContextInput}>
+        <ApplicationsContext.Provider value={contextInput}>
+          <Header />
+          {authType ? <Content /> : <LoginPage />}
+        </ApplicationsContext.Provider>
+      </AuthContext.Provider>
+    </ThemeContext.Provider>
   );
 }
 

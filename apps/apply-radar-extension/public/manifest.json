@@ -27,7 +27,30 @@
   },
   "background": {
     "service_worker": "background.js"
-},
-  "permissions": ["scripting", "tabs", "sidePanel", "commands", "contextMenus", "storage"],
-  "host_permissions": ["http://*/*", "https://*/*"]
+  },
+  "permissions": [
+    "scripting",
+    "tabs",
+    "sidePanel",
+    "commands",
+    "contextMenus",
+    "storage",
+    "notifications",
+    "alarms",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://accounts.google.com/*",
+    "https://oauth2.googleapis.com/*",
+    "https://www.googleapis.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*",
+    "https://localhost/*",
+    "https://127.0.0.1/*"
+  ],
+  "icons": {
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
 }

@@ -1,4 +1,25 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
+
+/* -----------------------------------------------------------
+   SURFACE TOKENS (CSS variables, not Tailwind theme)
+----------------------------------------------------------- */
+
+:root {
+  --bg-app: #f0f4f8;
+  --surface-card: #ffffff;
+  --border-subtle: rgba(0, 0, 0, 0.07);
+}
+
+.dark {
+  --bg-app: #07091a;
+  --surface-card: #0f1829;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+}
+
+html {
+  background-color: var(--bg-app);
+}
 
 /* -----------------------------------------------------------
    KEYFRAMES (pure CSS — required by Tailwind v4)
@@ -131,6 +152,47 @@
   }
 }
 
+/** highlight animation */
+@keyframes highlight-ring {
+  0% {
+    box-shadow: 0 0 8px oklch(70.4% 0.14 182.503);
+  }
+  100% {
+    box-shadow: 0 0 8px transparent;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* -----------------------------------------------------------
    THEME TOKENS
 ----------------------------------------------------------- */
@@ -148,6 +210,8 @@
   --glow-interview: rgba(0, 255, 180, 0.28);
   --glow-offered: rgba(16, 185, 129, 0.28);
   --glow-lost: rgba(255, 60, 60, 0.35);
+
+  --animate-highlight-ring: highlight-ring 5s ease-in-out infinite;
 }
 
 /* -----------------------------------------------------------
@@ -297,7 +361,9 @@
 @utility radar-lost {
   @apply radar-base;
   background: var(--radar-lost);
-  box-shadow: inset 0 0 7px var(--glow-lost), 0 0 4px rgba(255, 60, 60, 0.25);
+  box-shadow:
+    inset 0 0 7px var(--glow-lost),
+    0 0 4px rgba(255, 60, 60, 0.25);
 }
 
 .radar-lost::after {
@@ -313,4 +379,33 @@
   --pending-color: rgba(250, 204, 21, 0.6);
   --offer-color: rgba(56, 211, 153, 0.6);
   --bg-color: rgb(38, 38, 38);
+}
+
+/* -----------------------------------------------------------
+   CUSTOM SCROLLBAR
+----------------------------------------------------------- */
+
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(20, 180, 160, 0.3);
+  border-radius: 2px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 180, 160, 0.5);
+}
+
+/* Hide native number input spinners */
+input[type="number"].no-spin {
+  appearance: textfield;
+  -moz-appearance: textfield; /* Firefox */
+}
+input[type="number"].no-spin::-webkit-outer-spin-button,
+input[type="number"].no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
