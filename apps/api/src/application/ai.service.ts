@@ -102,7 +102,11 @@ export class AiService {
       return null;
     }
 
-    const name = typeof result['name'] === 'string' ? result['name'] : '';
+    const name =
+      typeof result['name'] === 'string' ? result['name'].trim() : '';
+    if (!name) {
+      throw new Error('AI service returned an empty "name" field');
+    }
     const description =
       typeof result['description'] === 'string'
         ? result['description']
