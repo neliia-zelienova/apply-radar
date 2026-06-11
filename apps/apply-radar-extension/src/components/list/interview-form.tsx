@@ -174,7 +174,7 @@ export const InterviewForm = ({
       notifyMinutesBefore: minutesBefore,
     };
     onSave(payload);
-    // schedule alarm in background if enabled
+    // schedule (or cancel) alarm in background
     if (notifyEnabled) {
       chrome.runtime.sendMessage({
         type: "scheduleInterviewAlarm",
@@ -183,6 +183,11 @@ export const InterviewForm = ({
         notifyMinutesBefore: minutesBefore,
         title: payload.name ? `${payload.name} reminder` : "Interview reminder",
         link: locationLink,
+      });
+    } else if (initialInterview?.id) {
+      chrome.runtime.sendMessage({
+        type: "cancelInterviewAlarm",
+        interviewId: payload.id,
       });
     }
     setOpen(false);
