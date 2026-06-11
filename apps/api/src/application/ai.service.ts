@@ -72,16 +72,7 @@ export class AiService {
       }),
       signal: controller.signal,
     }).finally(() => clearTimeout(timeoutId));
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: text }],
-        temperature: 0,
-        max_tokens: 600,
-      }),
-    });
+// (removed duplicate fetch request block that was accidentally pasted here)
 
     if (!response.ok) {
       const errorBody = await response.text();
