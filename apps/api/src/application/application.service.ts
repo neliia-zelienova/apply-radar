@@ -50,6 +50,16 @@ export class ApplicationService {
 
     const { name, description, notes } = parsed;
 
+    const safeName = name.trim().slice(0, 200);
+    if (!safeName) {
+      return null;
+    }
+
+    const safeDescription =
+      typeof description === 'string' ? description.trim().slice(0, 1000) : '';
+    const safeNotes =
+      typeof notes === 'string' ? notes.trim().slice(0, 500) : '';
+
     return await this.prisma.$transaction(async (tx) => {
       const application = await (tx as PrismaService).applications.create({
         data: {
