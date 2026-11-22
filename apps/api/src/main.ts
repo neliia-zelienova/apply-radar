@@ -52,7 +52,7 @@ async function bootstrap() {
     });
   }
 
-  const port = process.env.PORT ?? 3002;
+  const port = process.env.PORT ?? 3010;
   await app.listen(port);
 
   if (tls && httpsPort) {
