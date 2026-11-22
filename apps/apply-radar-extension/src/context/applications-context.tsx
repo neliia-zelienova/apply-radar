@@ -1,22 +1,22 @@
 import { createContext, useContext } from "react";
-import { type ApplicationData } from "../types/applications";
+import { type Application } from "@apply-radar/shared";
 
 interface ApplicationsContextType {
-  applications: ApplicationData[];
+  applications: Application[];
   total: number;
   search: string;
   setSearch: (search: string) => void;
   setFilterStatus: (status: string) => void;
-  createApplication: (app: ApplicationData) => void;
+  createApplication: (app: Application) => void;
   deleteApplication: (id: string) => void;
   archiveApplication: (id: string) => void;
   updateApplication: (
     id: string,
-    updater: (app: ApplicationData) => ApplicationData
+    updater: (app: Application) => Application
   ) => void;
-  sortBy: "companyName" | "date" | "status" | "favorite";
+  sortBy: "name" | "date" | "status" | "favorite";
   sortOrder: "asc" | "desc";
-  setSortBy: (sortBy: "companyName" | "date" | "status" | "favorite") => void;
+  setSortBy: (sortBy: "name" | "date" | "status" | "favorite") => void;
   setSortOrder: (sortOrder: "asc" | "desc") => void;
 }
 

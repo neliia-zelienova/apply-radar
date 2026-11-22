@@ -4,11 +4,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from "../ui/dropdown-menu";
-import { useAuthContext } from "../../context/auth-context";
-import { useThemeContext } from "../../context/theme-context";
-import { ApplyRadarApi } from "../../services/app-radar-api";
-import {
   AlertDialog,
   AlertDialogTrigger,
   AlertDialogContent,
@@ -18,7 +13,10 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from "../ui/alert-dialog";
+} from "@apply-radar/ui";
+import { useAuthContext } from "../../context/auth-context";
+import { useThemeContext } from "../../context/theme-context";
+import { ApplyRadarApi } from "../../services/app-radar-api";
 
 export const SettingsDropdown = () => {
   const { authType, signInWithGoogle, signOut } = useAuthContext();

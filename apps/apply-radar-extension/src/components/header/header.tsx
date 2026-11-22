@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { useApplicationContext } from "../../context/applications-context";
-import type { ApplicationData } from "../../types/applications";
+import { type Application } from "@apply-radar/shared";
 import { ApplicationForm } from "../list/application-form";
 import { useAuthContext } from "../../context/auth-context";
 import { SettingsDropdown } from "./settings-dropdown";
@@ -9,7 +9,7 @@ export const Header = () => {
   const { createApplication } = useApplicationContext();
   const { authType } = useAuthContext();
 
-  const createNewApp = (application: ApplicationData) => {
+  const createNewApp = (application: Application) => {
     createApplication(application);
   };
 
@@ -98,8 +98,8 @@ export const Header = () => {
               </svg>
             </div>
 
-            {/* Brand text */}
-            <div>
+            {/* Brand text — left-aligned to the logo (overrides the inherited `#root { text-align: center }`) */}
+            <div className="text-left">
               <div
                 style={{
                   fontSize: "22px",

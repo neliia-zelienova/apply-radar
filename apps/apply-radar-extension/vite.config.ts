@@ -17,4 +17,8 @@ export default defineConfig({
     outDir: "dist",
   },
   plugins: [react(), tailwindcss()],
+  resolve: {
+    // @apply-radar/ui has React as a peer dependency; make sure only one copy is bundled.
+    dedupe: ["react", "react-dom"],
+  },
 });

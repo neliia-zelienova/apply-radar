@@ -1,24 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Button } from "../ui/button";
 import {
+  Button,
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import type { Interview } from "../../types/applications";
-import {
   SelectContent,
   SelectItem,
   SelectRoot,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { InputNumber } from "../ui/input-number";
-import { Checkbox } from "../ui/checkbox";
+  InputNumber,
+  Checkbox,
+} from "@apply-radar/ui";
+import { type Interview } from "@apply-radar/shared";
 
 interface InterviewFormProps {
   triggerComponent?: React.ReactNode;
@@ -37,7 +35,7 @@ export const InterviewForm = ({
 }: InterviewFormProps) => {
   const [open, setOpen] = useState<boolean>(false);
   const initial = initialInterview
-    ? new Date(initialInterview.date)
+    ? new Date(initialInterview.scheduledAt)
     : undefined;
   // Helper: format Date as local YYYY-MM-DD (avoid UTC shift from toISOString)
   const formatLocalDate = (d: Date) => d.toLocaleDateString("en-CA");
@@ -167,7 +165,7 @@ export const InterviewForm = ({
     const payload: Interview = {
       id: initialInterview?.id || uuidv4(),
       name,
-      date: isoDateTime,
+      scheduledAt: isoDateTime,
       locationLink,
       notes,
       notifyEnabled,
@@ -179,7 +177,7 @@ export const InterviewForm = ({
       chrome.runtime.sendMessage({
         type: "scheduleInterviewAlarm",
         interviewId: payload.id,
-        dateISO: payload.date,
+        dateISO: payload.scheduledAt,
         notifyMinutesBefore: minutesBefore,
         title: payload.name ? `${payload.name} reminder` : "Interview reminder",
         link: locationLink,
@@ -237,7 +235,7 @@ export const InterviewForm = ({
   useEffect(() => {
     if (initialInterview && hasOpenedRef.current) {
       // when initialInterview changes while open, update form fields
-      const initialDate = new Date(initialInterview.date);
+      const initialDate = new Date(initialInterview.scheduledAt);
       setDate(formatLocalDate(initialDate));
       setTime(initialDate.toTimeString().slice(0, 5));
       setLocationLink(initialInterview.locationLink || "");

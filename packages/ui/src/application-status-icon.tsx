@@ -1,5 +1,5 @@
-import { ApplicationStatus } from "../../types/applications";
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "../ui/tooltip";
+import { ApplicationStatus, getStatusLabel } from "@apply-radar/shared";
+import { TooltipContent, TooltipRoot, TooltipTrigger } from "./tooltip";
 
 export const ApplicationStatusIcon = ({
   status,
@@ -31,7 +31,8 @@ export const ApplicationStatusIcon = ({
         </div>
       </TooltipTrigger>
       <TooltipContent align="center">
-        Current status: {status}. Click to change
+        Current status: {status ? getStatusLabel(status) : "Unknown"}. Click to
+        change
       </TooltipContent>
     </TooltipRoot>
   );

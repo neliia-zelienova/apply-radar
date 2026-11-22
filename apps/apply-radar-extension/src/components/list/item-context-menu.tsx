@@ -4,7 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@apply-radar/ui";
 import { EllipsisVertical } from "lucide-react";
 import { useThemeContext } from "../../context/theme-context";
 
@@ -30,7 +30,13 @@ export const ItemContextMenu = ({ itemId, options }: ItemContextMenuProps) => {
           <EllipsisVertical className="h-4 w-4 text-gray-900 dark:text-teal-600" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="flex flex-col bg-white dark:bg-[#0f1829] gap-0.5 border border-gray-200 dark:border-white/10 rounded-lg shadow-lg p-1">
+      <DropdownMenuContent
+        // The trigger sits at the far right of the row; centering the menu on it
+        // pushed half of it past the popup edge (under the scrollbar).
+        align="end"
+        sideOffset={4}
+        collisionPadding={8}
+        className="flex flex-col bg-white dark:bg-[#0f1829] gap-0.5 border border-gray-200 dark:border-white/10 rounded-lg shadow-lg p-1">
         {options.map((option) => (
           <DropdownMenuItem
             key={`context-menu-item-${option.label}`}

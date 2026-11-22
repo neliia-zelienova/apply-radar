@@ -51,6 +51,8 @@ export const DialogContent = React.forwardRef<
         ref={ref}
         className={classNames(
           "fixed left-1/2 top-1/2 z-[110] w-[95vw] max-w-md -translate-x-1/2 -translate-y-1/2",
+          // Keep 24px free above and below; tall forms scroll inside the dialog.
+          "max-h-[calc(100vh-48px)] overflow-y-auto",
           "rounded-2xl border border-black/8 bg-white p-6 shadow-2xl outline-none",
           // Dark mode variants
           "dark:border-white/10 dark:bg-[#0f1829]",

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ApplicationStatus,
-  type ApplicationData,
-} from "../../types/applications";
+  type Application,
+  getStatusLabel,
+  fromDateInputValue,
+  toDateInputValue,
+} from "@apply-radar/shared";
 import { v4 as uuidv4 } from "uuid";
-import { Button } from "../ui/button";
 import {
+  Button,
   Dialog,
   DialogClose,
   DialogContent,
@@ -13,8 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "../ui/dialog";
-import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogFooter,
@@ -23,14 +24,11 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
   AlertDialogDescription,
-} from "../ui/alert-dialog";
-import {
   SelectContent,
   SelectItem,
   SelectRoot,
   SelectTrigger,
-} from "../ui/select";
-import { getStatusLabel } from "../../utils/status";
+} from "@apply-radar/ui";
 
 export const ApplicationForm = ({
   triggerComponent,
@@ -41,19 +39,21 @@ export const ApplicationForm = ({
 }: {
   externalOpen?: boolean;
   triggerComponent?: React.ReactNode;
-  app?: ApplicationData;
-  onSave: (app: ApplicationData) => void;
+  app?: Application;
+  onSave: (app: Application) => void;
   onCancel?: () => void;
 }) => {
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-  const [companyName, setCompanyName] = useState<string>(
-    app?.companyName || ""
-  );
+  // Form fields keep their UI names; they map to Application.name / Application.url.
+  const [companyName, setCompanyName] = useState<string>(app?.name || "");
   const [position, setPosition] = useState<string>(app?.position || "");
-  const [link, setLink] = useState<string>(app?.link || "");
+  const [link, setLink] = useState<string>(app?.url || "");
   const [notes, setNotes] = useState<string>(app?.notes || "");
   const [status, setStatus] = useState<ApplicationStatus | undefined>(
     app?.status
+  );
+  const [appliedDate, setAppliedDate] = useState<string>(
+    toDateInputValue(app?.createdAt ?? new Date())
   );
   const [touched, setTouched] = useState<{
     companyName: boolean;
@@ -75,17 +75,20 @@ export const ApplicationForm = ({
         companyName.trim().length > 0 ||
         position.trim().length > 0 ||
         link.trim().length > 0 ||
-        notes.trim().length > 0
+        notes.trim().length > 0 ||
+        appliedDate !== toDateInputValue(new Date())
       );
     }
     return (
-      companyName !== app?.companyName ||
-      position !== app?.position ||
-      link !== app?.link ||
-      notes !== app?.notes ||
-      status !== app?.status
+      // position/notes are optional on Application; the form treats "missing" as "".
+      companyName !== app.name ||
+      position !== (app.position ?? "") ||
+      link !== app.url ||
+      notes !== (app.notes ?? "") ||
+      status !== app?.status ||
+      appliedDate !== toDateInputValue(app.createdAt)
     );
-  }, [companyName, position, link, notes, app, status]);
+  }, [companyName, position, link, notes, app, status, appliedDate]);
 
   // Simple validators
   const isCompanyNameValid = companyName.trim().length > 1;
@@ -97,7 +100,12 @@ export const ApplicationForm = ({
     );
   const notesLimit = 500;
   const notesCount = notes.length;
-  const isFormValid = isCompanyNameValid && isPositionValid && isLinkValid;
+  const todayInputValue = toDateInputValue(new Date());
+  // `YYYY-MM-DD` strings compare correctly as plain strings.
+  const isAppliedDateValid =
+    appliedDate.length > 0 && appliedDate <= todayInputValue;
+  const isFormValid =
+    isCompanyNameValid && isPositionValid && isLinkValid && isAppliedDateValid;
 
   const allowedStatuses = useMemo(() => {
     if (status !== undefined) {
@@ -111,10 +119,11 @@ export const ApplicationForm = ({
   console.log("allowedStatuses", allowedStatuses);
 
   const resetForm = useCallback(() => {
-    setCompanyName(app?.companyName || "");
+    setCompanyName(app?.name || "");
     setPosition(app?.position || "");
-    setLink(app?.link || "");
+    setLink(app?.url || "");
     setNotes(app?.notes || "");
+    setAppliedDate(toDateInputValue(app?.createdAt ?? new Date()));
     setTouched({ companyName: false, position: false, link: false });
   }, [app]);
 
@@ -306,6 +315,28 @@ export const ApplicationForm = ({
             )}
           </div>
 
+          {/* Applied date */}
+          <div className="grid grid-cols-3 gap-3 w-full">
+            <label className="flex flex-col gap-1 items-start w-full col-span-1">
+              <span className="text-sm">Applied on</span>
+              <input
+                type="date"
+                aria-label="Applied on"
+                value={appliedDate}
+                max={todayInputValue}
+                onChange={(e) => setAppliedDate(e.target.value)}
+                className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors font-roboto ${
+                  isAppliedDateValid ? "border-white/20" : "border-red-500"
+                }`}
+              />
+              {!isAppliedDateValid && (
+                <span role="alert" className="text-xs text-red-400">
+                  Pick a date that isn't in the future.
+                </span>
+              )}
+            </label>
+          </div>
+
           {/* Notes */}
           <label className="flex flex-col gap-1 items-start w-full">
             <span className="text-sm">Notes</span>
@@ -346,26 +377,30 @@ export const ApplicationForm = ({
               onClick={() => {
                 // Mark that we're closing intentionally to skip unsaved-check
                 skipUnsavedCheckRef.current = true;
+                const nowIso = new Date().toISOString();
                 onSave(
                   app
                     ? {
                         ...app,
-                        companyName,
+                        name: companyName,
                         position,
-                        link,
+                        url: link,
                         notes,
                         status: status || app.status,
-                        updatedAt: new Date().toISOString(),
+                        createdAt: fromDateInputValue(appliedDate, app.createdAt),
+                        updatedAt: nowIso,
                       }
                     : {
                         id: uuidv4(),
-                        companyName,
+                        name: companyName,
                         position,
-                        link,
+                        url: link,
                         notes,
                         status: ApplicationStatus.PENDING,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
+                        archived: false,
+                        // Today keeps the current time; a past day is stored as local midnight.
+                        createdAt: fromDateInputValue(appliedDate, nowIso),
+                        updatedAt: nowIso,
                         favorite: false,
                       }
                 );

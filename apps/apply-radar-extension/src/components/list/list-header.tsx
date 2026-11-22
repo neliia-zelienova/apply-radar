@@ -24,10 +24,10 @@ export const ListHeader = ({
   searchValue,
   updateSearchValue,
 }: {
-  sortBy: "date" | "companyName" | "status" | "favorite";
+  sortBy: "date" | "name" | "status" | "favorite";
   sortOrder: "asc" | "desc";
   onSortByChange: (
-    field: "date" | "companyName" | "status" | "favorite"
+    field: "date" | "name" | "status" | "favorite"
   ) => void;
   onSortOrderChange: (order: "asc" | "desc") => void;
   searchValue: string;
@@ -36,7 +36,7 @@ export const ListHeader = ({
   const [focused, setFocused] = useState(false);
 
   const handleSortChange = (
-    field: "date" | "companyName" | "status" | "favorite",
+    field: "date" | "name" | "status" | "favorite",
     order: "asc" | "desc"
   ) => {
     onSortByChange(field);
@@ -100,9 +100,9 @@ export const ListHeader = ({
         <SortingOption
           name="Application"
           className="text-[10px] flex justify-start"
-          order={sortBy === "companyName" ? sortOrder : undefined}
+          order={sortBy === "name" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") =>
-            handleSortChange("companyName", order)
+            handleSortChange("name", order)
           }
         />
         <SortingOption
@@ -114,7 +114,7 @@ export const ListHeader = ({
           }
         />
         <SortingOption
-          name="Added"
+          name="Applied"
           className="text-[10px] flex justify-center"
           order={sortBy === "date" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") => handleSortChange("date", order)}

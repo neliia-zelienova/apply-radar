@@ -1,4 +1,4 @@
-import type { Interview } from "../../types/applications";
+import { type Interview } from "@apply-radar/shared";
 import { useThemeContext } from "../../context/theme-context";
 
 interface InterviewCardProps {
@@ -40,7 +40,7 @@ export const InterviewCard = ({
   const { theme } = useThemeContext();
   const dark = theme === "dark";
 
-  const isUpcoming = new Date(interview.date).getTime() >= Date.now();
+  const isUpcoming = new Date(interview.scheduledAt).getTime() >= Date.now();
   const cfg = isUpcoming
     ? {
         label: "UPCOMING",
@@ -174,7 +174,7 @@ export const InterviewCard = ({
       >
         <span>
           📅{" "}
-          {new Date(interview.date).toLocaleString("en-US", {
+          {new Date(interview.scheduledAt).toLocaleString("en-US", {
             month: "short",
             day: "numeric",
             hour: "2-digit",
@@ -187,7 +187,7 @@ export const InterviewCard = ({
             fontWeight: 500,
           }}
         >
-          · {formatRelative(interview.date)}
+          · {formatRelative(interview.scheduledAt)}
         </span>
       </div>
 

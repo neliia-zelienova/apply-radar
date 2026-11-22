@@ -1,8 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ApplicationData } from "../types/applications";
+import { type Application } from "@apply-radar/shared";
 import { getFromStorage, setInStorage } from "../utils/storage";
+import { migrateStoredApplications } from "../utils/migrate-applications";
 
 const STORAGE_KEY = "applications";
+/** Raw copy of the data as it was before the first migration to the shared model. */
+const BACKUP_KEY = "applications_backup_before_shared_model";
+
+/** Reads stored applications, migrating (and persisting) old-format records on the way. */
+const readApplications = async (): Promise<Application[]> => {
+  const raw = await getFromStorage<unknown>(STORAGE_KEY);
+  const { applications, changed } = migrateStoredApplications(raw);
+  if (changed) {
+    // Keep only the first backup, so a later migration never overwrites the original data.
+    if ((await getFromStorage<unknown>(BACKUP_KEY)) === null) {
+      await setInStorage(BACKUP_KEY, raw);
+    }
+    await setInStorage(STORAGE_KEY, applications);
+  }
+  return applications;
+};
 
 export const useApplications = ({
   search,
@@ -12,16 +29,16 @@ export const useApplications = ({
 }: {
   search: string;
   filterStatus: string;
-  sortBy: "companyName" | "date" | "status" | "favorite";
+  sortBy: "name" | "date" | "status" | "favorite";
   sortOrder: "asc" | "desc";
 }) => {
-  const [applications, setApplications] = useState<ApplicationData[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const filteredApplications = useMemo(() => {
     return applications
       .filter((app) => {
-        const matchesSearch = app.companyName
+        const matchesSearch = app.name
           .toLowerCase()
           .includes(search.toLowerCase());
         const matchesStatus =
@@ -30,10 +47,10 @@ export const useApplications = ({
       })
       .sort((a, b) => {
         switch (sortBy) {
-          case "companyName":
+          case "name":
             return sortOrder === "asc"
-              ? a.companyName.localeCompare(b.companyName)
-              : b.companyName.localeCompare(a.companyName);
+              ? a.name.localeCompare(b.name)
+              : b.name.localeCompare(a.name);
           case "status":
             return sortOrder === "asc"
               ? a.status.localeCompare(b.status)
@@ -52,10 +69,8 @@ export const useApplications = ({
       });
   }, [applications, search, filterStatus, sortBy, sortOrder]);
 
-  const createApplication = async (app: ApplicationData) => {
-    const storedApplications = await getFromStorage<ApplicationData[]>(
-      STORAGE_KEY
-    );
+  const createApplication = async (app: Application) => {
+    const storedApplications = await readApplications();
     const apps = storedApplications || [];
     const updatedApps = [...apps, app];
     try {
@@ -67,13 +82,11 @@ export const useApplications = ({
   };
 
   const deleteApplication = async (id: string) => {
-    const storedApplications = await getFromStorage<ApplicationData[]>(
-      STORAGE_KEY
-    );
+    const storedApplications = await readApplications();
     if (storedApplications) {
       try {
         const updatedApps = storedApplications.filter(
-          (app: ApplicationData) => app.id !== id
+          (app: Application) => app.id !== id
         );
         await setInStorage(STORAGE_KEY, updatedApps);
         setApplications(updatedApps);
@@ -84,11 +97,9 @@ export const useApplications = ({
   };
 
   const archiveApplication = async (id: string) => {
-    const storedApplications = await getFromStorage<ApplicationData[]>(
-      STORAGE_KEY
-    );
+    const storedApplications = await readApplications();
     if (storedApplications) {
-      const updatedApps = storedApplications.map((app: ApplicationData) =>
+      const updatedApps = storedApplications.map((app: Application) =>
         app.id === id ? { ...app, archived: true } : app
       );
       try {
@@ -102,14 +113,12 @@ export const useApplications = ({
 
   const updateApplication = async (
     id: string,
-    updater: (app: ApplicationData) => ApplicationData
+    updater: (app: Application) => Application
   ) => {
-    const storedApplications = await getFromStorage<ApplicationData[]>(
-      STORAGE_KEY
-    );
+    const storedApplications = await readApplications();
     if (storedApplications) {
       try {
-        const updatedApps = storedApplications.map((app: ApplicationData) =>
+        const updatedApps = storedApplications.map((app: Application) =>
           app.id === id ? updater(app) : app
         );
         await setInStorage(STORAGE_KEY, updatedApps);
@@ -124,9 +133,7 @@ export const useApplications = ({
     const loadApplications = async () => {
       setIsLoading(true);
       try {
-        const storedApplications = await getFromStorage<ApplicationData[]>(
-          STORAGE_KEY
-        );
+        const storedApplications = await readApplications();
         if (storedApplications) {
           setApplications(storedApplications);
         }

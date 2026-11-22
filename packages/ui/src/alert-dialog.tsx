@@ -53,7 +53,9 @@ export const AlertDialogContent = React.forwardRef<
       <AlertDialogPrimitive.Content
         ref={ref}
         className={classNames(
-          "fixed left-1/2 top-1/2 z-[110] w-[95vw] max-w-md -translate-x-1/2 -translate-y-1/2",
+          // Narrower than the regular Dialog (max-w-md) so a confirmation reads as a separate, smaller step.
+          "fixed left-1/2 top-1/2 z-[110] w-[85vw] max-w-[360px] -translate-x-1/2 -translate-y-1/2",
+          "max-h-[calc(100vh-48px)] overflow-y-auto",
           "rounded-2xl border border-black/8 bg-white p-6 shadow-2xl outline-none",
           // Dark mode variants
           "dark:border-white/10 dark:bg-[#0f1829]",

@@ -14,7 +14,7 @@ function App() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortBy, setSortBy] = useState<
-    "companyName" | "date" | "status" | "favorite"
+    "name" | "date" | "status" | "favorite"
   >("date"); // Currently unused
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const {

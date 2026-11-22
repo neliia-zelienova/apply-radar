@@ -1,14 +1,29 @@
 import { useMemo, useState } from "react";
 import {
   ApplicationStatus,
-  type ApplicationData,
-} from "../../types/applications";
+  type Application,
+  getStatusLabel,
+  formatDaysAgo,
+  getDaysSince,
+} from "@apply-radar/shared";
 import {
   TooltipContent,
   TooltipProvider,
   TooltipRoot,
   TooltipTrigger,
-} from "../ui/tooltip";
+  ApplicationStatusIcon,
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@apply-radar/ui";
 import { ItemContextMenu } from "./item-context-menu";
 import {
   Archive,
@@ -19,34 +34,17 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { ApplicationStatusIcon } from "./applications-status-icon";
 import { ApplicationForm } from "./application-form";
-import {
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-} from "../ui/select";
-import { getStatusLabel } from "../../utils/status";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../ui/alert-dialog";
 import { InterviewForm } from "./interview-form";
 import { InterviewCard } from "./interview-card";
 import { useThemeContext } from "../../context/theme-context";
 
 interface ApplicationItemProps {
-  app: ApplicationData;
+  app: Application;
   deleteApp?: (id: string) => void;
   updateApp?: (
     id: string,
-    updater: (app: ApplicationData) => ApplicationData,
+    updater: (app: Application) => Application,
   ) => void;
   archiveApp?: (id: string) => void;
 }
@@ -96,10 +94,25 @@ const STATUS_COLORS: Record<
   },
 };
 
-const formatDate = (dateStr: string) => {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+/** A pending application with no answer for this many days gets the "stale" pill. */
+const STALE_PENDING_AFTER_DAYS = 7;
+
+/** Amber — a warmer step from the pending yellow, still far from rejected red. Status pill only. */
+const STALE_PENDING_COLORS: (typeof STATUS_COLORS)[ApplicationStatus] = {
+  border: "#d97706",
+  bgLight: "rgba(245,158,11,0.10)",
+  bgDark: "rgba(217,119,6,0.20)",
+  ring: "rgba(245,158,11,0.3)",
+  textLight: "#92400e",
+  textDark: "#fbbf24",
 };
+
+const formatFullDate = (dateStr: string) =>
+  new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 
 export const ApplicationItem = ({
   app,
@@ -125,6 +138,13 @@ export const ApplicationItem = ({
 
   const colors =
     STATUS_COLORS[app.status] ?? STATUS_COLORS[ApplicationStatus.PENDING];
+
+  const daysSinceApplied = getDaysSince(app.createdAt);
+  const isStalePending =
+    app.status === ApplicationStatus.PENDING &&
+    daysSinceApplied >= STALE_PENDING_AFTER_DAYS;
+  // The card keeps its status colors; only the status pill turns orange.
+  const pillColors = isStalePending ? STALE_PENDING_COLORS : colors;
 
   const menuOptions = [
     {
@@ -233,9 +253,9 @@ export const ApplicationItem = ({
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
               }}
-              title={app?.companyName}
+              title={app.name}
             >
-              {app?.companyName}
+              {app.name}
             </div>
             <div
               className="text-gray-400 dark:text-slate-500"
@@ -256,15 +276,26 @@ export const ApplicationItem = ({
           <div style={{ justifySelf: "start" }}>
             <SelectRoot onValueChange={handleStatusChange}>
               <SelectTrigger
+                title={
+                  isStalePending
+                    ? `No response for ${daysSinceApplied} days — consider following up`
+                    : undefined
+                }
                 style={{
+                  ...(isStalePending && {
+                    // Recolors the radar icon inside the pill (it reads these CSS variables).
+                    "--radar-pending": "rgba(245,158,11,0.2)",
+                    "--glow-pending": "rgba(245,158,11,0.3)",
+                    "--radar-pending-sweep": "rgba(245,158,11,0.5)",
+                  }),
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "6px",
                   padding: "4px 10px 4px 6px",
                   borderRadius: "9999px",
-                  border: `1px solid ${colors.border}55`,
-                  background: dark ? colors.bgDark : colors.bgLight,
-                  color: dark ? colors.textDark : colors.textLight,
+                  border: `1px solid ${pillColors.border}55`,
+                  background: dark ? pillColors.bgDark : pillColors.bgLight,
+                  color: dark ? pillColors.textDark : pillColors.textLight,
                   fontSize: "11px",
                   fontWeight: 600,
                   letterSpacing: "0.02em",
@@ -274,7 +305,7 @@ export const ApplicationItem = ({
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow =
-                    `0 0 0 3px ${colors.ring}`;
+                    `0 0 0 3px ${pillColors.ring}`;
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow = "none";
@@ -303,9 +334,11 @@ export const ApplicationItem = ({
               fontSize: "11px",
               textAlign: "center",
               fontVariantNumeric: "tabular-nums",
+              whiteSpace: "nowrap",
             }}
+            title={`Applied ${formatFullDate(app.createdAt)}`}
           >
-            {formatDate(app.createdAt)}
+            {formatDaysAgo(app.createdAt)}
           </div>
 
           {/* Favorite */}
@@ -379,7 +412,7 @@ export const ApplicationItem = ({
             <TooltipRoot>
               <TooltipTrigger asChild>
                 <a
-                  href={app?.link}
+                  href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gray-300 dark:text-white/20 hover:text-gray-500 dark:hover:text-white/40 transition-colors"
@@ -466,8 +499,8 @@ export const ApplicationItem = ({
                     {[...app.interviews]
                       .sort(
                         (a, b) =>
-                          new Date(a.date).getTime() -
-                          new Date(b.date).getTime(),
+                          new Date(a.scheduledAt).getTime() -
+                          new Date(b.scheduledAt).getTime(),
                       )
                       .map((iv) => (
                         <InterviewCard
