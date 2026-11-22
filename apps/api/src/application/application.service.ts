@@ -118,7 +118,7 @@ export class ApplicationService {
             ...rest,
             interviewCount: _count.interviews,
             ...(includeInterviews && {
-              interviews: interviews.map(
+              interviews: (interviews ?? []).map(
                 (appInterview) => appInterview.interview,
               ),
             }),
