@@ -33,7 +33,34 @@ pnpm dev:api
 
 # start extension dev server
 pnpm dev:ext
+
+# start the web dashboard (http://localhost:5173)
+pnpm dev:web
 ```
+
+## Apps
+
+| App | What it is |
+| --- | --- |
+| `apps/api` | NestJS + Prisma (PostgreSQL/Neon). Google sign-in, JWT access token + HttpOnly refresh cookie. All `/application`, `/interview`, `/users` routes require `Authorization: Bearer <token>`. |
+| `apps/apply-radar-extension` | Chrome extension. **Signed in with Google**: reads/writes the account via the API (applications saved "device only" are copied to the account once, on first sign-in). **Device only**: data stays in `chrome.storage`. |
+| `apps/web` | Web dashboard for signed-in users — the same applications as the extension, in a wider layout with stats. |
+
+### Web dashboard setup
+
+1. `cp apps/web/.env.example apps/web/.env` and fill in `VITE_API_URL` (the API, e.g. `http://localhost:3010`)
+   and `VITE_GOOGLE_OAUTH_CLIENT_ID` (the same **Web application** OAuth client as the extension).
+2. In Google Cloud Console → that OAuth client → **Authorized redirect URIs**, add
+   `http://localhost:5173/oauth2` (the web sign-in popup returns there).
+3. The API must allow the web origin (CORS). Without `CORS_ORIGINS` set, local dev already allows
+   `http://localhost:5173`; if you set `CORS_ORIGINS`, include it there.
+4. `pnpm dev:api` and `pnpm dev:web`, then open http://localhost:5173.
+
+The web app keeps the access token in memory and restores the session from the refresh cookie on reload.
+That cookie is shared with the extension in the same browser, so signing in, signing out or switching
+accounts in one app is picked up by the other (on open/focus and every 30s). "Device only" mode in the
+extension is never switched automatically.
+Interview reminders (notifications) only fire from the extension.
 
 ### Filtering (run a single package)
 
