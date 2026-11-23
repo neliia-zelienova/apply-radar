@@ -35,8 +35,6 @@
     "commands",
     "contextMenus",
     "storage",
-    "notifications",
-    "alarms",
     "identity"
   ],
   "host_permissions": [

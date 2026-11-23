@@ -26,6 +26,8 @@ enum ApplicationStatus {
 model Users {
   id             String   @id @default(uuid())
   oauthId        String   @unique @map("oauth_id")
+  /// Avatar settings chosen in the apps: {source, icon, color, background}. No personal data.
+  avatar         Json?
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
   userApplications UserApplications[]
@@ -43,6 +45,9 @@ model Applications {
   updatedAt   DateTime          @updatedAt @map("updated_at")
   notes       String             @default("")
   archived    Boolean           @default(false)
+  /// Job title, e.g. "Front-end Engineer" (name holds the company).
+  position    String            @default("")
+  favorite    Boolean           @default(false)
 
   interviews       ApplicationInterviews[]
   userApplications UserApplications[]
@@ -56,6 +61,10 @@ model Interviews {
   id                    String   @id @default(uuid())
   notes                 String?
   scheduledAt           DateTime @map("scheduled_at")
+  /// e.g. Screening, Technical, Onsite
+  name                  String?
+  /// Zoom/Meet/Maps/office link
+  locationLink          String?  @map("location_link")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
   applicationInterviews ApplicationInterviews[]

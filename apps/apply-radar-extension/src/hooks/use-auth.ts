@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
+import { ApiError } from "@apply-radar/shared";
+import { useSessionSync } from "@apply-radar/ui";
 import {
   getExtensionStorage,
   removeExtensionStorage,
   setExtensionStorage,
 } from "../utils/extensionStorage";
-import { ApplyRadarApi } from "../services/app-radar-api";
+import {
+  api,
+  SESSION_EXPIRED_EVENT,
+  sessionEvents,
+} from "../services/app-radar-api";
 import { getGoogleIdTokenViaIdentity } from "../services/google-identity-auth";
 
 type JwtPayload = {
@@ -83,6 +89,8 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    // Also clears the refresh cookie, so the session can't be restored.
+    await api.logout();
     await handleAuthTypeChange(null);
     await removeExtensionStorage("jwt");
     await removeExtensionStorage("loginType");
@@ -93,10 +101,39 @@ export const useAuth = () => {
       const idToken = await getGoogleIdTokenViaIdentity();
 
       // Validate token with backend and get JWT
-      const response = await ApplyRadarApi.googleSignIn(idToken);
-      await handleJwt(response.access_token);
+      const jwt = await api.googleSignIn(idToken);
+      await handleJwt(jwt);
     } catch (error) {
       console.error("Google sign-in failed:", error);
+    }
+  };
+
+  // The API client couldn't refresh the session: show the login screen again.
+  useEffect(() => {
+    const onExpired = () => void signOut();
+    sessionEvents.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    return () =>
+      sessionEvents.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
+    // signOut only touches state setters and storage; registering once is enough.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /**
+   * Follows the session shared with the web app (the API's refresh cookie):
+   * signed in on the web → signed in here; signed out there → signed out here;
+   * a different account there → switch to it. "Device only" mode is left alone.
+   */
+  const syncWithSharedSession = async () => {
+    const storedType = await getExtensionStorage<string>("loginType");
+    if (storedType === "local") return;
+    try {
+      await handleJwt(await api.refresh());
+    } catch (error) {
+      // 401: no shared session. If we had one, onSessionExpired already signed us out.
+      // Network errors: keep the current state.
+      if (error instanceof ApiError && error.status === 401 && storedType === "google") {
+        await signOut();
+      }
     }
   };
 
@@ -112,8 +149,13 @@ export const useAuth = () => {
       } else if (storedType === "local") {
         setAuthType("local");
       }
+      await syncWithSharedSession();
     })();
+    // Runs once on open; later checks come from useSessionSync below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useSessionSync(() => void syncWithSharedSession());
 
   return {
     authType,

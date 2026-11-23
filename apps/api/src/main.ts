@@ -1,6 +1,15 @@
 import { NestFactory } from '@nestjs/core';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import fs from 'node:fs';
+
+/**
+ * Validate request bodies/queries against their DTOs:
+ * - whitelist: drop properties a DTO doesn't declare
+ * - transform: build DTO instances (applies defaults and number conversion)
+ */
+const useValidation = (app: INestApplication) =>
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
 async function bootstrap() {
   const httpsPort = process.env.HTTPS_PORT;
@@ -16,6 +25,7 @@ async function bootstrap() {
       : undefined;
 
   const app = await NestFactory.create(AppModule);
+  useValidation(app);
 
   const nodeEnv = process.env.NODE_ENV ?? 'development';
   const isProduction = nodeEnv === 'production';
@@ -52,7 +62,7 @@ async function bootstrap() {
     });
   }
 
-  const port = process.env.PORT ?? 3002;
+  const port = process.env.PORT ?? 3010;
   await app.listen(port);
 
   if (tls && httpsPort) {
@@ -61,6 +71,7 @@ async function bootstrap() {
     const httpsApp = await NestFactory.create(AppModule, {
       httpsOptions: tls,
     });
+    useValidation(httpsApp);
 
     if (allowedOrigins.length > 0) {
       httpsApp.enableCors({
