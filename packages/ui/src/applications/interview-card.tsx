@@ -1,5 +1,5 @@
 import { type Interview } from "@apply-radar/shared";
-import { useThemeContext } from "../../context/theme-context";
+import { useThemeContext } from "../context/theme-context";
 
 interface InterviewCardProps {
   interview: Interview;

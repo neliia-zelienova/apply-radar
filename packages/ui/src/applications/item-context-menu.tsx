@@ -1,12 +1,7 @@
 import * as React from "react";
-import {
-  DropdownMenuRoot,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@apply-radar/ui";
+import { DropdownMenuRoot, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../dropdown-menu";
 import { EllipsisVertical } from "lucide-react";
-import { useThemeContext } from "../../context/theme-context";
+import { useThemeContext } from "../context/theme-context";
 
 interface ItemContextMenuProps {
   itemId: string;

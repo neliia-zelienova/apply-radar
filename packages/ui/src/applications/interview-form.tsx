@@ -1,22 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-  InputNumber,
-  Checkbox,
-} from "@apply-radar/ui";
+import { Button } from "../button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../dialog";
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValue } from "../select";
+import { InputNumber } from "../input-number";
+import { Checkbox } from "../checkbox";
 import { type Interview } from "@apply-radar/shared";
+import { useReminders } from "../context/reminders-context";
 
 interface InterviewFormProps {
   triggerComponent?: React.ReactNode;
@@ -33,6 +23,7 @@ export const InterviewForm = ({
   onCancel,
   initialInterview,
 }: InterviewFormProps) => {
+  const reminders = useReminders();
   const [open, setOpen] = useState<boolean>(false);
   const initial = initialInterview
     ? new Date(initialInterview.scheduledAt)
@@ -172,21 +163,17 @@ export const InterviewForm = ({
       notifyMinutesBefore: minutesBefore,
     };
     onSave(payload);
-    // schedule (or cancel) alarm in background
+    // Schedule (or cancel) the reminder — a no-op where the app provides none.
     if (notifyEnabled) {
-      chrome.runtime.sendMessage({
-        type: "scheduleInterviewAlarm",
+      reminders.scheduleInterviewReminder({
         interviewId: payload.id,
-        dateISO: payload.scheduledAt,
+        scheduledAt: payload.scheduledAt,
         notifyMinutesBefore: minutesBefore,
         title: payload.name ? `${payload.name} reminder` : "Interview reminder",
         link: locationLink,
       });
     } else if (initialInterview?.id) {
-      chrome.runtime.sendMessage({
-        type: "cancelInterviewAlarm",
-        interviewId: payload.id,
-      });
+      reminders.cancelInterviewReminder(payload.id);
     }
     setOpen(false);
     setDate("");
@@ -204,6 +191,7 @@ export const InterviewForm = ({
     notifyValue,
     onSave,
     initialInterview,
+    reminders,
   ]);
 
   const handleUnitsChanged = (value: string) => {

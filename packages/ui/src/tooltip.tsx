@@ -1,4 +1,5 @@
 import { Tooltip } from "radix-ui";
+import classNames from "classnames";
 
 const TooltipProvider = Tooltip.Provider;
 const TooltipRoot = (props: Tooltip.TooltipProps) => (
@@ -7,13 +8,28 @@ const TooltipRoot = (props: Tooltip.TooltipProps) => (
   </Tooltip.Root>
 );
 const TooltipTrigger = Tooltip.Trigger;
-const TooltipContent = (props: Tooltip.TooltipContentProps) => (
-  <Tooltip.Content
-    className="bg-gray-800 text-white rounded p-2 shadow-md dark:bg-gray-300 dark:text-gray-800"
-    {...props}
-  >
-    {props.children}
-  </Tooltip.Content>
+const TooltipContent = ({
+  className,
+  sideOffset = 6,
+  children,
+  ...props
+}: Tooltip.TooltipContentProps) => (
+  // Portal so the tooltip isn't clipped by scrolling lists/cards.
+  <Tooltip.Portal>
+    <Tooltip.Content
+      sideOffset={sideOffset}
+      collisionPadding={8}
+      className={classNames(
+        // Small, like the card's secondary text — not the page's 16px default.
+        "z-[200] max-w-64 rounded-md px-2 py-1 text-xs font-medium leading-snug shadow-md",
+        "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-900",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </Tooltip.Content>
+  </Tooltip.Portal>
 );
 const TooltipArrow = Tooltip.Arrow;
 

@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import { type Application } from "@apply-radar/shared";
 
-interface ApplicationsContextType {
+export interface ApplicationsContextType {
   applications: Application[];
   total: number;
   search: string;

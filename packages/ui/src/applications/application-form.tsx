@@ -7,28 +7,10 @@ import {
   toDateInputValue,
 } from "@apply-radar/shared";
 import { v4 as uuidv4 } from "uuid";
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogCancel,
-  AlertDialogAction,
-  AlertDialogDescription,
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-} from "@apply-radar/ui";
+import { Button } from "../button";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction, AlertDialogDescription } from "../alert-dialog";
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "../select";
 
 export const ApplicationForm = ({
   triggerComponent,

@@ -1,7 +1,7 @@
-import { useRef } from "react";
-import { useApplicationContext } from "../../context/applications-context";
-import { ApplicationItem } from "../list/application-item";
-import { ListHeader } from "../list/list-header";
+import { useRef, type CSSProperties } from "react";
+import { useApplicationContext } from "../context/applications-context";
+import { ApplicationItem } from "./application-item";
+import { ListHeader } from "./list-header";
 
 const EmptyState = ({ search }: { search: string }) => (
   <div
@@ -57,7 +57,18 @@ const EmptyState = ({ search }: { search: string }) => (
   </div>
 );
 
-export const Content = () => {
+export interface ApplicationsPanelProps {
+  /** Extra styles for the outer element (e.g. the extension overlaps its header). */
+  style?: CSSProperties;
+  /** Max height of the scrolling list. Defaults to the space left in the viewport. */
+  listMaxHeight?: string;
+}
+
+/** Search + sortable list of applications, fed by `ApplicationsContext`. */
+export const ApplicationsPanel = ({
+  style,
+  listMaxHeight,
+}: ApplicationsPanelProps) => {
   const {
     updateApplication,
     archiveApplication,
@@ -74,14 +85,7 @@ export const Content = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   return (
-    <main
-      style={{
-        marginTop: "-18px",
-        padding: "0 12px 12px",
-        position: "relative",
-        zIndex: 3,
-      }}
-    >
+    <main data-radar-avoid style={{ position: "relative", zIndex: 3, ...style }}>
       <div
         style={{
           borderRadius: "14px",
@@ -105,9 +109,9 @@ export const Content = () => {
           ref={scrollAreaRef}
           className="custom-scroll flex flex-col overflow-y-auto"
           style={{
-            maxHeight: `calc(100vh - ${
-              scrollAreaRef.current?.offsetTop ?? 0
-            }px - 1.5rem)`,
+            maxHeight:
+              listMaxHeight ??
+              `calc(100vh - ${scrollAreaRef.current?.offsetTop ?? 0}px - 1.5rem)`,
             padding: "8px",
           }}
         >

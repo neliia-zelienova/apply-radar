@@ -6,24 +6,10 @@ import {
   formatDaysAgo,
   getDaysSince,
 } from "@apply-radar/shared";
-import {
-  TooltipContent,
-  TooltipProvider,
-  TooltipRoot,
-  TooltipTrigger,
-  ApplicationStatusIcon,
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectTrigger,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@apply-radar/ui";
+import { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "../tooltip";
+import { ApplicationStatusIcon } from "../application-status-icon";
+import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "../select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../alert-dialog";
 import { ItemContextMenu } from "./item-context-menu";
 import {
   Archive,
@@ -37,7 +23,8 @@ import {
 import { ApplicationForm } from "./application-form";
 import { InterviewForm } from "./interview-form";
 import { InterviewCard } from "./interview-card";
-import { useThemeContext } from "../../context/theme-context";
+import { useThemeContext } from "../context/theme-context";
+import { useReminders } from "../context/reminders-context";
 
 interface ApplicationItemProps {
   app: Application;
@@ -134,6 +121,7 @@ export const ApplicationItem = ({
   }>({ open: false });
 
   const { theme } = useThemeContext();
+  const reminders = useReminders();
   const dark = theme === "dark";
 
   const colors =
@@ -610,10 +598,9 @@ export const ApplicationItem = ({
                           (i) => i.id !== deleteConfirm.interviewId,
                         ),
                       }));
-                    chrome.runtime.sendMessage({
-                      type: "cancelInterviewAlarm",
-                      interviewId: deleteConfirm.interviewId,
-                    });
+                    reminders.cancelInterviewReminder(
+                      deleteConfirm.interviewId,
+                    );
                   }
                   setDeleteConfirm({ open: false });
                 }}

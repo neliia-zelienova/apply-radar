@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Shared React + Tailwind components for Apply Radar apps (extension, web).",
+  "description": "Shared React + Tailwind components for Apply Radar apps (extension, web): generic UI plus the applications list, forms and interviews.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -18,7 +18,9 @@
     "@apply-radar/shared": "workspace:*",
     "classnames": "^2.5.1",
     "lucide-react": "^0.553.0",
-    "radix-ui": "^1.4.3"
+    "radix-ui": "^1.4.3",
+    "react-best-gradient-color-picker": "^3.0.14",
+    "uuid": "^13.0.0"
   },
   "peerDependencies": {
     "react": "^19.1.1",

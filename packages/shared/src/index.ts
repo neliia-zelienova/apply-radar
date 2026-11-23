@@ -23,3 +23,35 @@ export {
   getDaysSince,
   formatDaysAgo,
 } from "./utils/date";
+export {
+  createApiClient,
+  ApiError,
+  fromApiApplication,
+  fromApiInterview,
+  type ApiClient,
+  type ApiClientOptions,
+  type ApplicationInput,
+  type InterviewInput,
+  type TokenStore,
+} from "./api/client";
+export {
+  createRemoteRepository,
+  filterAndSortApplications,
+  type ApplicationsRepository,
+  type ApplicationQuery,
+  type ApplicationSortField,
+} from "./applications/repository";
+export {
+  uploadApplications,
+  type UploadFailure,
+  type UploadResult,
+} from "./applications/upload";
+export { decodeAccessToken, type AccessTokenClaims } from "./utils/jwt";
+export {
+  ANIMAL_ICONS,
+  defaultAvatar,
+  isAnimalIcon,
+  normalizeAvatar,
+  type AnimalIconName,
+  type AvatarSettings,
+} from "./types/avatar";

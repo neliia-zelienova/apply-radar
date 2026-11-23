@@ -1,0 +1,89 @@
+import type { ReactNode } from "react";
+import { HeaderRadar, RadarLogo } from "./radar-logo";
+
+export interface AppHeaderProps {
+  /** Shown at the top right (e.g. settings menu). */
+  right?: ReactNode;
+  /** Shown under the logo row (e.g. the "Add application" button). */
+  children?: ReactNode;
+}
+
+/** Dark radar-style header with the Apply Radar logo, shared by the extension and web. */
+export const AppHeader = ({ right, children }: AppHeaderProps) => {
+  return (
+    <div
+      data-radar-avoid
+      className="w-full relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(160deg, #050b1a 0%, #071328 55%, #0c1a32 100%)",
+        paddingBottom: "28px",
+      }}
+    >
+      {/* Scanline texture */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.025) 2px, rgba(255,255,255,0.025) 3px)",
+        }}
+      />
+
+      {/* Slow radar sweep around the logo */}
+      <HeaderRadar />
+
+      {/* Teal radial glow */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: "-20px",
+          left: "20px",
+          width: "200px",
+          height: "120px",
+          background:
+            "radial-gradient(ellipse, rgba(20,184,166,0.18) 0%, transparent 70%)",
+        }}
+      />
+
+      <div className="relative z-10 px-[18px] pt-[18px] flex flex-col gap-3.5">
+        {/* Top row: logo + settings */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <RadarLogo />
+
+            {/* Brand text — left-aligned to the logo (overrides the inherited `#root { text-align: center }`) */}
+            <div className="text-left">
+              <div
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 700,
+                  color: "#f0fdf9",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
+                  fontFamily: "Roboto, sans-serif",
+                }}
+              >
+                Apply Radar
+              </div>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "rgba(94,234,212,0.75)",
+                  letterSpacing: "0.03em",
+                  fontWeight: 400,
+                  fontFamily: "Roboto, sans-serif",
+                }}
+              >
+                Every application. Always on radar.
+              </div>
+            </div>
+          </div>
+
+          {right && <div className="flex-shrink-0">{right}</div>}
+        </div>
+
+        {children}
+      </div>
+    </div>
+  );
+};

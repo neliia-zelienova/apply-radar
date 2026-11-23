@@ -7,6 +7,52 @@
 ----------------------------------------------------------- */
 
 /* -----------------------------------------------------------
+   SURFACE TOKENS (CSS variables, not Tailwind theme)
+----------------------------------------------------------- */
+
+:root {
+  --bg-app: #f0f4f8;
+  --surface-card: #ffffff;
+  --border-subtle: rgba(0, 0, 0, 0.07);
+}
+
+.dark {
+  --bg-app: #07091a;
+  --surface-card: #0f1829;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+}
+
+/* -----------------------------------------------------------
+   CUSTOM SCROLLBAR
+----------------------------------------------------------- */
+
+.custom-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(20, 180, 160, 0.3);
+  border-radius: 2px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 180, 160, 0.5);
+}
+
+/* Used by InputNumber. */
+/* Hide native number input spinners */
+input[type="number"].no-spin {
+  appearance: textfield;
+  -moz-appearance: textfield; /* Firefox */
+}
+input[type="number"].no-spin::-webkit-outer-spin-button,
+input[type="number"].no-spin::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* -----------------------------------------------------------
    RADAR KEYFRAMES
 ----------------------------------------------------------- */
 
@@ -137,6 +183,388 @@
   }
 }
 
+
+/* Used by the applications list (empty state, interview cards). */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* -----------------------------------------------------------
+   HEADER RADAR (logo pings + background sweep)
+   Subtle on purpose; disabled for prefers-reduced-motion.
+----------------------------------------------------------- */
+
+@keyframes radar-logo-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.radar-logo-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(20, 184, 166, 0.45);
+  animation: radar-logo-ping 3.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+.radar-logo-ping--delayed {
+  animation-delay: 1.8s;
+}
+
+/* Logo sweep: conic wedge whose bright edge (at 12 o'clock = 360deg) leads a
+   clockwise rotation, with the trail fading counter-clockwise behind it. */
+.radar-logo-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 260deg,
+    rgba(45, 212, 191, 0.12) 300deg,
+    rgba(45, 212, 191, 0.55) 360deg
+  );
+  animation: spin-slow 4s linear infinite;
+}
+
+/* Leading edge line, from the center to the rim. */
+.radar-logo-sweep::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 0.75px);
+  top: 0;
+  width: 1.5px;
+  height: 50%;
+  border-radius: 1px;
+  background: linear-gradient(to top, rgba(94, 234, 212, 0.4), rgba(94, 234, 212, 1));
+}
+
+@keyframes radar-logo-blip {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  65%,
+  100% {
+    opacity: 0.12;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+}
+
+.radar-logo-blip {
+  position: absolute;
+  width: 11%;
+  height: 11%;
+  border-radius: 9999px;
+  background: rgba(94, 234, 212, 1);
+  box-shadow: 0 0 4px rgba(94, 234, 212, 0.9);
+  opacity: 0.12;
+  transform: translate(-50%, -50%);
+  animation: radar-logo-blip 4s ease-out infinite;
+}
+
+/* 520px radar centered on the logo (logo center = 36px, 36px in the header). */
+.header-radar {
+  position: absolute;
+  left: -224px;
+  top: -224px;
+  width: 520px;
+  height: 520px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: repeating-radial-gradient(
+    circle,
+    transparent 0 59px,
+    rgba(20, 184, 166, 0.07) 59px 60px
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 0%, #000 40%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 0%, #000 40%, transparent 70%);
+}
+
+.header-radar__sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  /* Bright edge leads the clockwise turn; the trail fades behind it. */
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 290deg,
+    rgba(20, 184, 166, 0.16) 360deg
+  );
+  animation: spin-slow 10s linear infinite;
+}
+
+@keyframes header-blip {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  4% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  28% {
+    opacity: 0;
+  }
+}
+
+.header-radar__blip {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(94, 234, 212, 0.9);
+  box-shadow: 0 0 8px rgba(94, 234, 212, 0.8);
+  opacity: 0;
+  animation: header-blip 10s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-logo-ping {
+    display: none;
+  }
+  .radar-logo-sweep,
+  .radar-logo-blip,
+  .header-radar__sweep,
+  .header-radar__blip {
+    animation: none;
+  }
+}
+
+/* -----------------------------------------------------------
+   PAGE RADAR BACKGROUND (net + sweep + rare detections)
+   Very low contrast on purpose. See RadarBackground.
+----------------------------------------------------------- */
+
+.radar-bg {
+  /* Light theme */
+  --radar-net: rgba(13, 148, 136, 0.13);
+  --radar-net-strong: rgba(13, 148, 136, 0.45);
+  --radar-net-sweep: rgba(13, 148, 136, 0.14);
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dark .radar-bg {
+  --radar-net: rgba(45, 212, 191, 0.11);
+  --radar-net-strong: rgba(45, 212, 191, 0.42);
+  --radar-net-sweep: rgba(45, 212, 191, 0.16);
+}
+
+/* Range rings every 120px + radial lines every 30deg, centered on the
+   bottom-right corner (--net-x/--net-y let the spotlight copy stay aligned). */
+.radar-bg__grid,
+.radar-bg__spotlight {
+  --net-x: 100%;
+  --net-y: 100%;
+  background:
+    repeating-radial-gradient(
+      circle at var(--net-x) var(--net-y),
+      transparent 0 119px,
+      var(--net-color) 119px 120px
+    ),
+    repeating-conic-gradient(
+      from 0deg at var(--net-x) var(--net-y),
+      var(--net-color) 0deg 0.07deg,
+      transparent 0.07deg 30deg
+    );
+}
+
+.radar-bg__grid {
+  --net-color: var(--radar-net);
+  position: absolute;
+  inset: 0;
+  /* Strongest near the corner, fading out across the page. */
+  -webkit-mask-image: radial-gradient(circle at 100% 100%, #000 0%, #000 35%, rgba(0, 0, 0, 0.35) 75%, transparent 100%);
+  mask-image: radial-gradient(circle at 100% 100%, #000 0%, #000 35%, rgba(0, 0, 0, 0.35) 75%, transparent 100%);
+}
+
+.radar-bg__sweep {
+  position: absolute;
+  right: -1100px;
+  bottom: -1100px;
+  width: 2200px;
+  height: 2200px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg 315deg,
+    var(--radar-net-sweep) 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 0%, #000 45%, transparent 72%);
+  mask-image: radial-gradient(circle, #000 0%, #000 45%, transparent 72%);
+  animation: spin-slow 28s linear infinite;
+}
+
+/* Hover "scanner": a small window that redraws the net brighter under the
+   cursor, with a soft glow. Moved via transform (see RadarBackground). */
+.radar-bg__spotlight {
+  --net-color: var(--radar-net-strong);
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 9999px;
+  -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.6) 35%, transparent 70%);
+  mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.6) 35%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  will-change: transform;
+}
+
+.radar-bg__spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.12) 0%, transparent 60%);
+}
+
+.radar-bg__spotlight[data-visible="1"] {
+  opacity: 1;
+}
+
+/* Click ping: two rings expanding from the click point. */
+@keyframes radar-ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+.radar-ripple {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.radar-ripple__ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 220px;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(20, 184, 166, 0.55);
+  box-shadow: 0 0 18px rgba(45, 212, 191, 0.25);
+  animation: radar-ripple 1.1s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
+}
+
+.radar-ripple__ring--late {
+  animation-delay: 0.22s;
+  opacity: 0;
+}
+
+@keyframes radar-detection {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  10%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.radar-detection {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: radar-detection 4.6s ease-in-out forwards;
+}
+
+.radar-detection__dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(20, 184, 166, 0.9);
+  box-shadow: 0 0 10px rgba(45, 212, 191, 0.8);
+}
+
+.radar-detection__dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid rgba(45, 212, 191, 0.6);
+  animation: radar-logo-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.radar-detection__label {
+  padding: 3px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  background: rgba(255, 255, 255, 0.75);
+  color: rgb(15, 118, 110);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.dark .radar-detection__label {
+  background: rgba(7, 13, 26, 0.7);
+  color: rgb(94, 234, 212);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-bg__sweep,
+  .radar-detection__dot::after {
+    animation: none;
+  }
+  .radar-bg__spotlight,
+  .radar-ripple {
+    display: none;
+  }
+}
 
 /* -----------------------------------------------------------
    RADAR THEME TOKENS
