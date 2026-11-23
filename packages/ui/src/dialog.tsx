@@ -54,8 +54,10 @@ export const DialogContent = React.forwardRef<
           // Keep 24px free above and below; tall forms scroll inside the dialog.
           "max-h-[calc(100vh-48px)] overflow-y-auto",
           "rounded-2xl border border-black/8 bg-white p-6 shadow-2xl outline-none",
+          // Own text color, so labels and inputs don't depend on the page's default.
+          "text-gray-900",
           // Dark mode variants
-          "dark:border-white/10 dark:bg-[#0f1829]",
+          "dark:border-white/10 dark:bg-[#0f1829] dark:text-slate-100",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
           "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",

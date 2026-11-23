@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import {
   ApplicationStatus,
   type Application,
@@ -196,7 +197,7 @@ export const ApplicationForm = ({
               className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
                 !isCompanyNameValid && touched.companyName
                   ? "border-red-500"
-                  : "border-white/20"
+                  : "border-black/15 dark:border-white/20"
               }`}
             />
             {!isCompanyNameValid && touched.companyName && (
@@ -220,7 +221,7 @@ export const ApplicationForm = ({
               className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
                 !isPositionValid && touched.position
                   ? "border-red-500"
-                  : "border-white/20"
+                  : "border-black/15 dark:border-white/20"
               }`}
             />
             {!isPositionValid && touched.position && (
@@ -248,7 +249,7 @@ export const ApplicationForm = ({
                 className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
                   !isLinkValid && touched.link
                     ? "border-red-500"
-                    : "border-white/20"
+                    : "border-black/15 dark:border-white/20"
                 }`}
               />
               <div className="flex items-center justify-between">
@@ -277,10 +278,10 @@ export const ApplicationForm = ({
                     setStatus(value as ApplicationStatus);
                   }}
                 >
-                  <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left">
-                    <span className="w-full text-xs font-medium">
-                      {getStatusLabel(status)}
-                    </span>
+                  {/* Same border, text size and height as the inputs next to it. */}
+                  <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left cursor-pointer">
+                    <span className="w-full truncate">{getStatusLabel(status)}</span>
+                    <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
                   </SelectTrigger>
                   <SelectContent>
                     {allowedStatuses.map((status) => (
@@ -308,7 +309,7 @@ export const ApplicationForm = ({
                 max={todayInputValue}
                 onChange={(e) => setAppliedDate(e.target.value)}
                 className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors font-roboto ${
-                  isAppliedDateValid ? "border-white/20" : "border-red-500"
+                  isAppliedDateValid ? "border-black/15 dark:border-white/20" : "border-red-500"
                 }`}
               />
               {!isAppliedDateValid && (
@@ -322,7 +323,7 @@ export const ApplicationForm = ({
           {/* Notes */}
           <label className="flex flex-col gap-1 items-start w-full">
             <span className="text-sm">Notes</span>
-            <div className="relative w-full p-2 pb-5.5 min-h-24 rounded-md bg-teal-400/10 dark:bg-black/20 border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <div className="relative w-full p-2 pb-5.5 min-h-24 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500">
               <textarea
                 aria-label="Application Notes"
                 placeholder="Add quick notes (e.g. referral, contact, next steps...)"

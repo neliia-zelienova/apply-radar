@@ -5,6 +5,10 @@ import { useThemeContext } from "../context/theme-context";
 
 interface ItemContextMenuProps {
   itemId: string;
+  /** Accessible name of the trigger, e.g. "Actions for Acme". */
+  label?: string;
+  /** Extra classes for the trigger button (e.g. its grid area). */
+  className?: string;
   options: Array<{
     label: string;
     icon: React.ReactNode;
@@ -14,14 +18,14 @@ interface ItemContextMenuProps {
   }>;
 }
 
-export const ItemContextMenu = ({ itemId, options }: ItemContextMenuProps) => {
+export const ItemContextMenu = ({ itemId, options, label = "Actions", className = "" }: ItemContextMenuProps) => {
   const { theme } = useThemeContext();
   const dark = theme === "dark";
 
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger asChild>
-        <button className="mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20 h-fit">
+        <button aria-label={label} className={`${className} mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20 h-fit`}>
           <EllipsisVertical className="h-4 w-4 text-gray-900 dark:text-teal-600" />
         </button>
       </DropdownMenuTrigger>

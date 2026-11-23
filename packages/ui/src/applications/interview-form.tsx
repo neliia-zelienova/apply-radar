@@ -303,7 +303,7 @@ export const InterviewForm = ({
               placeholder="e.g., Screening, Technical, Onsite"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
+              className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
             />
           </label>
           <div className="grid grid-cols-2 gap-3 w-full">
@@ -313,7 +313,7 @@ export const InterviewForm = ({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
+                className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
               />
             </label>
             <label className="flex flex-col gap-1 items-start w-full">
@@ -322,7 +322,7 @@ export const InterviewForm = ({
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
+                className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
               />
             </label>
           </div>
@@ -336,7 +336,7 @@ export const InterviewForm = ({
               className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors font-roboto ${
                 isProbablyUrl(locationLink) && !isUrlSyntaxValid(locationLink)
                   ? "border-red-500"
-                  : "border-white/20"
+                  : "border-black/15 dark:border-white/20"
               }`}
             />
           </label>
@@ -345,7 +345,7 @@ export const InterviewForm = ({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full min-h-24 p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none font-roboto"
+              className="w-full min-h-24 p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none font-roboto"
               placeholder="Interview panel, agenda, reminders..."
             />
           </label>
@@ -380,7 +380,7 @@ export const InterviewForm = ({
                     onValueChange={handleUnitsChanged}
                   >
                     <span className="text-sm">before</span>
-                    <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left">
+                    <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left">
                       <SelectValue placeholder="Select unit" />
                     </SelectTrigger>
                     <SelectContent>

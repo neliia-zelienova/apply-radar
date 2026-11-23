@@ -216,6 +216,87 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
   }
 }
 
+/* The app's theme (not the OS setting) decides native colors: default text,
+   date-picker icon, scrollbars, form controls. */
+html:root:not(.dark) {
+  color-scheme: light;
+}
+html:root.dark,
+.dark {
+  color-scheme: dark;
+}
+
+/* Date-picker icon in the text color: Chrome keeps its own icon black even
+   with color-scheme: dark, which made it invisible on dark inputs. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v4'/%3E%3Cpath d='M16 2v4'/%3E%3Crect width='18' height='18' x='3' y='4' rx='2'/%3E%3Cpath d='M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2v4'/%3E%3Cpath d='M16 2v4'/%3E%3Crect width='18' height='18' x='3' y='4' rx='2'/%3E%3Cpath d='M3 10h18'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Application list rows + their column headers. One line normally; when the
+   list itself is narrow (web on a phone), two lines:
+     name ·········· status ★ ⋮
+     date ⌄ ↗                                                      */
+.app-list {
+  container: app-list / inline-size;
+}
+.app-grid {
+  display: grid;
+  grid-template-columns: 1fr 140px 80px 36px 72px;
+  gap: 8px;
+}
+.app-cell-date {
+  text-align: center;
+}
+/* Name/position lines size to their text; cap them so long names end in "…"
+   instead of running under the status pill. */
+.app-cell-name > * {
+  max-width: 100%;
+}
+.app-cell-actions {
+  display: flex;
+}
+/* Sort button: only where the column headers are hidden (narrow list). */
+.app-sort-button {
+  display: none;
+}
+@container app-list (max-width: 479px) {
+  .app-grid {
+    grid-template-columns: auto auto 1fr auto auto auto;
+    grid-template-areas:
+      "name name name status fav more"
+      "date expand link . . .";
+    column-gap: 6px;
+    row-gap: 4px;
+  }
+  /* Its buttons become grid items so ⋮ can go up to the first line. */
+  .app-cell-actions {
+    display: contents;
+  }
+  .app-cell-name { grid-area: name; }
+  .app-cell-status { grid-area: status; }
+  .app-cell-more { grid-area: more; }
+  .app-cell-date { grid-area: date; text-align: left; }
+  .app-cell-fav { grid-area: fav; }
+  .app-cell-expand { grid-area: expand; }
+  .app-cell-link { grid-area: link; justify-self: start; }
+  /* Column headers don't match two-line cards; sorting moves to a button. */
+  .app-grid--header {
+    display: none;
+  }
+  .app-sort-button {
+    display: flex;
+  }
+}
+
 /* -----------------------------------------------------------
    HEADER RADAR (logo + background sweep)
    Subtle on purpose; disabled for prefers-reduced-motion.

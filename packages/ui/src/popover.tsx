@@ -44,8 +44,8 @@ export const PopoverContent = React.forwardRef<
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
             "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
             "data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2",
-            // Typography fallback
-            "text-gray-900",
+            // Typography fallback + dark mode
+            "text-gray-900 dark:border-white/10 dark:bg-[#0f1829] dark:text-slate-100",
             className
           )}
           {...props}

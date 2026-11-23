@@ -86,7 +86,9 @@ export const ApplicationsPanel = ({
 
   return (
     <main data-radar-avoid style={{ position: "relative", zIndex: 3, ...style }}>
+      {/* app-list: container for the row layout (see .app-grid in styles.css) */}
       <div
+        className="app-list"
         style={{
           borderRadius: "14px",
           background: "var(--surface-card)",

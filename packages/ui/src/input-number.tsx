@@ -157,7 +157,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
 
   return (
     <div
-      className={`relative inline-flex items-center gap-2 border rounded px-2 py-1 w-24 bg-teal-400/10 dark:bg-black/20 border focus-within:ring-2 focus-within:ring-teal-500 transition-colors ${
+      className={`relative inline-flex items-center gap-2 border border-black/15 dark:border-white/20 rounded px-2 py-1 w-24 bg-teal-400/10 dark:bg-black/20 focus-within:ring-2 focus-within:ring-teal-500 transition-colors ${
         className ?? ""
       }`}
     >

@@ -220,17 +220,16 @@ export const ApplicationItem = ({
     >
       <TooltipProvider>
         {/* Main row */}
+        {/* Columns from .app-grid (styles.css): one line, or two when the list is narrow */}
         <div
+          className="app-grid"
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 140px 80px 36px 72px",
-            gap: "8px",
             alignItems: "center",
             padding: "10px 10px 10px 12px",
           }}
         >
           {/* Company + Position */}
-          <div style={{ minWidth: 0 }} className="flex flex-col items-start">
+          <div style={{ minWidth: 0 }} className="app-cell-name flex flex-col items-start">
             <div
               className="text-gray-900 dark:text-white/90"
               style={{
@@ -261,7 +260,7 @@ export const ApplicationItem = ({
           </div>
 
           {/* Status pill — wrapped in div so the button isn't a direct grid item (prevents 140px stretch) */}
-          <div style={{ justifySelf: "start" }}>
+          <div className="app-cell-status" style={{ justifySelf: "start" }}>
             <SelectRoot onValueChange={handleStatusChange}>
               <SelectTrigger
                 title={
@@ -317,10 +316,9 @@ export const ApplicationItem = ({
 
           {/* Date */}
           <div
-            className="text-gray-400 dark:text-slate-600"
+            className="app-cell-date text-gray-400 dark:text-slate-600"
             style={{
               fontSize: "11px",
-              textAlign: "center",
               fontVariantNumeric: "tabular-nums",
               whiteSpace: "nowrap",
             }}
@@ -334,6 +332,7 @@ export const ApplicationItem = ({
             <TooltipTrigger asChild>
               <button
                 onClick={toggleFavorite}
+                className="app-cell-fav"
                 style={{
                   background: "none",
                   border: "none",
@@ -366,12 +365,12 @@ export const ApplicationItem = ({
           </TooltipRoot>
 
           {/* Actions: expand + link + context menu */}
-          <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+          <div className="app-cell-actions" style={{ alignItems: "center", gap: "2px" }}>
             <TooltipRoot>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setMoreInfo((e) => !e)}
-                  className="text-gray-300 dark:text-white/20 hover:text-gray-500 dark:hover:text-white/40 transition-colors"
+                  className="app-cell-expand text-gray-300 dark:text-white/20 hover:text-gray-500 dark:hover:text-white/40 transition-colors"
                   style={{
                     background: "none",
                     border: "none",
@@ -403,7 +402,7 @@ export const ApplicationItem = ({
                   href={app.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-300 dark:text-white/20 hover:text-gray-500 dark:hover:text-white/40 transition-colors"
+                  className="app-cell-link text-gray-300 dark:text-white/20 hover:text-gray-500 dark:hover:text-white/40 transition-colors"
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -420,7 +419,7 @@ export const ApplicationItem = ({
               </TooltipContent>
             </TooltipRoot>
 
-            <ItemContextMenu options={menuOptions} itemId={app?.id ?? ""} />
+            <ItemContextMenu options={menuOptions} itemId={app?.id ?? ""} label={`Actions for ${app.name}`} className="app-cell-more" />
           </div>
         </div>
 

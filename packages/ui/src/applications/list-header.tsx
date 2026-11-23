@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SortingOption } from "./sorting-option";
+import { SortMenu } from "./sort-menu";
 
 const SearchIcon = () => (
   <svg
@@ -45,10 +46,10 @@ export const ListHeader = ({
 
   return (
     <div className="flex flex-col" style={{ fontFamily: "Roboto, sans-serif" }}>
-      {/* Search bar — pill shaped */}
-      <div style={{ padding: "14px 12px 10px" }}>
+      {/* Search bar — pill shaped; + sort button when the column headers are hidden */}
+      <div className="flex items-center gap-2" style={{ padding: "14px 12px 10px" }}>
         <div
-          className="flex items-center gap-2"
+          className="flex min-w-0 flex-1 items-center gap-2"
           style={{
             padding: "9px 14px",
             borderRadius: "9999px",
@@ -85,21 +86,26 @@ export const ListHeader = ({
             onBlur={() => setFocused(false)}
           />
         </div>
+        <SortMenu
+          className="app-sort-button"
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          onSortByChange={onSortByChange}
+          onSortOrderChange={onSortOrderChange}
+        />
       </div>
 
       {/* Column headers */}
       <div
+        className="app-grid app-grid--header"
         style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 140px 80px 36px 72px",
-          gap: "8px",
           padding: "0 10px 8px 15px",
           borderBottom: "1px solid var(--border-subtle)",
         }}
       >
         <SortingOption
           name="Application"
-          className="text-[10px] flex justify-start"
+          className="app-cell-name text-[10px] flex justify-start"
           order={sortBy === "name" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") =>
             handleSortChange("name", order)
@@ -107,7 +113,7 @@ export const ListHeader = ({
         />
         <SortingOption
           name="Status"
-          className="text-[10px] flex justify-start"
+          className="app-cell-status text-[10px] flex justify-start"
           order={sortBy === "status" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") =>
             handleSortChange("status", order)
@@ -115,19 +121,19 @@ export const ListHeader = ({
         />
         <SortingOption
           name="Applied"
-          className="text-[10px] flex justify-center"
+          className="app-cell-date text-[10px] flex justify-center"
           order={sortBy === "date" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") => handleSortChange("date", order)}
         />
         <SortingOption
           name="Fav"
-          className="text-[10px] flex justify-center"
+          className="app-cell-fav text-[10px] flex justify-center"
           order={sortBy === "favorite" ? sortOrder : undefined}
           onClick={(order: "asc" | "desc") =>
             handleSortChange("favorite", order)
           }
         />
-        <h2 className="text-[10px] flex justify-center items-center text-slate-400 dark:text-white/25 font-semibold tracking-wider">
+        <h2 className="app-cell-more text-[10px] flex justify-center items-center text-slate-400 dark:text-white/25 font-semibold tracking-wider">
           ACT
         </h2>
       </div>
