@@ -55,6 +55,8 @@ pnpm dev:web
 3. The API must allow the web origin (CORS). Without `CORS_ORIGINS` set, local dev already allows
    `http://localhost:5173`; if you set `CORS_ORIGINS`, include it there.
 4. `pnpm dev:api` and `pnpm dev:web`, then open http://localhost:5173.
+   When signed in with Google, the extension header has a dashboard button that opens (or focuses) it;
+   set `VITE_WEB_APP_URL` in the extension env if the web app runs elsewhere (default `http://localhost:5173`).
 
 The web app keeps the access token in memory and restores the session from the refresh cookie on reload.
 That cookie is shared with the extension in the same browser, so signing in, signing out or switching
