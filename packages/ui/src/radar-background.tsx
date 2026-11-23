@@ -20,7 +20,8 @@ interface Detection {
   id: number;
   x: number;
   y: number;
-  label: string;
+  /** Absent in dots-only mode. */
+  label?: string;
 }
 
 interface Ripple {
@@ -29,10 +30,19 @@ interface Ripple {
   y: number;
 }
 
-const LABEL_WIDTH = 230; // generous estimate of a blip + label, px
-const LABEL_HEIGHT = 34;
-const EDGE = 24;
-const GAP = 16; // keep this far away from content
+/** Footprint of a detection plus how far it stays from content / the viewport edge. */
+interface Size {
+  width: number;
+  height: number;
+  gap: number;
+  edge: number;
+}
+// Generous estimate of a blip + label, px.
+const LABELED: Size = { width: 230, height: 34, gap: 16, edge: 24 };
+// A blip + its ping ring: tiny, so it can sit much closer to content.
+const DOT: Size = { width: 18, height: 18, gap: 6, edge: 12 };
+const LABEL_MS = 4800;
+const BLIP_MS = 3800;
 const SPOTLIGHT = 340; // px, diameter of the hover "scanner"
 const ECHO_CHANCE = 0.35; // share of clicks that get a detection nearby
 const ECHO_COOLDOWN = 3000;
@@ -53,47 +63,52 @@ const avoidRects = () =>
     el.getBoundingClientRect(),
   );
 
-const overlapsContent = (x: number, y: number, rects: DOMRect[]) =>
+const overlapsContent = (x: number, y: number, size: Size, rects: DOMRect[]) =>
   rects.some(
     (r) =>
-      x < r.right + GAP &&
-      x + LABEL_WIDTH > r.left - GAP &&
-      y < r.bottom + GAP &&
-      y + LABEL_HEIGHT > r.top - GAP,
+      x < r.right + size.gap &&
+      x + size.width > r.left - size.gap &&
+      y < r.bottom + size.gap &&
+      y + size.height > r.top - size.gap,
   );
 
-const fitsViewport = (x: number, y: number) =>
-  x >= EDGE &&
-  y >= EDGE &&
-  x <= window.innerWidth - LABEL_WIDTH - EDGE &&
-  y <= window.innerHeight - LABEL_HEIGHT - EDGE;
+const fitsViewport = (x: number, y: number, size: Size) =>
+  x >= size.edge &&
+  y >= size.edge &&
+  x <= window.innerWidth - size.width - size.edge &&
+  y <= window.innerHeight - size.height - size.edge;
 
 /** A random empty spot in the viewport, or near (`around`) a point. */
-const findFreeSpot = (around?: { x: number; y: number }) => {
+const findFreeSpot = (size: Size, around?: { x: number; y: number }) => {
   const rects = avoidRects();
-  for (let attempt = 0; attempt < 20; attempt++) {
+  for (let attempt = 0; attempt < 40; attempt++) {
     let x: number;
     let y: number;
     if (around) {
       const angle = Math.random() * Math.PI * 2;
       const distance = 50 + Math.random() * 110;
-      x = around.x + Math.cos(angle) * distance - LABEL_WIDTH / 4;
-      y = around.y + Math.sin(angle) * distance - LABEL_HEIGHT / 2;
+      x = around.x + Math.cos(angle) * distance - size.width / 4;
+      y = around.y + Math.sin(angle) * distance - size.height / 2;
     } else {
-      x = EDGE + Math.random() * (window.innerWidth - LABEL_WIDTH - 2 * EDGE);
-      y = EDGE + Math.random() * (window.innerHeight - LABEL_HEIGHT - 2 * EDGE);
+      x = size.edge + Math.random() * (window.innerWidth - size.width - 2 * size.edge);
+      y = size.edge + Math.random() * (window.innerHeight - size.height - 2 * size.edge);
     }
-    if (fitsViewport(x, y) && !overlapsContent(x, y, rects)) return { x, y };
+    if (fitsViewport(x, y, size) && !overlapsContent(x, y, size, rects)) return { x, y };
   }
   return null; // no empty space right now — skip
 };
 
 export interface RadarBackgroundProps {
   /**
-   * Occasionally pop up a work-themed "detection" by itself (every 25–45s).
-   * Clicks on empty space can always produce an "echo" detection.
+   * Occasionally pop up "detections" by itself. Clicks on empty space can
+   * always produce an "echo" detection.
    */
   detections?: boolean;
+  /**
+   * true (default): one work-themed label every 25–45s.
+   * false: dots only — 1–3 blips that flash, ping twice and fade, every 6–12s.
+   */
+  labels?: boolean;
 }
 
 /**
@@ -104,21 +119,40 @@ export interface RadarBackgroundProps {
  *
  * Put page content in a positioned layer above it (e.g. `relative z-[1]`).
  */
-export const RadarBackground = ({ detections = false }: RadarBackgroundProps) => {
+export const RadarBackground = ({
+  detections = false,
+  labels = true,
+}: RadarBackgroundProps) => {
   const spotlightRef = useRef<HTMLDivElement>(null);
-  const [detection, setDetection] = useState<Detection | null>(null);
+  const [shown, setShown] = useState<Detection[]>([]);
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const lastLabel = useRef<string | null>(null);
   const nextId = useRef(1);
-  const hideTimer = useRef<number | undefined>(undefined);
+  const timers = useRef(new Set<number>());
+  const size = labels ? LABELED : DOT;
+
+  const later = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timers.current.delete(id);
+      fn();
+    }, ms);
+    timers.current.add(id);
+  };
 
   const showDetection = (spot: { x: number; y: number }) => {
-    const choices = DETECTION_LABELS.filter((l) => l !== lastLabel.current);
-    const label = choices[Math.floor(Math.random() * choices.length)];
-    lastLabel.current = label;
-    setDetection({ id: nextId.current++, label, ...spot });
-    window.clearTimeout(hideTimer.current);
-    hideTimer.current = window.setTimeout(() => setDetection(null), 4800);
+    const id = nextId.current++;
+    if (labels) {
+      const choices = DETECTION_LABELS.filter((l) => l !== lastLabel.current);
+      const label = choices[Math.floor(Math.random() * choices.length)];
+      lastLabel.current = label;
+      setShown([{ id, label, ...spot }]); // one label at a time
+    } else {
+      setShown((current) => [...current.slice(-5), { id, ...spot }]);
+    }
+    later(
+      () => setShown((current) => current.filter((d) => d.id !== id)),
+      labels ? LABEL_MS : BLIP_MS,
+    );
   };
 
   // Passive detections.
@@ -128,15 +162,21 @@ export const RadarBackground = ({ detections = false }: RadarBackgroundProps) =>
     const schedule = (delay: number) => {
       timer = window.setTimeout(() => {
         if (document.visibilityState === "visible") {
-          const spot = findFreeSpot();
-          if (spot) showDetection(spot);
+          // Labels: one; dots: a small cluster, staggered like a sweep passing.
+          const count = labels ? 1 : 1 + Math.floor(Math.random() * 3);
+          for (let i = 0; i < count; i++) {
+            later(() => {
+              const spot = findFreeSpot(size);
+              if (spot) showDetection(spot);
+            }, i * (300 + Math.random() * 600));
+          }
         }
-        schedule(25_000 + Math.random() * 20_000); // every 25–45s
+        schedule(labels ? 25_000 + Math.random() * 20_000 : 6_000 + Math.random() * 6_000);
       }, delay);
     };
-    schedule(8_000 + Math.random() * 7_000); // first one after 8–15s
+    schedule(labels ? 8_000 + Math.random() * 7_000 : 2_000 + Math.random() * 3_000);
     return () => window.clearTimeout(timer);
-  }, [detections]);
+  }, [detections, labels]);
 
   // Hover scanner + click pings.
   useEffect(() => {
@@ -177,10 +217,10 @@ export const RadarBackground = ({ detections = false }: RadarBackgroundProps) =>
       );
       const now = Date.now();
       if (now - lastEcho > ECHO_COOLDOWN && Math.random() < ECHO_CHANCE) {
-        const spot = findFreeSpot({ x: event.clientX, y: event.clientY });
+        const spot = findFreeSpot(size, { x: event.clientX, y: event.clientY });
         if (spot) {
           lastEcho = now;
-          window.setTimeout(() => showDetection(spot), 450); // the "echo" comes back
+          later(() => showDetection(spot), 450); // the "echo" comes back
         }
       }
     };
@@ -196,9 +236,12 @@ export const RadarBackground = ({ detections = false }: RadarBackgroundProps) =>
       window.removeEventListener("blur", hide);
       window.removeEventListener("click", onClick);
     };
-  }, []);
+  }, [labels]);
 
-  useEffect(() => () => window.clearTimeout(hideTimer.current), []);
+  useEffect(() => {
+    const pending = timers.current;
+    return () => pending.forEach((id) => window.clearTimeout(id));
+  }, []);
 
   return (
     <div aria-hidden className="radar-bg">
@@ -216,15 +259,19 @@ export const RadarBackground = ({ detections = false }: RadarBackgroundProps) =>
           <span className="radar-ripple__ring radar-ripple__ring--late" />
         </span>
       ))}
-      {detection && (
-        <div
-          key={detection.id}
-          className="radar-detection"
-          style={{ left: detection.x, top: detection.y }}
-        >
-          <span className="radar-detection__dot" />
-          <span className="radar-detection__label">{detection.label}</span>
-        </div>
+      {shown.map((d) =>
+        d.label ? (
+          <div key={d.id} className="radar-detection" style={{ left: d.x, top: d.y }}>
+            <span className="radar-detection__dot" />
+            <span className="radar-detection__label">{d.label}</span>
+          </div>
+        ) : (
+          <span key={d.id} className="radar-blip" style={{ left: d.x, top: d.y }}>
+            <span className="radar-blip__ring" />
+            <span className="radar-blip__ring radar-blip__ring--late" />
+            <span className="radar-blip__dot" />
+          </span>
+        ),
       )}
     </div>
   );

@@ -6,10 +6,25 @@ export interface AppHeaderProps {
   right?: ReactNode;
   /** Shown under the logo row (e.g. the "Add application" button). */
   children?: ReactNode;
+  /**
+   * The slow radar sweep in the header. Off where the page background is
+   * already animated (web app).
+   */
+  animated?: boolean;
+  /** Space under the content; the extension's list overlaps the bottom 18px. */
+  paddingBottom?: number;
+  /** Extra classes for the content row, e.g. "mx-auto max-w-6xl" to line up with the page. */
+  contentClassName?: string;
 }
 
 /** Dark radar-style header with the Apply Radar logo, shared by the extension and web. */
-export const AppHeader = ({ right, children }: AppHeaderProps) => {
+export const AppHeader = ({
+  right,
+  children,
+  animated = true,
+  paddingBottom = 28,
+  contentClassName = "",
+}: AppHeaderProps) => {
   return (
     <div
       data-radar-avoid
@@ -17,7 +32,7 @@ export const AppHeader = ({ right, children }: AppHeaderProps) => {
       style={{
         background:
           "linear-gradient(160deg, #050b1a 0%, #071328 55%, #0c1a32 100%)",
-        paddingBottom: "28px",
+        paddingBottom,
       }}
     >
       {/* Scanline texture */}
@@ -30,14 +45,14 @@ export const AppHeader = ({ right, children }: AppHeaderProps) => {
       />
 
       {/* Slow radar sweep around the logo */}
-      <HeaderRadar />
+      {animated && <HeaderRadar />}
 
-      {/* Teal radial glow */}
+      {/* Teal radial glow, with the radar in the bottom-right corner */}
       <div
         className="absolute pointer-events-none"
         style={{
-          top: "-20px",
-          left: "20px",
+          bottom: "-40px",
+          right: "-40px",
           width: "200px",
           height: "120px",
           background:
@@ -45,7 +60,7 @@ export const AppHeader = ({ right, children }: AppHeaderProps) => {
         }}
       />
 
-      <div className="relative z-10 px-[18px] pt-[18px] flex flex-col gap-3.5">
+      <div className={`relative z-10 px-[18px] pt-[18px] flex flex-col gap-3.5 ${contentClassName}`}>
         {/* Top row: logo + settings */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">

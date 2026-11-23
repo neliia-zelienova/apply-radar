@@ -5,6 +5,7 @@ import {
   type ApplicationSortField,
 } from "@apply-radar/shared";
 import {
+  AppHeader,
   ApplicationForm,
   ApplicationsContext,
   ApplicationsPanel,
@@ -17,7 +18,6 @@ import {
 import { api } from "../api";
 import type { Profile } from "../hooks/use-session";
 import { AccountMenu } from "./account-menu";
-import { Brand } from "./brand";
 import { StatsRow } from "./stats-row";
 
 /** Signed-in view: same applications as the extension, read/written via the API. */
@@ -70,12 +70,12 @@ export const Dashboard = ({
 
   return (
     <ApplicationsContext.Provider value={applicationsContext}>
-      <header
-        data-radar-avoid
-        className="border-b border-black/5 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-[#071328]/80"
-      >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Brand />
+      {/* Same header as the extension, minus its sweep (the page background moves). */}
+      <AppHeader
+        animated={false}
+        paddingBottom={18}
+        contentClassName="mx-auto w-full max-w-6xl"
+        right={
           <AccountMenu
             profile={profile}
             avatar={avatar}
@@ -83,13 +83,14 @@ export const Dashboard = ({
             onSignOut={onSignOut}
             onDeleteAccount={onDeleteAccount}
           />
-        </div>
-      </header>
+        }
+      />
 
-      {/* data-radar-avoid: background "detections" never appear over the list */}
-      <div data-radar-avoid className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6">
+      {/* Only the visible parts are data-radar-avoid (not this column), so background
+          blips can still show in the empty space around and between them. */}
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-[18px] py-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-left">
+          <div data-radar-avoid className="text-left">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
               {profile.name ? `Hi, ${profile.name.split(" ")[0]}` : "Your applications"}
             </h1>
@@ -97,7 +98,7 @@ export const Dashboard = ({
               Synced with the Apply Radar extension.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div data-radar-avoid className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => void store.reload()}
@@ -139,7 +140,7 @@ export const Dashboard = ({
         <StatsRow applications={store.allApplications} />
 
         {store.isLoading && store.allApplications.length === 0 ? (
-          <div className="py-16 text-center text-sm text-gray-400 dark:text-slate-500">
+          <div data-radar-avoid className="py-16 text-center text-sm text-gray-400 dark:text-slate-500">
             Loading your applications…
           </div>
         ) : (

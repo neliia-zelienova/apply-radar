@@ -43,13 +43,15 @@ export const AccountMenu = ({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const displayName = profile.name || profile.email;
 
   return (
     <>
       <DropdownMenuRoot>
         <DropdownMenuTrigger asChild>
           <button
-            className="flex cursor-pointer items-center gap-2 rounded-full border border-black/10 py-1 pl-1 pr-3 hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/5"
+            // Room after the name only when the name is shown (sm and up).
+            className={`flex cursor-pointer items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1 transition-colors hover:bg-teal-500/15 ${displayName ? "sm:pr-3" : ""}`}
             aria-label="Account menu"
           >
             <UserAvatar
@@ -57,9 +59,11 @@ export const AccountMenu = ({
               photoUrl={profile.picture}
               label={profile.name || "Your avatar"}
             />
-            <span className="hidden max-w-40 truncate text-sm text-gray-700 sm:inline dark:text-slate-200">
-              {profile.name || profile.email}
-            </span>
+            {displayName && (
+              <span className="hidden max-w-40 truncate text-sm text-slate-200 sm:inline">
+                {displayName}
+              </span>
+            )}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

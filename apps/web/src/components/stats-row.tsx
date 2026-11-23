@@ -20,6 +20,7 @@ const Stat = ({
   accent: string;
 }) => (
   <div
+    data-radar-avoid
     className="rounded-xl border border-black/5 bg-white px-4 py-3 text-left shadow-sm dark:border-white/10 dark:bg-[#0f1829]"
     title={hint}
   >

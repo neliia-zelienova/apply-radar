@@ -44,7 +44,7 @@ const SignedInGate = ({ radarEffects }: { radarEffects: boolean }) => {
   return (
     <>
       {/* Net + sweep everywhere; the "detections" easter egg only on the dashboard. */}
-      {radarEffects && <RadarBackground detections={session.status === "signed-in"} />}
+      {radarEffects && <RadarBackground detections={session.status === "signed-in"} labels={false} />}
       <div className="relative z-[1]">{content}</div>
     </>
   );

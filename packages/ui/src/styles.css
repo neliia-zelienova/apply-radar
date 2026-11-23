@@ -217,7 +217,7 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
 }
 
 /* -----------------------------------------------------------
-   HEADER RADAR (logo pings + background sweep)
+   HEADER RADAR (logo + background sweep)
    Subtle on purpose; disabled for prefers-reduced-motion.
 ----------------------------------------------------------- */
 
@@ -233,56 +233,48 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
   }
 }
 
-.radar-logo-ping {
-  position: absolute;
-  inset: 0;
+/* Logo: a still radar scope (the header and page backgrounds already move).
+   Light base in the light theme, dark navy in the dark theme. */
+.radar-logo {
+  --radar-logo-base: #ffffff;
   border-radius: 9999px;
   border: 1.5px solid rgba(20, 184, 166, 0.45);
-  animation: radar-logo-ping 3.6s cubic-bezier(0, 0, 0.2, 1) infinite;
-  pointer-events: none;
+  box-shadow: 0 0 16px rgba(20, 184, 166, 0.25);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(20, 184, 166, 0.32), rgba(20, 184, 166, 0.08) 70%),
+    var(--radar-logo-base);
 }
 
-.radar-logo-ping--delayed {
-  animation-delay: 1.8s;
+.dark .radar-logo {
+  --radar-logo-base: #071328;
 }
 
-/* Logo sweep: conic wedge whose bright edge (at 12 o'clock = 360deg) leads a
-   clockwise rotation, with the trail fading counter-clockwise behind it. */
+/* Sweep wedge frozen at 2 o'clock: bright leading edge, fading trail. */
 .radar-logo-sweep {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
+  /* Soft: the peak sits just behind the edge and eases off, so there's no hard line. */
   background: conic-gradient(
     from 0deg,
-    transparent 0deg 260deg,
-    rgba(45, 212, 191, 0.12) 300deg,
-    rgba(45, 212, 191, 0.55) 360deg
+    transparent 0deg 250deg,
+    rgba(45, 212, 191, 0.07) 300deg,
+    rgba(45, 212, 191, 0.26) 350deg,
+    rgba(45, 212, 191, 0.12) 360deg
   );
-  animation: spin-slow 4s linear infinite;
+  transform: rotate(60deg);
 }
 
 /* Leading edge line, from the center to the rim. */
 .radar-logo-sweep::after {
   content: "";
   position: absolute;
-  left: calc(50% - 0.75px);
+  left: calc(50% - 0.5px);
   top: 0;
-  width: 1.5px;
+  width: 1px;
   height: 50%;
   border-radius: 1px;
-  background: linear-gradient(to top, rgba(94, 234, 212, 0.4), rgba(94, 234, 212, 1));
-}
-
-@keyframes radar-logo-blip {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1.15);
-  }
-  65%,
-  100% {
-    opacity: 0.12;
-    transform: translate(-50%, -50%) scale(0.85);
-  }
+  background: linear-gradient(to top, rgba(94, 234, 212, 0.1), rgba(94, 234, 212, 0.45));
 }
 
 .radar-logo-blip {
@@ -290,18 +282,16 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
   width: 11%;
   height: 11%;
   border-radius: 9999px;
-  background: rgba(94, 234, 212, 1);
+  background: rgba(45, 212, 191, 1);
   box-shadow: 0 0 4px rgba(94, 234, 212, 0.9);
-  opacity: 0.12;
   transform: translate(-50%, -50%);
-  animation: radar-logo-blip 4s ease-out infinite;
 }
 
-/* 520px radar centered on the logo (logo center = 36px, 36px in the header). */
+/* 520px radar centered on the header's bottom-right corner, away from the logo. */
 .header-radar {
   position: absolute;
-  left: -224px;
-  top: -224px;
+  right: -260px;
+  bottom: -260px;
   width: 520px;
   height: 520px;
   border-radius: 9999px;
@@ -355,11 +345,6 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .radar-logo-ping {
-    display: none;
-  }
-  .radar-logo-sweep,
-  .radar-logo-blip,
   .header-radar__sweep,
   .header-radar__blip {
     animation: none;
@@ -521,6 +506,8 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
 
 .radar-detection__dot {
   position: relative;
+  display: block; /* a <span>: without this it has no size outside a flex row */
+  flex-shrink: 0;
   width: 8px;
   height: 8px;
   border-radius: 9999px;
@@ -555,8 +542,79 @@ input[type="number"].no-spin::-webkit-inner-spin-button {
   color: rgb(94, 234, 212);
 }
 
+/* Dots-only detection: flashes in, pulses, fades (like the header blips). */
+@keyframes radar-blip {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  12% {
+    opacity: 0.9;
+    transform: scale(1.2);
+  }
+  30% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+
+.radar-blip {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  animation: radar-blip 3.8s ease-out forwards;
+}
+
+.radar-blip__dot,
+.radar-blip__ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 9999px;
+}
+
+.radar-blip__dot {
+  background: rgb(20, 184, 166);
+  box-shadow:
+    0 0 0 1.5px rgba(45, 212, 191, 0.25),
+    0 0 9px 2px rgba(45, 212, 191, 0.6);
+}
+
+.dark .radar-blip__dot {
+  background: rgb(45, 212, 191);
+}
+
+/* Two pings spreading out from the dot. */
+@keyframes radar-blip-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(4.5);
+    opacity: 0;
+  }
+}
+
+.radar-blip__ring {
+  border: 1px solid rgba(45, 212, 191, 0.75);
+  animation: radar-blip-ring 1.6s ease-out 2 both;
+}
+
+.radar-blip__ring--late {
+  animation-delay: 0.5s;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .radar-bg__sweep,
+  .radar-blip__ring,
   .radar-detection__dot::after {
     animation: none;
   }

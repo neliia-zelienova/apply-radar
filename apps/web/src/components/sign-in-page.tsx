@@ -15,7 +15,8 @@ export const SignInPage = ({
 }) => (
   <div className="flex min-h-screen justify-center">
     <div data-radar-avoid className="flex w-full max-w-[600px] flex-col">
-      <AppHeader />
+      {/* No header sweep: the page background is already animated. */}
+      <AppHeader animated={false} />
       <div
         className="bg-slate-50 dark:bg-[#070d1a]"
         style={{
