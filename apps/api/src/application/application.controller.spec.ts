@@ -3,11 +3,13 @@ import { JwtService } from '@nestjs/jwt';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { ApplicationController } from './application.controller';
 import { ApplicationService } from './application.service';
+import { AiService } from './ai.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 describe('ApplicationController', () => {
   let controller: ApplicationController;
   let applicationService: Record<string, jest.Mock>;
+  let aiService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     applicationService = {
@@ -18,10 +20,13 @@ describe('ApplicationController', () => {
       remove: jest.fn(),
     };
 
+    aiService = { parseJobPostingPage: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ApplicationController],
       providers: [
         { provide: ApplicationService, useValue: applicationService },
+        { provide: AiService, useValue: aiService },
         { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
       ],
     }).compile();
@@ -64,6 +69,18 @@ describe('ApplicationController', () => {
       favorite: true,
     });
     expect(applicationService.remove).toHaveBeenCalledWith(id, 'user-1');
+  });
+
+  it('parse-page returns the AI result without saving', async () => {
+    const fields = { company: 'Picnic', position: 'Engineer' };
+    aiService.parseJobPostingPage.mockResolvedValue(fields);
+    const body = { url: 'https://x.example/job', text: 'Job text' };
+
+    await expect(controller.parsePage(body)).resolves.toEqual({
+      result: fields,
+    });
+    expect(aiService.parseJobPostingPage).toHaveBeenCalledWith(body);
+    expect(applicationService.create).not.toHaveBeenCalled();
   });
 
   it('maps list query flags', async () => {

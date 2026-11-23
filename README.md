@@ -63,6 +63,26 @@ That cookie is shared with the extension in the same browser, so signing in, sig
 accounts in one app is picked up by the other (on open/focus and every 30s). "Device only" mode in the
 extension is never switched automatically.
 
+### Add an application from a job page (extension)
+
+"From this page" in the extension header, or right-click → **Add this job to Apply Radar** on any page,
+opens the "Add application" form pre-filled from the job posting in the current tab. Nothing is saved
+until you review it and press Save.
+
+- The page is read in your own browser tab (no request is sent to the job site), so pages behind a login
+  or bot protection work too. The toolbar icon and the context menu grant access to that tab only; from the
+  side panel the extension asks once per site.
+- Company, position, employment type and location come from the page's schema.org `JobPosting` data when
+  it has one, otherwise from the title and text.
+- If the API has `ANTHROPIC_API_KEY` set (model `claude-haiku-4-5` by default, `ANTHROPIC_MODEL` to change),
+  signed-in users also get a one-line summary and better guesses for missing fields. Without a key this step
+  is skipped.
+- Notes end with the work mode / employment type / location line and "Added from link".
+
+End-to-end check (built extension in Chromium, mocked API, local test pages):
+`pnpm --filter apply-radar-extension build && pnpm --filter apply-radar-extension test:e2e`
+(first time: `npx playwright install chromium`).
+
 ### Filtering (run a single package)
 
 ```bash

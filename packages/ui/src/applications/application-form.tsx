@@ -18,12 +18,18 @@ export const ApplicationForm = ({
   triggerComponent,
   externalOpen,
   app,
+  draft,
+  notice,
   onSave,
   onCancel,
 }: {
   externalOpen?: boolean;
   triggerComponent?: React.ReactNode;
   app?: Application;
+  /** Initial values when adding (e.g. read from a job posting page). Ignored with `app`. */
+  draft?: Partial<Pick<Application, "name" | "position" | "url" | "notes">>;
+  /** Shown above the fields, e.g. where the draft came from. */
+  notice?: React.ReactNode;
   /**
    * May be async. The form closes when it's done, unless it returns/resolves
    * `false` (save failed): then the form stays open with the draft intact.
@@ -34,11 +40,13 @@ export const ApplicationForm = ({
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
+  // Editing starts from the application, adding from the optional draft.
+  const source = app ?? draft;
   // Form fields keep their UI names; they map to Application.name / Application.url.
-  const [companyName, setCompanyName] = useState<string>(app?.name || "");
-  const [position, setPosition] = useState<string>(app?.position || "");
-  const [link, setLink] = useState<string>(app?.url || "");
-  const [notes, setNotes] = useState<string>(app?.notes || "");
+  const [companyName, setCompanyName] = useState<string>(source?.name || "");
+  const [position, setPosition] = useState<string>(source?.position || "");
+  const [link, setLink] = useState<string>(source?.url || "");
+  const [notes, setNotes] = useState<string>(source?.notes || "");
   const [status, setStatus] = useState<ApplicationStatus | undefined>(
     app?.status
   );
@@ -107,14 +115,14 @@ export const ApplicationForm = ({
   }, [status]);
 
   const resetForm = useCallback(() => {
-    setCompanyName(app?.name || "");
-    setPosition(app?.position || "");
-    setLink(app?.url || "");
-    setNotes(app?.notes || "");
+    setCompanyName(source?.name || "");
+    setPosition(source?.position || "");
+    setLink(source?.url || "");
+    setNotes(source?.notes || "");
     setAppliedDate(toDateInputValue(app?.createdAt ?? new Date()));
     setTouched({ companyName: false, position: false, link: false });
     setSaveFailed(false);
-  }, [app]);
+  }, [app, source]);
 
   const handleCloseWithUnsavedCheck = useCallback(() => {
     // When attempting to close the form, check for unsaved changes
@@ -186,6 +194,11 @@ export const ApplicationForm = ({
           </DialogTitle>
           {/* Remove implicit close to control explicitly */}
         </DialogHeader>
+        {notice && (
+          <div className="mb-1 rounded-md border border-teal-500/25 bg-teal-500/5 px-3 py-2 text-left text-xs text-gray-600 dark:text-slate-300">
+            {notice}
+          </div>
+        )}
         {/* Fields */}
         <div className="grid grid-cols-1 gap-3 w-full">
           {/* Company Name */}

@@ -1,3 +1,8 @@
+import {
+  EMPLOYMENT_TYPES,
+  WORK_MODES,
+  type JobPostingDraft,
+} from "../job-posting/job-posting";
 import type { Application, Interview } from "../types/application";
 import type { AvatarSettings } from "../types/avatar";
 
@@ -219,6 +224,22 @@ export const createApiClient = (options: ApiClientOptions) => {
       async remove(id: string): Promise<void> {
         await request(`/application/${id}`, { method: "DELETE" });
       },
+      /**
+       * Asks the API's AI to read a job posting page. Saves nothing.
+       * Resolves null when the page isn't a job posting; rejects with
+       * ApiError 503 when AI parsing isn't configured on the server.
+       */
+      async parsePage(page: {
+        url: string;
+        title: string;
+        text: string;
+      }): Promise<JobPostingDraft | null> {
+        const body = await request<{ result: unknown }>("/application/parse-page", {
+          method: "POST",
+          body: page,
+        });
+        return toJobPostingDraft(body?.result);
+      },
     },
 
     async deleteAccount(): Promise<void> {
@@ -254,6 +275,22 @@ export type ApiClient = ReturnType<typeof createApiClient>;
 // ---------------------------------------------------------------------------
 
 type Raw = Record<string, unknown>;
+
+/** Keeps only known values, so a misbehaving server can't put junk in the form. */
+const toJobPostingDraft = (raw: unknown): JobPostingDraft | null => {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Raw;
+  const oneOf = <T extends string>(value: unknown, allowed: readonly T[]) =>
+    allowed.includes(value as T) ? (value as T) : undefined;
+  return compact({
+    company: str(r.company)?.trim() || undefined,
+    position: str(r.position)?.trim() || undefined,
+    workMode: oneOf(r.workMode, WORK_MODES),
+    employmentType: oneOf(r.employmentType, EMPLOYMENT_TYPES),
+    location: str(r.location)?.trim() || undefined,
+    summary: str(r.summary)?.trim() || undefined,
+  });
+};
 
 const str = (value: unknown): string | undefined =>
   typeof value === "string" ? value : undefined;
