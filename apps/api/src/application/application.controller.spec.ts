@@ -1,69 +1,83 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { ApplicationController } from './application.controller';
 import { ApplicationService } from './application.service';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 describe('ApplicationController', () => {
   let controller: ApplicationController;
-  let applicationService: { createFromText: jest.Mock };
-  let jwtService: { verifyAsync: jest.Mock };
+  let applicationService: Record<string, jest.Mock>;
 
   beforeEach(async () => {
     applicationService = {
+      create: jest.fn(),
       createFromText: jest.fn(),
-    };
-    jwtService = {
-      verifyAsync: jest.fn(),
+      findAll: jest.fn(),
+      update: jest.fn(),
+      remove: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ApplicationController],
       providers: [
-        {
-          provide: ApplicationService,
-          useValue: applicationService,
-        },
-        {
-          provide: JwtService,
-          useValue: jwtService,
-        },
+        { provide: ApplicationService, useValue: applicationService },
+        { provide: JwtService, useValue: { verifyAsync: jest.fn() } },
       ],
     }).compile();
 
     controller = module.get<ApplicationController>(ApplicationController);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
+  it('is protected by JwtAuthGuard', () => {
+    const guards = Reflect.getMetadata(
+      GUARDS_METADATA,
+      ApplicationController,
+    ) as unknown[];
+    expect(guards).toContain(JwtAuthGuard);
   });
 
-  it('uses the authenticated user id for createFromText', async () => {
+  it('passes the authenticated user id to createFromText', async () => {
     const body = { text: 'job description', url: 'https://example.com' };
-    const request = {
-      headers: {
-        authorization: ['Bearer', 'token-value'].join(' '),
-      },
-    } as any;
     const created = { id: 'application-id' };
-
-    jwtService.verifyAsync.mockResolvedValue({ sub: 'user-123' });
     applicationService.createFromText.mockResolvedValue(created);
 
-    await expect(controller.createFromText(request, body)).resolves.toBe(created);
-    expect(jwtService.verifyAsync).toHaveBeenCalledWith('token-value');
+    await expect(controller.createFromText('user-123', body)).resolves.toBe(
+      created,
+    );
     expect(applicationService.createFromText).toHaveBeenCalledWith(
       'user-123',
       body,
     );
   });
 
-  it('rejects createFromText when the access token is missing', async () => {
-    await expect(
-      controller.createFromText(
-        { headers: {} } as any,
-        { text: 'job description' },
-      ),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+  it('passes the authenticated user id to create/update/remove', async () => {
+    const id = '0b3c1f9e-5c1a-4f5e-9d6a-2a7f3e1b8c90';
+    await controller.create('user-1', { name: 'IKEA' });
+    await controller.update('user-1', id, { favorite: true });
+    await controller.remove('user-1', id);
+
+    expect(applicationService.create).toHaveBeenCalledWith('user-1', {
+      name: 'IKEA',
+    });
+    expect(applicationService.update).toHaveBeenCalledWith(id, 'user-1', {
+      favorite: true,
+    });
+    expect(applicationService.remove).toHaveBeenCalledWith(id, 'user-1');
+  });
+
+  it('maps list query flags', async () => {
+    await controller.findAll(
+      'user-1',
+      { page: 1, limit: 100 },
+      'interviews',
+      'true',
+    );
+    expect(applicationService.findAll).toHaveBeenCalledWith(
+      'user-1',
+      { page: 1, limit: 100 },
+      true,
+      true,
+    );
   });
 });

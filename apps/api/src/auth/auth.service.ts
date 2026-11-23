@@ -61,6 +61,18 @@ export class AuthService {
       '30d') as StringValue;
   }
 
+  /** Set-Cookie value that removes the refresh cookie (same attributes, expired). */
+  buildClearedRefreshCookie(): string {
+    return [
+      `${this.cookieName}=`,
+      'HttpOnly',
+      'Path=/',
+      'SameSite=None',
+      'Secure',
+      'Max-Age=0',
+    ].join('; ');
+  }
+
   private buildRefreshCookie(token: string) {
     // Extension + API are different origins, so we need SameSite=None.
     const maxAgeSeconds = this.parseDurationToSeconds(
@@ -156,7 +168,15 @@ export class AuthService {
     });
 
     const refresh_token = this.jwtService.sign(
-      { sub: user.oauthId, type: 'refresh' },
+      // The users table stores no profile data, so the (signed, HttpOnly) refresh
+      // token carries it; refresh() copies it into new access tokens.
+      {
+        sub: user.oauthId,
+        type: 'refresh',
+        email: userData.email,
+        name: userData.name,
+        picture: userData.picture,
+      },
       {
         secret: this.getRefreshSecret(),
         expiresIn: this.getRefreshExpiresIn(),
@@ -210,10 +230,10 @@ export class AuthService {
     const payload = {
       sub: user.id,
       userId: user.id,
-      // These fields may be nullable depending on your schema; include them if present.
-      email: (user as any).email,
-      name: (user as any).name,
-      picture: (user as any).picture,
+      // Profile claims travel in the refresh token (not stored in the DB).
+      email: decoded.email,
+      name: decoded.name,
+      picture: decoded.picture,
     };
 
     const access_token = this.jwtService.sign(payload, {
@@ -223,7 +243,13 @@ export class AuthService {
     // Stateless refresh-token rotation (best effort). Without DB storage we can't detect reuse,
     // but rotating still reduces the window if an attacker steals an older token.
     const refresh_token = this.jwtService.sign(
-      { sub: user.oauthId, type: 'refresh' },
+      {
+        sub: user.oauthId,
+        type: 'refresh',
+        email: decoded.email,
+        name: decoded.name,
+        picture: decoded.picture,
+      },
       {
         secret: this.getRefreshSecret(),
         expiresIn: this.getRefreshExpiresIn(),

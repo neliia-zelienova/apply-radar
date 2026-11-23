@@ -66,6 +66,12 @@ export class Application {
   })
   archived: boolean;
 
+  @ApiProperty({ description: 'Job title', example: 'Front-end Engineer' })
+  position: string;
+
+  @ApiProperty({ description: 'Marked as favorite', example: false })
+  favorite: boolean;
+
   @ApiProperty({
     description: 'The number of interviews for this application',
     example: 3,

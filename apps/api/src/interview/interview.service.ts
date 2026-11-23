@@ -35,7 +35,7 @@ export class InterviewService {
     return await this.prisma.interviews.create({
       data: {
         ...body,
-        scheduledAt: body.scheduledAt ?? new Date(),
+        scheduledAt: new Date(body.scheduledAt),
         applicationInterviews: {
           create: {
             applicationId,
@@ -116,7 +116,17 @@ export class InterviewService {
       data: {
         ...(body.notes !== undefined && { notes: body.notes }),
         ...(body.scheduledAt !== undefined && {
-          scheduledAt: body.scheduledAt,
+          scheduledAt: new Date(body.scheduledAt),
+        }),
+        ...(body.name !== undefined && { name: body.name }),
+        ...(body.locationLink !== undefined && {
+          locationLink: body.locationLink,
+        }),
+        ...(body.notifyEnabled !== undefined && {
+          notifyEnabled: body.notifyEnabled,
+        }),
+        ...(body.notifyMinutesBefore !== undefined && {
+          notifyMinutesBefore: body.notifyMinutesBefore,
         }),
       },
     });

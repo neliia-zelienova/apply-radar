@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type { Request } from 'express';
 import type { Response } from 'express';
@@ -12,6 +12,14 @@ export class AuthController {
     const result = await this.authService.googleLogin(idToken);
     res.setHeader('Set-Cookie', result.refresh_cookie);
     return res.json({ access_token: result.access_token });
+  }
+
+  /** Clears the refresh cookie so the session can't be restored after sign-out. */
+  @Post('logout')
+  @HttpCode(200)
+  logout(@Res() res: Response) {
+    res.setHeader('Set-Cookie', this.authService.buildClearedRefreshCookie());
+    return res.json({ ok: true });
   }
 
   @Post('refresh')
