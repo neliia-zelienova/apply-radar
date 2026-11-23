@@ -24,15 +24,15 @@ import { ApplicationForm } from "./application-form";
 import { InterviewForm } from "./interview-form";
 import { InterviewCard } from "./interview-card";
 import { useThemeContext } from "../context/theme-context";
-import { useReminders } from "../context/reminders-context";
 
 interface ApplicationItemProps {
   app: Application;
   deleteApp?: (id: string) => void;
+  /** Resolves false when the save failed (the edit forms then stay open). */
   updateApp?: (
     id: string,
     updater: (app: Application) => Application,
-  ) => void;
+  ) => Promise<boolean> | void;
   archiveApp?: (id: string) => void;
 }
 
@@ -121,7 +121,6 @@ export const ApplicationItem = ({
   }>({ open: false });
 
   const { theme } = useThemeContext();
-  const reminders = useReminders();
   const dark = theme === "dark";
 
   const colors =
@@ -134,13 +133,17 @@ export const ApplicationItem = ({
   // The card keeps its status colors; only the status pill turns orange.
   const pillColors = isStalePending ? STALE_PENDING_COLORS : colors;
 
+  const isInterviewing = app.status === ApplicationStatus.INTERVIEW;
+  // Past interviews stay visible after the status moves on (e.g. rejected or offered).
+  const showInterviews = isInterviewing || (app.interviews?.length ?? 0) > 0;
+
   const menuOptions = [
     {
       label: "Edit",
       icon: <Pencil />,
       action: () => setEditMode(true),
     },
-    ...(app.status === ApplicationStatus.INTERVIEW
+    ...(isInterviewing
       ? [
           {
             label: "Add interview",
@@ -432,7 +435,7 @@ export const ApplicationItem = ({
               background: dark ? "rgba(0,0,0,0.15)" : "rgba(0,0,0,0.02)",
             }}
           >
-            {app.status === ApplicationStatus.INTERVIEW && (
+            {showInterviews && (
               <div style={{ marginBottom: "10px" }}>
                 <div
                   style={{
@@ -454,29 +457,31 @@ export const ApplicationItem = ({
                     Interviews{" "}
                     {app.interviews?.length ? `(${app.interviews.length})` : ""}
                   </span>
-                  <button
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "11px",
-                      color: "#14b8a6",
-                      fontWeight: 600,
-                      padding: 0,
-                      fontFamily: "Roboto, sans-serif",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLElement).style.textDecoration =
-                        "underline";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLElement).style.textDecoration =
-                        "none";
-                    }}
-                    onClick={() => setInterviewFormOpen(true)}
-                  >
-                    + Add interview
-                  </button>
+                  {isInterviewing && (
+                    <button
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "11px",
+                        color: "#14b8a6",
+                        fontWeight: 600,
+                        padding: 0,
+                        fontFamily: "Roboto, sans-serif",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.textDecoration =
+                          "underline";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.textDecoration =
+                          "none";
+                      }}
+                      onClick={() => setInterviewFormOpen(true)}
+                    >
+                      + Add interview
+                    </button>
+                  )}
                 </div>
                 {app.interviews && app.interviews.length > 0 ? (
                   <ul
@@ -544,9 +549,9 @@ export const ApplicationItem = ({
             ? (app.interviews || []).find((i) => i.id === interviewIdToEdit)
             : undefined
         }
-        onSave={(interview) => {
-          updateApp &&
-            updateApp(app.id, (prevApp) => {
+        onSave={async (interview) => {
+          if (!updateApp) return false;
+          const saved = await updateApp(app.id, (prevApp) => {
               const list = prevApp.interviews || [];
               const exists = list.findIndex((i) => i.id === interview.id);
               const newList =
@@ -558,6 +563,7 @@ export const ApplicationItem = ({
                 interviews: newList,
               };
             });
+          if (saved === false) return false;
           setInterviewFormOpen(false);
           setInterviewIdToEdit(null);
         }}
@@ -597,9 +603,6 @@ export const ApplicationItem = ({
                           (i) => i.id !== deleteConfirm.interviewId,
                         ),
                       }));
-                    reminders.cancelInterviewReminder(
-                      deleteConfirm.interviewId,
-                    );
                   }
                   setDeleteConfirm({ open: false });
                 }}
@@ -614,9 +617,13 @@ export const ApplicationItem = ({
       <ApplicationForm
         app={app}
         externalOpen={editMode}
-        onSave={(application) => {
-          updateApp &&
-            updateApp(app.id, (prevApp) => ({ ...prevApp, ...application }));
+        onSave={async (application) => {
+          if (!updateApp) return false;
+          // Interviews are edited separately; don't overwrite them with the form's copy.
+          const { interviews: _formCopy, ...fields } = application;
+          void _formCopy;
+          const saved = await updateApp(app.id, (prevApp) => ({ ...prevApp, ...fields }));
+          if (saved === false) return false;
           setEditMode(false);
         }}
         onCancel={() => setEditMode(false)}

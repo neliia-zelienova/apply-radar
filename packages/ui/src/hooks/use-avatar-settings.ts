@@ -34,7 +34,8 @@ export const useAvatarSettings = ({
     return () => {
       cancelled = true;
     };
-  }, [store]);
+    // seed too: the extension reuses one store across account switches.
+  }, [store, seed]);
 
   const saveAvatar = useCallback(
     async (avatar: AvatarSettings) => {

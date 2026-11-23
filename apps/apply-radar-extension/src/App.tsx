@@ -9,7 +9,6 @@ import {
   BannerAction,
   RadarBackground,
   RadarEffectsContext,
-  RemindersContext,
   StatusBanner,
   ThemeContext,
   useApplicationsStore,
@@ -23,7 +22,6 @@ import { useTheme } from "./hooks/use-theme";
 import { useAccountUpload } from "./hooks/use-account-upload";
 import { useRadarEffectsPreference } from "./hooks/use-radar-effects-preference";
 import { api } from "./services/app-radar-api";
-import { chromeReminders } from "./services/reminders";
 import { localRepository } from "./utils/local-repository";
 
 function App() {
@@ -124,44 +122,42 @@ function App() {
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       <RadarEffectsContext.Provider value={radarEffects}>
         <AuthContext.Provider value={auth}>
-          <RemindersContext.Provider value={chromeReminders}>
-            <ApplicationsContext.Provider value={applicationsContext}>
-              {/* Faint radar net behind the popup (no "detections" here: the list fills it). */}
-              {radarEffects.enabled && <RadarBackground />}
-              <div className="relative z-[1]">
-                <Header />
-                {auth.authType ? (
-                  <>
-                    {(uploadBanner || store.error) && (
-                      <div className="relative z-10 -mt-3 mb-4 flex flex-col gap-2 px-3">
-                        {uploadBanner}
-                        {store.error && (
-                          <StatusBanner
-                            tone="error"
-                            actions={
-                              <>
-                                <BannerAction onClick={() => void store.reload()}>
-                                  Reload
-                                </BannerAction>
-                                <BannerAction onClick={store.clearError}>
-                                  Dismiss
-                                </BannerAction>
-                              </>
-                            }
-                          >
-                            {store.error}
-                          </StatusBanner>
-                        )}
-                      </div>
-                    )}
-                    <ApplicationsPanel style={{ marginTop: "-18px", padding: "0 12px 12px" }} />
-                  </>
-                ) : (
-                  <LoginPage />
-                )}
-              </div>
-            </ApplicationsContext.Provider>
-          </RemindersContext.Provider>
+          <ApplicationsContext.Provider value={applicationsContext}>
+            {/* Faint radar net behind the popup (no "detections" here: the list fills it). */}
+            {radarEffects.enabled && <RadarBackground />}
+            <div className="relative z-[1]">
+              <Header />
+              {auth.authType ? (
+                <>
+                  {(uploadBanner || store.error) && (
+                    <div className="relative z-10 -mt-3 mb-4 flex flex-col gap-2 px-3">
+                      {uploadBanner}
+                      {store.error && (
+                        <StatusBanner
+                          tone="error"
+                          actions={
+                            <>
+                              <BannerAction onClick={() => void store.reload()}>
+                                Reload
+                              </BannerAction>
+                              <BannerAction onClick={store.clearError}>
+                                Dismiss
+                              </BannerAction>
+                            </>
+                          }
+                        >
+                          {store.error}
+                        </StatusBanner>
+                      )}
+                    </div>
+                  )}
+                  <ApplicationsPanel style={{ marginTop: "-18px", padding: "0 12px 12px" }} />
+                </>
+              ) : (
+                <LoginPage />
+              )}
+            </div>
+          </ApplicationsContext.Provider>
         </AuthContext.Provider>
       </RadarEffectsContext.Provider>
     </ThemeContext.Provider>

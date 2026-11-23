@@ -326,8 +326,6 @@ export class ApplicationService {
         notes: input.notes ?? null,
         name: input.name ?? null,
         locationLink: input.locationLink ?? null,
-        notifyEnabled: input.notifyEnabled ?? true,
-        notifyMinutesBefore: input.notifyMinutesBefore ?? null,
       };
 
       if (id && currentIds.has(id)) {

@@ -7,13 +7,14 @@ export interface ApplicationsContextType {
   search: string;
   setSearch: (search: string) => void;
   setFilterStatus: (status: string) => void;
-  createApplication: (app: Application) => void;
-  deleteApplication: (id: string) => void;
-  archiveApplication: (id: string) => void;
+  /** These resolve true when saved, false when the save failed. */
+  createApplication: (app: Application) => Promise<boolean>;
+  deleteApplication: (id: string) => Promise<boolean>;
+  archiveApplication: (id: string) => Promise<boolean>;
   updateApplication: (
     id: string,
     updater: (app: Application) => Application
-  ) => void;
+  ) => Promise<boolean>;
   sortBy: "name" | "date" | "status" | "favorite";
   sortOrder: "asc" | "desc";
   setSortBy: (sortBy: "name" | "date" | "status" | "favorite") => void;

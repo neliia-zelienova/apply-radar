@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { uploadApplications, type UploadFailure } from "@apply-radar/shared";
 import { api } from "../services/app-radar-api";
 import { readLocalApplications } from "../utils/local-repository";
@@ -29,24 +29,44 @@ export const useAccountUpload = ({
   onUploaded: () => void;
 }) => {
   const [state, setState] = useState<AccountUploadState>({ status: "idle" });
+  // The account signed in right now (empty when signed out).
+  const activeUserRef = useRef(enabled ? userId : "");
+  activeUserRef.current = enabled ? userId : "";
+
+  useEffect(() => {
+    // Progress/results of another account's batch don't belong on screen.
+    setState({ status: "idle" });
+  }, [enabled, userId]);
 
   const run = useCallback(async () => {
     if (!enabled || !userId) return;
+    // The API client is shared, so after a switch further creates would land
+    // in the new account: stop the batch as soon as this one isn't active.
+    const stillActive = () => activeUserRef.current === userId;
     const local = await readLocalApplications();
     const record = (await getFromStorage<UploadedRecord>(UPLOADED_KEY)) ?? {};
     const alreadyUploaded = new Set(record[userId] ?? []);
     const pending = local.filter((app) => !alreadyUploaded.has(app.id));
     if (pending.length === 0) return;
 
+    if (!stillActive()) return;
     setState({ status: "uploading", done: 0, total: pending.length });
-    const result = await uploadApplications(api, pending, (done, total) =>
-      setState({ status: "uploading", done, total }),
+    const result = await uploadApplications(
+      api,
+      pending,
+      (done, total) => {
+        if (stillActive()) setState({ status: "uploading", done, total });
+      },
+      stillActive,
     );
 
+    // Re-read: another account's batch may have written its markers meanwhile.
+    const latest = (await getFromStorage<UploadedRecord>(UPLOADED_KEY)) ?? {};
     await setInStorage<UploadedRecord>(UPLOADED_KEY, {
-      ...record,
-      [userId]: [...alreadyUploaded, ...result.uploaded],
+      ...latest,
+      [userId]: [...new Set([...(latest[userId] ?? []), ...result.uploaded])],
     });
+    if (!stillActive()) return;
     setState(
       result.failed.length > 0
         ? { status: "partial", uploaded: result.uploaded.length, failed: result.failed }

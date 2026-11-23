@@ -1,15 +1,6 @@
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsInt,
-  IsISO8601,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsISO8601, IsOptional, IsString, MaxLength } from 'class-validator';
 
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
@@ -49,19 +40,4 @@ export class CreateInterviewDto {
   @MaxLength(2048)
   @Transform(trim)
   locationLink?: string;
-
-  @ApiProperty({ description: 'Whether to send a reminder', required: false })
-  @IsBoolean()
-  @IsOptional()
-  notifyEnabled?: boolean;
-
-  @ApiProperty({
-    description: 'Reminder offset in minutes before the interview',
-    required: false,
-  })
-  @IsInt()
-  @Min(0)
-  @Max(60 * 24 * 30)
-  @IsOptional()
-  notifyMinutesBefore?: number;
 }

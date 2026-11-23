@@ -62,7 +62,6 @@ The web app keeps the access token in memory and restores the session from the r
 That cookie is shared with the extension in the same browser, so signing in, signing out or switching
 accounts in one app is picked up by the other (on open/focus and every 30s). "Device only" mode in the
 extension is never switched automatically.
-Interview reminders (notifications) only fire from the extension.
 
 ### Filtering (run a single package)
 
@@ -81,8 +80,8 @@ so Vite apps always compile the current code. Their `build` script is just a typ
 Framework-free model and helpers, aligned with the API:
 
 - `Application`, `Interview` — field names follow the API (`name`, `url`, `scheduledAt`, …);
-  dates are ISO strings. `position`, `favorite` and interview `name` / `locationLink` /
-  `notify*` are client-only optional fields for now.
+  dates are ISO strings. `position`, `favorite` and interview `name` / `locationLink` are
+  optional fields.
 - `ApplicationStatus` — `PENDING | INTERVIEW | OFFERED | REJECTED` (same values as the Prisma enum),
   `getStatusLabel()`.
 - Date helpers: `toDateInputValue`, `fromDateInputValue`, `getDaysSince`, `formatDaysAgo`.

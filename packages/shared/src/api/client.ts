@@ -275,9 +275,6 @@ export const fromApiInterview = (raw: unknown): Interview => {
     notes: str(r.notes),
     name: str(r.name),
     locationLink: str(r.locationLink),
-    notifyEnabled: typeof r.notifyEnabled === "boolean" ? r.notifyEnabled : undefined,
-    notifyMinutesBefore:
-      typeof r.notifyMinutesBefore === "number" ? r.notifyMinutesBefore : undefined,
     createdAt: r.createdAt ? isoString(r.createdAt) : undefined,
     updatedAt: r.updatedAt ? isoString(r.updatedAt) : undefined,
   });
@@ -324,8 +321,6 @@ const toApiInput = (input: ApplicationInput): Raw =>
         notes: iv.notes,
         name: iv.name,
         locationLink: iv.locationLink,
-        notifyEnabled: iv.notifyEnabled,
-        notifyMinutesBefore: iv.notifyMinutesBefore,
       }),
     ),
   });

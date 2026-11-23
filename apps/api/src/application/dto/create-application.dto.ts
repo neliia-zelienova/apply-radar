@@ -88,7 +88,8 @@ export class CreateApplicationDto {
   @IsOptional()
   @MaxLength(2048)
   @Transform(trim)
-  @ValidateIf((o: CreateApplicationDto) => !!o.url)
+  // Only the empty string skips the link check; IsOptional covers absent values.
+  @ValidateIf((o: CreateApplicationDto) => o.url !== '')
   @IsUrl(
     { require_protocol: false },
     { message: 'URL must be a valid link (e.g. https://company.com/job)' },

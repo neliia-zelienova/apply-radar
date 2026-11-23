@@ -9,9 +9,31 @@ export interface ApplicationsRepository {
   list(): Promise<Application[]>;
   /** Returns the stored application (the API may fill in fields). */
   create(app: Application): Promise<Application>;
-  update(app: Application): Promise<Application>;
+  /**
+   * Saves `next`. `previous` is the version it was edited from, so a remote
+   * repository can send only what changed.
+   */
+  update(next: Application, previous: Application): Promise<Application>;
   remove(id: string): Promise<void>;
 }
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Fields of `next` that differ from `previous`. Interviews are sent only when
+ * they were edited: the API treats a sent list as a full replacement, so
+ * sending a stale copy along with e.g. a favorite toggle would delete
+ * interviews added elsewhere (web app vs extension).
+ */
+export const changedFields = (
+  next: Application,
+  previous: Application,
+): Partial<Application> =>
+  Object.fromEntries(
+    (Object.keys(next) as Array<keyof Application>)
+      .filter((key) => key !== "id" && !same(next[key], previous[key]))
+      .map((key) => [key, next[key]]),
+  ) as Partial<Application>;
 
 /** Repository backed by the Apply Radar API. */
 export const createRemoteRepository = (
@@ -19,7 +41,12 @@ export const createRemoteRepository = (
 ): ApplicationsRepository => ({
   list: () => api.applications.list(),
   create: (app) => api.applications.create(app),
-  update: (app) => api.applications.update(app.id, app),
+  update: async (next, previous) => {
+    const changes = changedFields(next, previous);
+    return Object.keys(changes).length > 0
+      ? api.applications.update(next.id, changes)
+      : next;
+  },
   remove: (id) => api.applications.remove(id),
 });
 

@@ -8,10 +8,13 @@ export const SignInPage = ({
   error,
   busy,
   onSignIn,
+  onCancel,
 }: {
   error?: string;
   busy: boolean;
   onSignIn: () => void;
+  /** Stops waiting for the Google popup. */
+  onCancel: () => void;
 }) => (
   <div className="flex min-h-screen justify-center">
     <div data-radar-avoid className="flex w-full max-w-[600px] flex-col">
@@ -43,6 +46,24 @@ export const SignInPage = ({
         {error && <StatusBanner tone="error">{error}</StatusBanner>}
 
         <GoogleSignInCard onSignIn={onSignIn} busy={busy} recommended={false} />
+
+        {busy && (
+          // We can't detect the popup being closed (Google's pages cut it off
+          // from this window), so let the user stop waiting.
+          <div
+            role="status"
+            className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-slate-400"
+          >
+            <span>Finish signing in in the Google window.</span>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="cursor-pointer rounded-full border border-black/10 px-3 py-1 font-medium text-gray-700 hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   </div>

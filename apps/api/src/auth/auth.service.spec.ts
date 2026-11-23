@@ -1,4 +1,6 @@
+import { UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import type { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from 'src/users/users.service';
@@ -31,5 +33,22 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('assertCsrfHeader (refresh, logout)', () => {
+    const req = (headers: Record<string, string>) =>
+      ({ headers }) as unknown as Request;
+
+    it('accepts the header the apps send', () => {
+      expect(() =>
+        service.assertCsrfHeader(req({ 'x-ar-ext': '1' })),
+      ).not.toThrow();
+    });
+
+    it('rejects a request without it (e.g. a cross-site form POST)', () => {
+      expect(() => service.assertCsrfHeader(req({}))).toThrow(
+        UnauthorizedException,
+      );
+    });
   });
 });

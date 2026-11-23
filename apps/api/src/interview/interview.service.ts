@@ -122,12 +122,6 @@ export class InterviewService {
         ...(body.locationLink !== undefined && {
           locationLink: body.locationLink,
         }),
-        ...(body.notifyEnabled !== undefined && {
-          notifyEnabled: body.notifyEnabled,
-        }),
-        ...(body.notifyMinutesBefore !== undefined && {
-          notifyMinutesBefore: body.notifyMinutesBefore,
-        }),
       },
     });
     return new Interview(updatedInterview);

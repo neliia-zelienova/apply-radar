@@ -12,6 +12,7 @@ import { Button } from "../button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction, AlertDialogDescription } from "../alert-dialog";
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "../select";
+import type { SaveResult } from "./save-result";
 
 export const ApplicationForm = ({
   triggerComponent,
@@ -23,10 +24,16 @@ export const ApplicationForm = ({
   externalOpen?: boolean;
   triggerComponent?: React.ReactNode;
   app?: Application;
-  onSave: (app: Application) => void;
+  /**
+   * May be async. The form closes when it's done, unless it returns/resolves
+   * `false` (save failed): then the form stays open with the draft intact.
+   */
+  onSave: (app: Application) => SaveResult;
   onCancel?: () => void;
 }) => {
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   // Form fields keep their UI names; they map to Application.name / Application.url.
   const [companyName, setCompanyName] = useState<string>(app?.name || "");
   const [position, setPosition] = useState<string>(app?.position || "");
@@ -99,8 +106,6 @@ export const ApplicationForm = ({
     return [];
   }, [status]);
 
-  console.log("allowedStatuses", allowedStatuses);
-
   const resetForm = useCallback(() => {
     setCompanyName(app?.name || "");
     setPosition(app?.position || "");
@@ -108,6 +113,7 @@ export const ApplicationForm = ({
     setNotes(app?.notes || "");
     setAppliedDate(toDateInputValue(app?.createdAt ?? new Date()));
     setTouched({ companyName: false, position: false, link: false });
+    setSaveFailed(false);
   }, [app]);
 
   const handleCloseWithUnsavedCheck = useCallback(() => {
@@ -339,6 +345,11 @@ export const ApplicationForm = ({
             </div>
           </label>
         </div>
+        {saveFailed && (
+          <p role="alert" className="text-left text-sm text-red-600 dark:text-red-400">
+            Couldn't save. Your changes are still here, so you can try again.
+          </p>
+        )}
         <DialogFooter>
           {/* Actions */}
           <div className="flex flex-row gap-2 justify-end pt-1">
@@ -356,12 +367,12 @@ export const ApplicationForm = ({
               aria-label="Save"
               variant="primary"
               size="md"
-              disabled={!isFormValid}
-              onClick={() => {
-                // Mark that we're closing intentionally to skip unsaved-check
-                skipUnsavedCheckRef.current = true;
+              disabled={!isFormValid || isSaving}
+              onClick={async () => {
                 const nowIso = new Date().toISOString();
-                onSave(
+                setIsSaving(true);
+                setSaveFailed(false);
+                const saved = await onSave(
                   app
                     ? {
                         ...app,
@@ -387,12 +398,20 @@ export const ApplicationForm = ({
                         favorite: false,
                       }
                 );
-                // Close the form after saving successfully
+                setIsSaving(false);
+                if (saved === false) {
+                  // Keep the form open with the draft so the user can retry.
+                  setSaveFailed(true);
+                  return;
+                }
+                // A parent that controls `externalOpen` closes it next; skip the
+                // unsaved-changes check for that close only.
+                skipUnsavedCheckRef.current = externalOpen !== undefined;
                 setIsFormOpen(false);
                 resetForm();
               }}
             >
-              Save
+              {isSaving ? "Saving…" : "Save"}
             </Button>
           </div>
         </DialogFooter>

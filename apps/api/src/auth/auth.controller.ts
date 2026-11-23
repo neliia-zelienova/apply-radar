@@ -17,7 +17,9 @@ export class AuthController {
   /** Clears the refresh cookie so the session can't be restored after sign-out. */
   @Post('logout')
   @HttpCode(200)
-  logout(@Res() res: Response) {
+  logout(@Req() req: Request, @Res() res: Response) {
+    // Otherwise any site could sign the user out with a cross-site form POST.
+    this.authService.assertCsrfHeader(req);
     res.setHeader('Set-Cookie', this.authService.buildClearedRefreshCookie());
     return res.json({ ok: true });
   }

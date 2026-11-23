@@ -9,9 +9,8 @@ export const Header = () => {
   const { createApplication } = useApplicationContext();
   const { authType } = useAuthContext();
 
-  const createNewApp = (application: Application) => {
-    createApplication(application);
-  };
+  // Resolves false on failure, which keeps the form open with the draft.
+  const createNewApp = (application: Application) => createApplication(application);
 
   return (
     <AppHeader

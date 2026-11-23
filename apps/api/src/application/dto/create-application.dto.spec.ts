@@ -25,8 +25,6 @@ describe('CreateApplicationDto validation', () => {
           scheduledAt: '2026-11-25T13:00:00.000Z', // ISO string, not Date
           name: 'Screening',
           locationLink: 'meet.google.com/abc',
-          notifyEnabled: true,
-          notifyMinutesBefore: 30,
         },
       ],
     });
@@ -64,6 +62,8 @@ describe('CreateApplicationDto validation', () => {
     ['missing name', { url: 'https://x.com' }],
     ['invalid status', { name: 'IKEA', status: 'pending' }],
     ['invalid url', { name: 'IKEA', url: 'not a url' }],
+    ['non-string url (0)', { name: 'IKEA', url: 0 }],
+    ['non-string url (false)', { name: 'IKEA', url: false }],
     ['non-uuid id', { name: 'IKEA', id: '123' }],
     ['invalid applied date', { name: 'IKEA', createdAt: 'yesterday' }],
     ['markup in name', { name: '<script>' }],

@@ -38,9 +38,6 @@ export interface Interview {
   name?: string;
   /** Zoom/Meet/Maps/office link */
   locationLink?: string;
-  /** Whether to schedule a reminder notification. */
-  notifyEnabled?: boolean;
-  notifyMinutesBefore?: number;
 }
 
 export interface Application {

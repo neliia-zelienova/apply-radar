@@ -31,15 +31,6 @@ export class Interview {
   @ApiProperty({ description: 'Zoom/Meet/Maps/office link', nullable: true })
   locationLink: string | null;
 
-  @ApiProperty({ description: 'Whether a reminder is enabled' })
-  notifyEnabled: boolean;
-
-  @ApiProperty({
-    description: 'Reminder offset in minutes before the interview',
-    nullable: true,
-  })
-  notifyMinutesBefore: number | null;
-
   @ApiProperty({
     description: 'The created at date of the interview',
     example: '2021-01-01',

@@ -2,16 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "../button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../dialog";
-import { SelectContent, SelectItem, SelectRoot, SelectTrigger, SelectValue } from "../select";
-import { InputNumber } from "../input-number";
-import { Checkbox } from "../checkbox";
 import { type Interview } from "@apply-radar/shared";
-import { useReminders } from "../context/reminders-context";
+import type { SaveResult } from "./save-result";
 
 interface InterviewFormProps {
   triggerComponent?: React.ReactNode;
   externalOpen?: boolean;
-  onSave: (interview: Interview) => void;
+  /** May be async; resolving `false` keeps the form open with the draft. */
+  onSave: (interview: Interview) => SaveResult;
   onCancel?: () => void;
   initialInterview?: Interview;
 }
@@ -23,8 +21,9 @@ export const InterviewForm = ({
   onCancel,
   initialInterview,
 }: InterviewFormProps) => {
-  const reminders = useReminders();
   const [open, setOpen] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
   const initial = initialInterview
     ? new Date(initialInterview.scheduledAt)
     : undefined;
@@ -58,32 +57,6 @@ export const InterviewForm = ({
   );
   const [notes, setNotes] = useState<string>(initialInterview?.notes || "");
   const [name, setName] = useState<string>(initialInterview?.name || "");
-  const [notifyEnabled, setNotifyEnabled] = useState<boolean>(
-    initialInterview?.notifyEnabled ?? true,
-  );
-  // Initialize notify value/unit from initialInterview if present
-  const initialMinutesBefore = initialInterview?.notifyMinutesBefore ?? null;
-  const initialNotify = (() => {
-    if (typeof initialMinutesBefore === "number") {
-      if (initialMinutesBefore < 60) {
-        return { value: initialMinutesBefore, unit: "minutes" as const };
-      } else if (initialMinutesBefore < 1440) {
-        return {
-          value: Math.floor(initialMinutesBefore / 60),
-          unit: "hours" as const,
-        };
-      }
-      return {
-        value: Math.floor(initialMinutesBefore / 1440),
-        unit: "days" as const,
-      };
-    }
-    return { value: 1, unit: "hours" as const };
-  })();
-  const [notifyValue, setNotifyValue] = useState<number>(initialNotify.value);
-  const [notifyUnit, setNotifyUnit] = useState<"minutes" | "hours" | "days">(
-    initialNotify.unit,
-  );
   const hasOpenedRef = useRef<boolean>(false);
 
   const isDateValid = useMemo(() => !!date, [date]);
@@ -106,34 +79,6 @@ export const InterviewForm = ({
     isUrlSyntaxValid(locationLink); // valid URL
   const isFormValid = isDateValid && isTimeValid && isLocationValid;
 
-  // max value for notify depends on difference between interview time and now in selected unit
-  const computeMaxForUnit = useCallback(
-    (unit: "minutes" | "hours" | "days") => {
-      if (!isDateValid || !isTimeValid) return 0;
-      const interviewMs = new Date(`${date}T${time}:00`).getTime();
-      const nowMs = Date.now();
-      const diffMs = Math.max(0, interviewMs - nowMs);
-      if (unit === "minutes") return Math.floor(diffMs / 60000);
-      if (unit === "hours") return Math.floor(diffMs / 3600000);
-      return Math.floor(diffMs / 86400000);
-    },
-    [date, time, isDateValid, isTimeValid],
-  );
-  const maxNotifyValue = computeMaxForUnit(notifyUnit);
-
-  const allowedUnits = useMemo(() => {
-    const units: ("minutes" | "hours" | "days")[] = [];
-    const maxMinutes = computeMaxForUnit("minutes");
-    if (maxMinutes >= 1) units.push("minutes");
-    const maxHours = computeMaxForUnit("hours");
-    if (maxHours >= 1) units.push("hours");
-    const maxDays = computeMaxForUnit("days");
-    if (maxDays >= 1) units.push("days");
-    // ensure current unit is always included
-    if (!units.includes(notifyUnit)) units.push(notifyUnit);
-    return units;
-  }, [date, time, notifyUnit, isDateValid, isTimeValid]);
-
   const handleOpenChange = (value: boolean) => {
     if (value) {
       hasOpenedRef.current = true;
@@ -144,81 +89,25 @@ export const InterviewForm = ({
     }
   };
 
-  const handleSaveInterview = useCallback(() => {
-    const isoDateTime = new Date(`${date}T${time}:00`).toISOString();
-    // convert user-selected value/unit to minutes
-    const minutesBefore =
-      notifyUnit === "minutes"
-        ? notifyValue
-        : notifyUnit === "hours"
-          ? notifyValue * 60
-          : notifyValue * 1440;
+  const handleSaveInterview = useCallback(async () => {
     const payload: Interview = {
       id: initialInterview?.id || uuidv4(),
       name,
-      scheduledAt: isoDateTime,
+      scheduledAt: new Date(`${date}T${time}:00`).toISOString(),
       locationLink,
       notes,
-      notifyEnabled,
-      notifyMinutesBefore: minutesBefore,
     };
-    onSave(payload);
-    // Schedule (or cancel) the reminder — a no-op where the app provides none.
-    if (notifyEnabled) {
-      reminders.scheduleInterviewReminder({
-        interviewId: payload.id,
-        scheduledAt: payload.scheduledAt,
-        notifyMinutesBefore: minutesBefore,
-        title: payload.name ? `${payload.name} reminder` : "Interview reminder",
-        link: locationLink,
-      });
-    } else if (initialInterview?.id) {
-      reminders.cancelInterviewReminder(payload.id);
-    }
-    setOpen(false);
-    setDate("");
-    setTime("");
-    setLocationLink("");
-    setNotes("");
-  }, [
-    date,
-    time,
-    name,
-    locationLink,
-    notes,
-    notifyEnabled,
-    notifyUnit,
-    notifyValue,
-    onSave,
-    initialInterview,
-    reminders,
-  ]);
-
-  const handleUnitsChanged = (value: string) => {
-    const isValidUnit = (v: string): v is "minutes" | "hours" | "days" =>
-      v === "minutes" || v === "hours" || v === "days";
-    if (!isValidUnit(value)) {
-      // Ignore unexpected values to preserve type safety
+    setIsSaving(true);
+    setSaveFailed(false);
+    const saved = await onSave(payload);
+    setIsSaving(false);
+    if (saved === false) {
+      // Keep the draft so the user can retry.
+      setSaveFailed(true);
       return;
     }
-    const nextUnit = value;
-    // preserve the total minutes when switching unit
-    const totalMinutes =
-      notifyUnit === "minutes"
-        ? notifyValue
-        : notifyUnit === "hours"
-          ? notifyValue * 60
-          : notifyValue * 1440;
-    const converted =
-      nextUnit === "minutes"
-        ? totalMinutes
-        : nextUnit === "hours"
-          ? Math.floor(totalMinutes / 60)
-          : Math.floor(totalMinutes / 1440);
-    setNotifyUnit(nextUnit);
-    const newMax = computeMaxForUnit(nextUnit);
-    setNotifyValue(Math.max(0, Math.min(converted, newMax)));
-  };
+    setOpen(false);
+  }, [date, time, name, locationLink, notes, onSave, initialInterview]);
 
   useEffect(() => {
     if (initialInterview && hasOpenedRef.current) {
@@ -229,38 +118,8 @@ export const InterviewForm = ({
       setLocationLink(initialInterview.locationLink || "");
       setNotes(initialInterview.notes || "");
       setName(initialInterview.name || "");
-      setNotifyEnabled(initialInterview.notifyEnabled ?? true);
-      // set notify value/unit based on minutes before
-      const minutesBefore = initialInterview.notifyMinutesBefore || 0;
-      if (minutesBefore < 60) {
-        setNotifyUnit("minutes");
-        setNotifyValue(minutesBefore);
-      } else if (minutesBefore < 1440) {
-        setNotifyUnit("hours");
-        setNotifyValue(Math.floor(minutesBefore / 60));
-      } else {
-        setNotifyUnit("days");
-        setNotifyValue(Math.floor(minutesBefore / 1440));
-      }
     }
   }, [initialInterview]);
-
-  // When opening the dialog for editing, derive notify value/unit from initialInterview
-  useEffect(() => {
-    if (open && initialInterview) {
-      const minutesBefore = initialInterview.notifyMinutesBefore || 0;
-      if (minutesBefore < 60) {
-        setNotifyUnit("minutes");
-        setNotifyValue(minutesBefore);
-      } else if (minutesBefore < 1440) {
-        setNotifyUnit("hours");
-        setNotifyValue(Math.floor(minutesBefore / 60));
-      } else {
-        setNotifyUnit("days");
-        setNotifyValue(Math.floor(minutesBefore / 1440));
-      }
-    }
-  }, [open, initialInterview]);
 
   // external control: sync open state when externalOpen changes
   useEffect(() => {
@@ -278,9 +137,7 @@ export const InterviewForm = ({
       setTime(defaults.hhmm);
       setLocationLink("");
       setNotes("");
-      setNotifyEnabled(true);
-      setNotifyValue(1);
-      setNotifyUnit("hours");
+      setSaveFailed(false);
     }
   }, [open]);
 
@@ -349,53 +206,12 @@ export const InterviewForm = ({
               placeholder="Interview panel, agenda, reminders..."
             />
           </label>
-          <div className="flex flex-col gap-3">
-            <label className="flex items-center gap-2">
-              <Checkbox
-                checked={notifyEnabled}
-                onCheckedChange={(checked) => setNotifyEnabled(checked)}
-                ariaLabel="Enable notification"
-              />
-              <span className="text-sm">Enable notification</span>
-            </label>
-            {notifyEnabled && (
-              <div className="flex flex-row gap-3">
-                <label className="flex items-center gap-2">
-                  <span className="text-sm">Notify</span>
-                  <InputNumber
-                    value={notifyValue}
-                    min={0}
-                    max={maxNotifyValue}
-                    onChange={(value: number) =>
-                      setNotifyValue(
-                        Math.max(0, Math.min(value, maxNotifyValue)),
-                      )
-                    }
-                    inputClassName="w-16 p-1"
-                  />
-                </label>
-                <label className="flex items-center gap-2">
-                  <SelectRoot
-                    value={notifyUnit}
-                    onValueChange={handleUnitsChanged}
-                  >
-                    <span className="text-sm">before</span>
-                    <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left">
-                      <SelectValue placeholder="Select unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allowedUnits.map((unit) => (
-                        <SelectItem key={unit} value={unit}>
-                          {unit}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </SelectRoot>
-                </label>
-              </div>
-            )}
-          </div>
         </div>
+        {saveFailed && (
+          <p role="alert" className="text-left text-sm text-red-600 dark:text-red-400">
+            Couldn't save. Your changes are still here, so you can try again.
+          </p>
+        )}
         <DialogFooter>
           <div className="flex flex-row gap-2 justify-end pt-1">
             <Button variant="secondary" onClick={() => handleOpenChange(false)}>
@@ -403,10 +219,10 @@ export const InterviewForm = ({
             </Button>
             <Button
               variant="primary"
-              disabled={!isFormValid}
-              onClick={handleSaveInterview}
+              disabled={!isFormValid || isSaving}
+              onClick={() => void handleSaveInterview()}
             >
-              Save
+              {isSaving ? "Saving…" : "Save"}
             </Button>
           </div>
         </DialogFooter>

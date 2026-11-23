@@ -189,15 +189,22 @@ export class AuthService {
     };
   }
 
-  async refresh(req: Request) {
-    // CSRF hardening: require a header that browsers can't attach via plain HTML forms.
-    // The extension will always send it from XHR/fetch.
+  /**
+   * CSRF hardening for the cookie-authenticated routes (refresh, logout):
+   * require a header that a plain HTML form on another site can't attach.
+   * The apps always send it from fetch.
+   */
+  assertCsrfHeader(req: Request) {
     const headerValue =
       (req.headers as any)?.[this.csrfHeaderName] ??
       (req.headers as any)?.[this.csrfHeaderName.toLowerCase()];
     if (headerValue !== this.csrfHeaderValue) {
-      throw new UnauthorizedException('Missing refresh CSRF header');
+      throw new UnauthorizedException('Missing CSRF header');
     }
+  }
+
+  async refresh(req: Request) {
+    this.assertCsrfHeader(req);
 
     const token = this.getCookie(req, this.cookieName);
     if (!token) {

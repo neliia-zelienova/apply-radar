@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, decodeAccessToken } from "@apply-radar/shared";
 import { useSessionSync } from "@apply-radar/ui";
 import { api, SESSION_EXPIRED_EVENT, sessionEvents } from "../api";
-import { signInWithGooglePopup } from "../google-popup";
+import { SignInCancelledError, signInWithGooglePopup } from "../google-popup";
 
 export interface Profile {
   userId: string;
@@ -81,18 +81,31 @@ export const useSession = () => {
     return () => sessionEvents.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
   }, []);
 
+  const popupAbortRef = useRef<AbortController | null>(null);
+
   const signInWithGoogle = useCallback(async () => {
+    popupAbortRef.current?.abort();
+    const controller = new AbortController();
+    popupAbortRef.current = controller;
     setSigningIn(true);
     try {
-      const idToken = await signInWithGooglePopup();
+      const idToken = await signInWithGooglePopup(controller.signal);
       const token = await api.googleSignIn(idToken);
       setSession({ status: "signed-in", profile: profileFrom(token) });
     } catch (error) {
-      setSession({ status: "signed-out", error: messageOf(error) });
+      // Cancelling by the user isn't an error worth a banner.
+      const cancelled = error instanceof SignInCancelledError && controller.signal.aborted;
+      setSession({ status: "signed-out", error: cancelled ? undefined : messageOf(error) });
     } finally {
-      setSigningIn(false);
+      if (popupAbortRef.current === controller) {
+        popupAbortRef.current = null;
+        setSigningIn(false);
+      }
     }
   }, []);
+
+  /** Stops waiting for the Google popup (e.g. the user closed it). */
+  const cancelSignIn = useCallback(() => popupAbortRef.current?.abort(), []);
 
   const signOut = useCallback(async () => {
     // Clears the shared refresh cookie, which also signs the extension out.
@@ -106,5 +119,5 @@ export const useSession = () => {
     setSession({ status: "signed-out" });
   }, []);
 
-  return { session, signingIn, signInWithGoogle, signOut, deleteAccount };
+  return { session, signingIn, signInWithGoogle, cancelSignIn, signOut, deleteAccount };
 };

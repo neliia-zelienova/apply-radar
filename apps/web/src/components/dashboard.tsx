@@ -109,7 +109,7 @@ export const Dashboard = ({
               Refresh
             </button>
             <ApplicationForm
-              onSave={(app) => void store.createApplication(app)}
+              onSave={(app) => store.createApplication(app)}
               triggerComponent={
                 <button
                   type="button"

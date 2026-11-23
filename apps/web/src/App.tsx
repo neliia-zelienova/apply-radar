@@ -8,7 +8,8 @@ import { useSession } from "./hooks/use-session";
 import { useTheme } from "./hooks/use-theme";
 
 const SignedInGate = ({ radarEffects }: { radarEffects: boolean }) => {
-  const { session, signingIn, signInWithGoogle, signOut, deleteAccount } = useSession();
+  const { session, signingIn, signInWithGoogle, cancelSignIn, signOut, deleteAccount } =
+    useSession();
 
   let content;
   switch (session.status) {
@@ -25,6 +26,7 @@ const SignedInGate = ({ radarEffects }: { radarEffects: boolean }) => {
           error={session.error}
           busy={signingIn}
           onSignIn={() => void signInWithGoogle()}
+          onCancel={cancelSignIn}
         />
       );
       break;
