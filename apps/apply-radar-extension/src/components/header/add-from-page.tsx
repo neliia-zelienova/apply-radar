@@ -6,6 +6,7 @@ import {
   useApplicationContext,
 } from "@apply-radar/ui";
 import { useAuthContext } from "../../context/auth-context";
+import { useIsOnWebApp } from "../../hooks/use-is-on-web-app";
 import { usePageImport } from "../../hooks/use-page-import";
 import { PillButton } from "./pill-button";
 
@@ -19,22 +20,26 @@ export const AddFromPageButton = () => {
   const { createApplication } = useApplicationContext();
   const { state, importFromActiveTab, reset } = usePageImport({ authType });
   const busy = state.status === "reading";
+  // Nothing to import from the dashboard itself (it has its own "Add by link").
+  const onWebApp = useIsOnWebApp();
 
   return (
     <>
-      <PillButton
-        onClick={() => void importFromActiveTab()}
-        disabled={busy}
-        aria-label="Add application from this page"
-        title="Read the job posting in the current tab"
-      >
-        {busy ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          <ScanText className="h-3.5 w-3.5" />
-        )}
-        {busy ? "Reading page…" : "From this page"}
-      </PillButton>
+      {!onWebApp && (
+        <PillButton
+          onClick={() => void importFromActiveTab()}
+          disabled={busy}
+          aria-label="Add application from this page"
+          title="Read the job posting in the current tab"
+        >
+          {busy ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <ScanText className="h-3.5 w-3.5" />
+          )}
+          {busy ? "Reading page…" : "From this page"}
+        </PillButton>
+      )}
 
       {state.status === "error" && (
         <StatusBanner
@@ -53,7 +58,20 @@ export const AddFromPageButton = () => {
           key={state.id}
           externalOpen
           draft={state.draft}
-          notice={state.notice}
+          notice={
+            authType === "local" ? (
+              <>
+                {state.notice}
+                <span className="mt-1.5 block text-xs opacity-80">
+                  Want AI to fill this in and add a short summary? Log in with Google from
+                  the account menu (top right). Applications already saved on this device
+                  are copied to your account.
+                </span>
+              </>
+            ) : (
+              state.notice
+            )
+          }
           onSave={async (application) => {
             const saved = await createApplication(application);
             if (saved) reset();

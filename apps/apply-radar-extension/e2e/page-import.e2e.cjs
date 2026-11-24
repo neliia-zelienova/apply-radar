@@ -67,7 +67,8 @@ const serveFixtures = () =>
     return route.continue();
   });
 
-  await sw.evaluate((token) => chrome.storage.local.set({ loginType: "google", jwt: token }), jwt);
+  // Starts in "Device only" mode (scenario 0); signs in with Google after it.
+  await sw.evaluate(() => chrome.storage.local.set({ loginType: "local" }));
 
   const job = await context.newPage();
   const panel = await context.newPage();
@@ -82,6 +83,27 @@ const serveFixtures = () =>
     }, jobUrl);
   };
   const field = (label) => panel.getByLabel(label).inputValue();
+
+  // 0. "Device only": page content only (no AI request) + a hint to log in;
+  //    after logging in, applications saved on the device are copied to the account.
+  await openPanel(`${SITE}/job-plain.html`);
+  await panel.getByRole("button", { name: "Add application from this page" }).click();
+  await panel.getByLabel("Company Name").waitFor();
+  check("Device only: no AI request", api.parseCalls.length === 0);
+  check("Device only: 'no AI' notice + log-in hint", (await panel.getByText("content (no AI)").isVisible()) && (await panel.getByText("Log in with Google from the account menu").isVisible()));
+  await panel.screenshot({ path: `${OUT}/00-device-only.png` });
+  await panel.getByRole("button", { name: "Save" }).click();
+  await panel.getByLabel("Company Name").waitFor({ state: "detached" });
+  const savedLocally = await sw.evaluate(() => chrome.storage.local.get("applications"));
+  check("Device only: saved on the device, not sent to the API", (savedLocally.applications || []).some((a) => a.name === "Globex") && api.posts.length === 0);
+  // Log in (same storage the Google sign-in writes), reopen the panel.
+  await sw.evaluate((token) => chrome.storage.local.set({ loginType: "google", jwt: token }), jwt);
+  await panel.reload();
+  const copied = await panel.getByText(/Copied 1 application/).waitFor({ timeout: 10000 }).then(() => true, () => false);
+  check("After logging in, device applications are copied to the account", copied && api.posts.length === 1 && api.posts[0].name === "Globex", `posts=${api.posts.length}`);
+  await panel.screenshot({ path: `${OUT}/00b-copied-after-login.png` });
+  api.posts.length = 0;
+  api.parseCalls.length = 0;
 
   // 1. JSON-LD page + AI result
   api.parsePage = { status: 200, body: { result: { company: "Evil Corp", position: "Front-end Engineer (AI)", workMode: "hybrid", employmentType: "full-time", location: "Amsterdam, Netherlands", summary: "Build the ordering experience in React and TypeScript." } } };
@@ -110,7 +132,7 @@ const serveFixtures = () =>
   check("No-AI notice shown", await panel.getByText("AI summaries aren't set up").isVisible());
   await panel.screenshot({ path: `${OUT}/02-form-no-ai.png` });
   await panel.getByRole("button", { name: "Cancel" }).click();
-  await panel.getByRole("button", { name: "Discard Changes" }).click();
+  await panel.getByRole("button", { name: "Discard", exact: true }).click();
 
   // 3. Unreadable page (chrome://) shows an error banner
   await panel.evaluate(() => { chrome.tabs.query = async () => [{ id: 999999, url: "chrome://settings" }]; });
@@ -140,6 +162,32 @@ const serveFixtures = () =>
 
   const manifest = await sw.evaluate(() => chrome.runtime.getManifest());
   check("Manifest: activeTab + module worker + optional hosts", manifest.permissions.includes("activeTab") && manifest.background.type === "module" && manifest.optional_host_permissions.includes("https://*/*"));
+
+  // 6. On the web dashboard itself, "From this page" is hidden (and comes back elsewhere)
+  await panel.getByRole("button", { name: "Cancel" }).click();
+  const discard = panel.getByRole("button", { name: "Discard", exact: true });
+  if (await discard.isVisible().catch(() => false)) await discard.click();
+  const bundle = [EXT, path.join(EXT, "assets")]
+    .filter((dir) => fs.existsSync(dir))
+    .flatMap((dir) => fs.readdirSync(dir).filter((f) => f.endsWith(".js")).map((f) => fs.readFileSync(path.join(dir, f), "utf8")))
+    .join("\n");
+  // WEB_APP_URL as built (from VITE_WEB_APP_URL).
+  const WEB = (bundle.match(/"(https?:\/\/[^"]+)"\.replace\(\/\\\/\+\$\/,""\)/) || [])[1];
+  const pageButton = panel.getByRole("button", { name: "Add application from this page" });
+  if (!WEB) {
+    check("Hidden on the web app", false, "WEB_APP_URL not found in the bundle");
+  } else {
+    const showTab = (u) => panel.evaluate((url) => { chrome.tabs.query = async () => [{ id: 1, url }]; }, u);
+    await showTab(`${WEB}/`);
+    await job.goto(`${WEB}/`).catch(() => {}); // the navigation fires tabs.onUpdated -> re-check
+    const hidden = await pageButton.waitFor({ state: "detached", timeout: 5000 }).then(() => true, () => false);
+    check("'From this page' hidden on the web app", hidden, WEB);
+    await panel.screenshot({ path: `${OUT}/04-on-web-app.png` });
+    await showTab(`${SITE}/job-plain.html`);
+    await job.goto(`${SITE}/job-plain.html`);
+    const back = await pageButton.waitFor({ timeout: 5000 }).then(() => true, () => false);
+    check("…and shown again on other pages", back);
+  }
 
   console.log(results.join("\n"));
   await context.close();

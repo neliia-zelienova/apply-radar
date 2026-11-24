@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  ApiError,
-  applicationDraftFrom,
-  draftFromSnapshot,
-  jobLinkFrom,
-  type Application,
-  type JobPostingDraft,
+  importFromSnapshot,
+  type ApplicationDraft,
   type PageSnapshot,
 } from "@apply-radar/shared";
 import { api } from "../services/app-radar-api";
@@ -16,7 +12,7 @@ import {
   type PendingImport,
 } from "../services/page-import";
 
-export type ApplicationDraft = Pick<Application, "name" | "position" | "url" | "notes">;
+export type { ApplicationDraft };
 
 export type PageImportState =
   | { status: "idle" }
@@ -43,35 +39,10 @@ export const usePageImport = ({ authType }: { authType: "google" | "local" | nul
   const fill = useCallback(
     async (snapshot: PageSnapshot) => {
       setState({ status: "reading" });
-      let ai: JobPostingDraft | null = null;
-      let notice = "Filled in from the page. Check the details before saving.";
-
-      const text = snapshot.text || snapshot.meta.description || snapshot.title;
-      if (authType === "google" && text) {
-        try {
-          ai = await api.applications.parsePage({
-            url: snapshot.url,
-            title: snapshot.title,
-            text,
-          });
-          notice = ai
-            ? "Filled in from the page with AI. Check the details before saving."
-            : "This page doesn't look like a single job posting. Filled in what could be found.";
-        } catch (error) {
-          notice =
-            error instanceof ApiError && error.status === 503
-              ? "Filled in from the page's job data (AI summaries aren't set up). Check the details before saving."
-              : "AI couldn't read this page, so only the page's job data was used. Check the details before saving.";
-        }
-      }
-
-      const draft = draftFromSnapshot(snapshot, ai);
-      setState({
-        status: "ready",
-        id: crypto.randomUUID(),
-        draft: applicationDraftFrom(draft, jobLinkFrom(snapshot)),
-        notice,
-      });
+      // AI only with a Google account (the API needs the sign-in).
+      const parsePage = authType === "google" ? api.applications.parsePage : null;
+      const { draft, notice } = await importFromSnapshot(snapshot, parsePage);
+      setState({ status: "ready", id: crypto.randomUUID(), draft, notice });
     },
     [authType],
   );

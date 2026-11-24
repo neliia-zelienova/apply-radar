@@ -18,6 +18,7 @@ import {
 import { api } from "../api";
 import type { Profile } from "../hooks/use-session";
 import { AccountMenu } from "./account-menu";
+import { AddByLinkButton } from "./add-by-link";
 import { StatsRow } from "./stats-row";
 
 /** Signed-in view: same applications as the extension, read/written via the API. */
@@ -98,7 +99,7 @@ export const Dashboard = ({
               Synced with the Apply Radar extension.
             </p>
           </div>
-          <div data-radar-avoid className="flex items-center gap-2">
+          <div data-radar-avoid className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => void store.reload()}
@@ -108,6 +109,7 @@ export const Dashboard = ({
               <RefreshCw className={`h-3.5 w-3.5 ${store.isLoading ? "animate-spin" : ""}`} />
               Refresh
             </button>
+            <AddByLinkButton onCreate={(app) => store.createApplication(app)} />
             <ApplicationForm
               onSave={(app) => store.createApplication(app)}
               triggerComponent={

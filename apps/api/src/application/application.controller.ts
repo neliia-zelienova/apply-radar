@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Query,
   HttpCode,
+  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
 import { ApplicationService } from './application.service';
@@ -16,6 +17,8 @@ import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { ParseApplicationFromTextDto } from './dto/parse-application-from-text.dto';
 import { ParsePageDto } from './dto/parse-page.dto';
+import { FetchPageDto } from './dto/fetch-page.dto';
+import { fetchPageSnapshot, PageFetchError } from './page-fetcher';
 import { AiService } from './ai.service';
 import { PaginationQueryDto } from 'src/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -51,6 +54,29 @@ export class ApplicationController {
   @HttpCode(200)
   async parsePage(@Body() body: ParsePageDto) {
     return { result: await this.aiService.parseJobPostingPage(body) };
+  }
+
+  /**
+   * "Add by link" (web app): downloads the page and returns the same snapshot
+   * the extension reads from a tab; the client then calls parse-page.
+   * 422 with a readable message when the page can't be read (login wall,
+   * bot protection, private address, not HTML, ...).
+   */
+  @Post('fetch-page')
+  @HttpCode(200)
+  async fetchPage(@Body() body: FetchPageDto) {
+    try {
+      return { snapshot: await fetchPageSnapshot(body.url) };
+    } catch (error) {
+      if (error instanceof PageFetchError) {
+        throw new UnprocessableEntityException({
+          statusCode: 422,
+          message: error.message,
+          reason: error.reason,
+        });
+      }
+      throw error;
+    }
   }
 
   @Get()

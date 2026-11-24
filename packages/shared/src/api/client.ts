@@ -3,6 +3,7 @@ import {
   WORK_MODES,
   type JobPostingDraft,
 } from "../job-posting/job-posting";
+import type { PageSnapshot } from "../job-posting/page-snapshot";
 import type { Application, Interview } from "../types/application";
 import type { AvatarSettings } from "../types/avatar";
 
@@ -240,6 +241,21 @@ export const createApiClient = (options: ApiClientOptions) => {
         });
         return toJobPostingDraft(body?.result);
       },
+
+      /**
+       * "Add by link": the API downloads the page and returns its snapshot.
+       * Throws ApiError 422 with a readable message when the site can't be read
+       * (sign-in wall, bot protection, not a web page, ...).
+       */
+      async fetchPage(url: string): Promise<PageSnapshot> {
+        const body = await request<{ snapshot: unknown }>("/application/fetch-page", {
+          method: "POST",
+          body: { url },
+        });
+        const snapshot = toPageSnapshot(body?.snapshot);
+        if (!snapshot) throw new ApiError(502, body, "The server returned an unreadable page.");
+        return snapshot;
+      },
     },
 
     async deleteAccount(): Promise<void> {
@@ -277,6 +293,26 @@ export type ApiClient = ReturnType<typeof createApiClient>;
 type Raw = Record<string, unknown>;
 
 /** Keeps only known values, so a misbehaving server can't put junk in the form. */
+const toPageSnapshot = (raw: unknown): PageSnapshot | null => {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Raw;
+  const url = str(r.url);
+  if (!url) return null;
+  const meta = (typeof r.meta === "object" && r.meta !== null ? r.meta : {}) as Raw;
+  return {
+    url,
+    canonicalUrl: str(r.canonicalUrl) || undefined,
+    title: str(r.title) ?? "",
+    meta: compact({
+      ogTitle: str(meta.ogTitle),
+      siteName: str(meta.siteName),
+      description: str(meta.description),
+    }),
+    jsonLd: Array.isArray(r.jsonLd) ? r.jsonLd.filter((v): v is string => typeof v === "string") : [],
+    text: str(r.text) ?? "",
+  };
+};
+
 const toJobPostingDraft = (raw: unknown): JobPostingDraft | null => {
   if (typeof raw !== "object" || raw === null) return null;
   const r = raw as Raw;
