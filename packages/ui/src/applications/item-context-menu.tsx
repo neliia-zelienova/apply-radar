@@ -25,7 +25,7 @@ export const ItemContextMenu = ({ itemId, options, label = "Actions", className 
   return (
     <DropdownMenuRoot>
       <DropdownMenuTrigger asChild>
-        <button aria-label={label} className={`${className} mx-auto cursor-pointer rounded-md p-2 hover:bg-teal-300/20 h-fit`}>
+        <button aria-label={label} className={`${className} mx-auto cursor-pointer rounded-full p-2 hover:bg-teal-300/20 h-fit`}>
           <EllipsisVertical className="h-4 w-4 text-gray-900 dark:text-teal-600" />
         </button>
       </DropdownMenuTrigger>
@@ -35,11 +35,11 @@ export const ItemContextMenu = ({ itemId, options, label = "Actions", className 
         align="end"
         sideOffset={4}
         collisionPadding={8}
-        className="flex flex-col bg-white dark:bg-[#0f1829] gap-0.5 border border-gray-200 dark:border-white/10 rounded-lg shadow-lg p-1">
+        className="flex flex-col bg-white dark:bg-[#0f1829] gap-0.5 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg p-1">
         {options.map((option) => (
           <DropdownMenuItem
             key={`context-menu-item-${option.label}`}
-            className="grid grid-cols-[auto_1fr] items-center gap-2 border-none outline-none p-2 rounded-md cursor-pointer transition-colors"
+            className="grid grid-cols-[auto_1fr] items-center gap-2 border-none outline-none p-2 rounded-lg cursor-pointer transition-colors"
             style={{
               color: option.danger
                 ? "#ef4444"

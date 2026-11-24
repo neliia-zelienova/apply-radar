@@ -27,7 +27,7 @@ export const SelectContent = React.forwardRef<
   // z above dialogs (z-[110]) so a select inside a modal isn't hidden behind it;
   // at least as wide as its trigger.
   const defaultContentClasses =
-    "z-[150] min-w-[var(--radix-select-trigger-width)] flex flex-col bg-white gap-0.5 dark:bg-[#0f1829] border border-black/10 dark:border-white/10 rounded-[10px] p-1";
+    "z-[150] min-w-[var(--radix-select-trigger-width)] flex flex-col bg-white gap-0.5 dark:bg-[#0f1829] border border-black/10 dark:border-white/10 rounded-xl p-1";
   const classNameCombined = [defaultContentClasses, (props as any).className]
     .filter(Boolean)
     .join(" ");
@@ -54,7 +54,7 @@ export const SelectItem = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Select.Item>
 >(({ children, ...props }, forwardedRef) => {
   const defaultItemClasses =
-    "flex items-center gap-2 border-none outline-none px-2 py-1.5 rounded-md cursor-pointer text-gray-800 dark:text-slate-200 text-xs font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.06]";
+    "flex items-center gap-2 border-none outline-none px-2.5 py-1.5 rounded-lg cursor-pointer text-gray-800 dark:text-slate-200 text-xs font-medium hover:bg-black/[0.04] dark:hover:bg-white/[0.06]";
   const classNameCombined = [defaultItemClasses, (props as any).className]
     .filter(Boolean)
     .join(" ");

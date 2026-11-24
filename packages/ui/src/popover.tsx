@@ -38,7 +38,7 @@ export const PopoverContent = React.forwardRef<
           sideOffset={sideOffset}
           className={classNames(
             // Panel base styles (Tailwind v4 compatible classes)
-            "z-50 rounded-md border border-gray-200 bg-white p-3 shadow-lg outline-none",
+            "z-50 rounded-xl border border-gray-200 bg-white p-3 shadow-lg outline-none",
             // Motion & placement animations
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",

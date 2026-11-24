@@ -10,6 +10,7 @@ export * from "./button";
 export * from "./checkbox";
 export * from "./dialog";
 export * from "./dropdown-menu";
+export * from "./field";
 export * from "./input-number";
 export * from "./popover";
 export * from "./select";

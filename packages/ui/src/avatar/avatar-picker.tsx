@@ -151,14 +151,14 @@ export const AvatarPicker = ({
 
             {/* Colors */}
             <div>
-              <div className="mb-2 flex gap-1 rounded-lg bg-black/5 p-1 text-xs font-semibold dark:bg-white/5">
+              <div className="mb-2 flex gap-1 rounded-full bg-black/5 p-1 text-xs font-semibold dark:bg-white/5">
                 {(["background", "color"] as const).map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setTab(t)}
                     className={classNames(
-                      "flex-1 cursor-pointer rounded-md px-2 py-1.5",
+                      "flex-1 cursor-pointer rounded-full px-2 py-1.5 transition-colors",
                       tab === t
                         ? "bg-white text-gray-900 shadow-sm dark:bg-[#1e293b] dark:text-slate-100"
                         : "text-gray-500 dark:text-slate-400",

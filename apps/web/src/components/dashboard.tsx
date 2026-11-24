@@ -10,6 +10,7 @@ import {
   ApplicationsContext,
   ApplicationsPanel,
   BannerAction,
+  Button,
   StatusBanner,
   useApplicationsStore,
   useAvatarSettings,
@@ -100,26 +101,23 @@ export const Dashboard = ({
             </p>
           </div>
           <div data-radar-avoid className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => void store.reload()}
-              className="flex cursor-pointer items-center gap-1.5 rounded-full border border-black/10 px-3 py-2 text-xs font-medium text-gray-600 hover:bg-black/5 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/5"
               aria-label="Reload applications"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${store.isLoading ? "animate-spin" : ""}`} />
               Refresh
-            </button>
+            </Button>
             <AddByLinkButton onCreate={(app) => store.createApplication(app)} />
             <ApplicationForm
               onSave={(app) => store.createApplication(app)}
               triggerComponent={
-                <button
-                  type="button"
-                  className="flex cursor-pointer items-center gap-1.5 rounded-full bg-teal-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-teal-500"
-                >
-                  <Plus className="h-3.5 w-3.5" />
+                <Button variant="primary" size="sm">
+                  <Plus className="h-4 w-4" />
                   Add application
-                </button>
+                </Button>
               }
             />
           </div>

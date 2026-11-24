@@ -18,6 +18,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Field,
+  Input,
 } from "@apply-radar/ui";
 import { api } from "../api";
 
@@ -122,17 +124,17 @@ export const AddByLinkButton = ({
 
   return (
     <>
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="sm"
         onClick={() => {
           setLink("");
           setStep({ name: "link" });
         }}
-        className="flex cursor-pointer items-center gap-1.5 rounded-full border border-teal-600/40 px-3 py-2 text-xs font-semibold text-teal-700 hover:bg-teal-600/10 dark:border-teal-400/40 dark:text-teal-300 dark:hover:bg-teal-400/10"
       >
-        <Link2 className="h-3.5 w-3.5" />
+        <Link2 className="h-4 w-4" />
         Add by link
-      </button>
+      </Button>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && close()}>
         <DialogContent>
@@ -145,9 +147,8 @@ export const AddByLinkButton = ({
               </DialogDescription>
             </DialogHeader>
 
-            <label className="flex flex-col gap-1">
-              <span className="text-sm">Job posting link</span>
-              <input
+            <Field label="Job posting link">
+              <Input
                 type="url"
                 inputMode="url"
                 autoFocus
@@ -156,19 +157,14 @@ export const AddByLinkButton = ({
                 value={link}
                 disabled={reading}
                 onChange={(event) => setLink(event.target.value)}
-                aria-invalid={step.name === "link" && !!step.error}
-                className={`w-full rounded-md border bg-teal-400/10 p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-60 dark:bg-black/20 ${
-                  step.name === "link" && step.error
-                    ? "border-red-500"
-                    : "border-black/15 dark:border-white/20"
-                }`}
+                invalid={step.name === "link" && !!step.error}
               />
-            </label>
+            </Field>
 
             {step.name === "link" && step.error && (
               <div
                 role="alert"
-                className="mt-3 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-200"
+                className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-700 dark:text-red-200"
               >
                 <p>{step.error}</p>
                 {step.failedUrl && (
@@ -178,13 +174,15 @@ export const AddByLinkButton = ({
                       Apply Radar extension: it reads the page as you see it, including
                       sites that need you to sign in (like LinkedIn).
                     </p>
-                    <button
+                    <Button
                       type="button"
-                      className="mt-2 cursor-pointer text-xs font-semibold underline underline-offset-2"
+                      variant="secondary"
+                      size="sm"
+                      className="mt-2.5"
                       onClick={() => review(linkOnlyImport(step.failedUrl!))}
                     >
                       Add with just the link
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -197,7 +195,7 @@ export const AddByLinkButton = ({
               <Button type="submit" variant="primary" size="sm" disabled={reading || !link.trim()}>
                 {reading ? (
                   <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
                     Reading page…
                   </>
                 ) : (
