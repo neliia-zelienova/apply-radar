@@ -134,6 +134,15 @@ describe("jobLinkFrom", () => {
     );
   });
 
+  it("keeps the page URL when the canonical drops the job's #fragment", () => {
+    expect(
+      jobLinkFrom({
+        url: "https://jobs.example.com/#/jobs/42",
+        canonicalUrl: "https://jobs.example.com/",
+      }),
+    ).toBe("https://jobs.example.com/#/jobs/42");
+  });
+
   it("ignores a canonical URL on another site", () => {
     expect(
       jobLinkFrom({ url: "https://a.example/job", canonicalUrl: "https://b.example/job" }),
@@ -161,6 +170,26 @@ describe("buildImportNotes", () => {
     const notes = buildImportNotes({ summary: "word ".repeat(200), workMode: "remote" }, 100);
     expect(notes.length).toBeLessThanOrEqual(100);
     expect(notes).toMatch(/word…\nRemote\nAdded from link$/);
+  });
+
+  it("shortens a details line that alone is too long", () => {
+    const notes = buildImportNotes({
+      summary: "Own the UI.",
+      workMode: "hybrid",
+      location: "Amsterdam ".repeat(100),
+    });
+    const [summary, details, last] = notes.split("\n");
+    expect(notes.length).toBeLessThanOrEqual(500);
+    expect(summary).toBe("Own the UI.");
+    expect(details.length).toBeLessThanOrEqual(150);
+    expect(details).toMatch(/^Hybrid · Amsterdam .*Amsterdam…$/);
+    expect(last).toBe(ADDED_FROM_LINK_NOTE);
+  });
+
+  it("fits a tiny limit even when the details alone exceed it", () => {
+    const notes = buildImportNotes({ location: "Amsterdam ".repeat(100) }, 60);
+    expect(notes.length).toBeLessThanOrEqual(60);
+    expect(notes).toMatch(/…\nAdded from link$/);
   });
 });
 

@@ -156,6 +156,21 @@ const serveFixtures = () =>
   const left = await sw.evaluate(() => chrome.storage.session.get("pendingPageImport"));
   check("Hand-off is consumed", !left.pendingPageImport);
 
+  // 4b. A second context-menu page while that form is open waits: the user's edits stay.
+  await panel.getByLabel("Position").fill("Edited by the user");
+  await sw.evaluate(() => chrome.storage.session.set({ pendingPageImport: { id: "t2", snapshot: { url: "https://jobs.initech.example/7", title: "Data Engineer at Initech", meta: {}, jsonLd: [], text: "" } } }));
+  await panel.waitForTimeout(1000);
+  const waiting = await sw.evaluate(() => chrome.storage.session.get("pendingPageImport"));
+  check("Open form isn't replaced by a new context-menu page", (await field("Position")) === "Edited by the user" && waiting.pendingPageImport?.id === "t2", `${await field("Position")} / ${waiting.pendingPageImport?.id}`);
+  await panel.getByRole("button", { name: "Cancel" }).click();
+  await panel.getByRole("button", { name: "Discard", exact: true }).click();
+  await panel.waitForFunction(() => [...document.querySelectorAll("input")].some((i) => i.value === "Initech"), null, { timeout: 5000 }).catch(() => undefined);
+  check("…it opens once the form is closed", (await field("Company Name")) === "Initech" && (await field("Position")) === "Data Engineer");
+  await panel.getByRole("button", { name: "Cancel" }).click();
+  const discardQueued = panel.getByRole("button", { name: "Discard", exact: true });
+  if (await discardQueued.isVisible().catch(() => false)) await discardQueued.click();
+  await panel.getByLabel("Company Name").waitFor({ state: "detached" });
+
   // 5. Context menu item exists (onInstalled ran in the module worker)
   const menuOk = await sw.evaluate(() => chrome.contextMenus.update("apply-radar-add-from-page", { title: "Add this job to Apply Radar" }).then(() => true, (e) => String(e)));
   check("Context menu item registered", menuOk === true, String(menuOk));
@@ -164,9 +179,6 @@ const serveFixtures = () =>
   check("Manifest: activeTab + module worker + optional hosts", manifest.permissions.includes("activeTab") && manifest.background.type === "module" && manifest.optional_host_permissions.includes("https://*/*"));
 
   // 6. On the web dashboard itself, "From this page" is hidden (and comes back elsewhere)
-  await panel.getByRole("button", { name: "Cancel" }).click();
-  const discard = panel.getByRole("button", { name: "Discard", exact: true });
-  if (await discard.isVisible().catch(() => false)) await discard.click();
   const bundle = [EXT, path.join(EXT, "assets")]
     .filter((dir) => fs.existsSync(dir))
     .flatMap((dir) => fs.readdirSync(dir).filter((f) => f.endsWith(".js")).map((f) => fs.readFileSync(path.join(dir, f), "utf8")))

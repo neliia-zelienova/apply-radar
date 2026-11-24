@@ -57,9 +57,14 @@ export const usePageImport = ({ authType }: { authType: "google" | "local" | nul
     }
   }, [fill]);
 
+  // While a page is being read or its form is open, a new context-menu page
+  // waits in storage: replacing the form would lose the user's edits without
+  // the unsaved-changes prompt. It opens once the form is saved or closed.
+  const busy = state.status === "reading" || state.status === "ready";
+
   // Pages sent from the context menu by the background worker.
   useEffect(() => {
-    if (!authType) return; // picked up after sign-in
+    if (!authType || busy) return; // picked up after sign-in / when the form closes
     const take = async () => {
       const stored = await chrome.storage.session.get(PENDING_IMPORT_KEY);
       const pending = stored[PENDING_IMPORT_KEY] as PendingImport | undefined;
@@ -77,7 +82,7 @@ export const usePageImport = ({ authType }: { authType: "google" | "local" | nul
     };
     chrome.storage.onChanged.addListener(onChanged);
     return () => chrome.storage.onChanged.removeListener(onChanged);
-  }, [authType, fill]);
+  }, [authType, busy, fill]);
 
   return {
     state,

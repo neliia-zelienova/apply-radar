@@ -245,8 +245,9 @@ const withoutTracking = (url: URL) => {
 /**
  * The posting's link, without tracking parameters. The canonical URL is used
  * only when it's on the same site and keeps every other parameter of the page
- * URL: on list pages (LinkedIn `?currentJobId=`, Indeed `?vjk=`) the canonical
- * points at the list and would lose which job it was.
+ * URL and its fragment: on list pages (LinkedIn `?currentJobId=`, Indeed
+ * `?vjk=`) and hash-routed boards (`/#/jobs/42`) the canonical points at the
+ * list and would lose which job it was.
  */
 export const jobLinkFrom = (snapshot: Pick<PageSnapshot, "url" | "canonicalUrl">): string => {
   let page: URL;
@@ -262,9 +263,11 @@ export const jobLinkFrom = (snapshot: Pick<PageSnapshot, "url" | "canonicalUrl">
     page.searchParams.forEach((value, key) => {
       if (canonical.searchParams.get(key) !== value) keepsParams = false;
     });
+    const keepsFragment = !page.hash || page.hash === canonical.hash;
     return canonical.protocol.startsWith("http") &&
       canonical.hostname === page.hostname &&
-      keepsParams
+      keepsParams &&
+      keepsFragment
       ? canonical.href
       : page.href;
   } catch {
@@ -272,28 +275,39 @@ export const jobLinkFrom = (snapshot: Pick<PageSnapshot, "url" | "canonicalUrl">
   }
 };
 
+/** A location from page data can be a whole paragraph; keep room for the summary. */
+const DETAILS_LINE_LIMIT = 150;
+
+/** `text` cut at a word, with "…", to at most `room` characters ("" if no room). */
+const shortenAtWord = (text: string, room: number): string => {
+  if (text.length <= room) return text;
+  if (room <= 1) return "";
+  const cut = text.slice(0, room - 1);
+  return `${cut.replace(/\s+\S*$/, "") || cut}…`;
+};
+
 /**
  * Notes for an imported application:
  *   <short summary>
  *   Hybrid · Full-time · Amsterdam
  *   Added from link
- * The summary is shortened (at a word) so everything fits in `limit`.
+ * The summary is shortened (at a word) so everything fits in `limit`; so is
+ * the details line if it alone is too long (a long location from page data).
  */
 export const buildImportNotes = (draft: JobPostingDraft, limit = 500): string => {
-  const details = [
+  const parts = [
     draft.workMode && WORK_MODE_LABELS[draft.workMode],
     draft.employmentType && EMPLOYMENT_TYPE_LABELS[draft.employmentType],
     draft.location,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ];
+  // At most one short line, and never more than the "Added from link" line
+  // (and its newline) leaves room for.
+  const details = shortenAtWord(
+    parts.filter(Boolean).join(" · "),
+    Math.min(DETAILS_LINE_LIMIT, limit - ADDED_FROM_LINK_NOTE.length - 1),
+  );
   const tail = [details, ADDED_FROM_LINK_NOTE].filter(Boolean).join("\n");
-
-  let summary = draft.summary?.trim() ?? "";
-  const room = limit - tail.length - 1; // 1 for the newline
-  if (summary.length > room) {
-    summary = room > 1 ? `${summary.slice(0, room - 1).replace(/\s+\S*$/, "")}…` : "";
-  }
+  const summary = shortenAtWord(draft.summary?.trim() ?? "", limit - tail.length - 1);
   return [summary, tail].filter(Boolean).join("\n");
 };
 
