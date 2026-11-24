@@ -45,7 +45,9 @@ export const AlertDialogContent = React.forwardRef<
     <AlertDialogPortal>
       <AlertDialogPrimitive.Overlay
         className={classNames(
-          "fixed inset-0 z-[100] bg-black/40 dark:bg-black/60",
+          // Above the regular Dialog (z-100/110): a confirmation can open on top of a form.
+          // Darker and blurred, so it clearly sits above that form.
+          "fixed inset-0 z-[120] bg-black/50 backdrop-blur-[2px] dark:bg-black/70",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0"
         )}
@@ -54,13 +56,14 @@ export const AlertDialogContent = React.forwardRef<
         ref={ref}
         className={classNames(
           // Narrower than the regular Dialog (max-w-md) so a confirmation reads as a separate, smaller step.
-          "fixed left-1/2 top-1/2 z-[110] w-[85vw] max-w-[360px] -translate-x-1/2 -translate-y-1/2",
+          "fixed left-1/2 top-1/2 z-[130] w-[85vw] max-w-[360px] -translate-x-1/2 -translate-y-1/2",
           "max-h-[calc(100vh-48px)] overflow-y-auto",
-          "rounded-2xl border border-black/8 bg-white p-6 shadow-2xl outline-none",
+          "rounded-2xl border border-black/8 bg-white p-5 shadow-2xl outline-none",
           // Own text color, so labels and inputs don't depend on the page's default.
           "text-gray-900",
           // Dark mode variants
-          "dark:border-white/10 dark:bg-[#0f1829] dark:text-slate-100",
+          // A step lighter than the form dialog behind it.
+          "dark:border-white/15 dark:bg-[#18233a] dark:text-slate-100 dark:shadow-black/60",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0",
           "data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
@@ -76,13 +79,41 @@ export const AlertDialogContent = React.forwardRef<
 
 AlertDialogContent.displayName = "AlertDialogContent";
 
+export type AlertDialogTone = "default" | "danger" | "warning";
+
+const ICON_TONES: Record<AlertDialogTone, string> = {
+  default: "bg-teal-500/15 text-teal-600 dark:text-teal-300",
+  danger: "bg-red-500/15 text-red-600 dark:text-red-300",
+  warning: "bg-amber-500/15 text-amber-600 dark:text-amber-300",
+};
+
+/** Title + description; with `icon`, shown in a tinted circle to the left. */
 export const AlertDialogHeader = ({
   children,
   className,
+  icon,
+  tone = "default",
 }: {
   children: React.ReactNode;
   className?: string;
-}) => <div className={classNames("mb-4", className)}>{children}</div>;
+  icon?: React.ReactNode;
+  tone?: AlertDialogTone;
+}) => (
+  <div className={classNames("flex items-start gap-3", className)}>
+    {icon && (
+      <span
+        aria-hidden
+        className={classNames(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+          ICON_TONES[tone]
+        )}
+      >
+        {icon}
+      </span>
+    )}
+    <div className="min-w-0 flex-1">{children}</div>
+  </div>
+);
 
 export const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
@@ -91,7 +122,7 @@ export const AlertDialogTitle = React.forwardRef<
   <AlertDialogPrimitive.Title
     ref={ref}
     className={classNames(
-      "text-lg font-semibold text-gray-900",
+      "text-base font-semibold leading-6 text-gray-900",
       // Dark mode variant
       "dark:text-gray-100",
       className
@@ -109,7 +140,7 @@ export const AlertDialogDescription = React.forwardRef<
   <AlertDialogPrimitive.Description
     ref={ref}
     className={classNames(
-      "mt-1 text-sm text-gray-600",
+      "mt-1 text-sm leading-5 text-gray-600",
       // Dark mode variant
       "dark:text-gray-300",
       className
@@ -129,7 +160,8 @@ export const AlertDialogFooter = ({
 }) => (
   <div
     className={classNames(
-      "mt-6 flex items-center justify-end gap-2",
+      // Buttons share the width and stay on one line.
+      "mt-5 flex items-center gap-2 [&>*]:flex-1 [&>*]:whitespace-nowrap",
       className
     )}
   >

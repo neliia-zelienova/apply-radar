@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { forwardRef } from "react";
 
-type ButtonVariant = "primary" | "secondary";
+type ButtonVariant = "primary" | "secondary" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -25,13 +25,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm cursor-pointer";
+      "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm cursor-pointer";
 
     const variantStyles = {
       primary:
-        "bg-teal-600 text-white shadow-md hover:shadow-teal-950/30 dark:hover:shadow-teal-400/30 focus:ring-white border hover:border-white/30 dark:border-teal-700",
+        "bg-teal-600 text-white shadow-md hover:shadow-teal-950/30 dark:hover:shadow-teal-400/30 focus-visible:ring-white/70 border hover:border-white/30 dark:border-teal-700",
       secondary:
-        "bg-blue-950 dark:bg-white/10 text-white border dark:border-white/30 border-blue-950/30 dark:hover:bg-white/20 hover:border-white/30 dark:hover:border-white/40 hover:shadow-blue-950/50 dark:hover:shadow-white shadow-md dark:focus:ring-white/50 focus:ring-blue-950/50",
+        "bg-blue-950 dark:bg-white/10 text-white border dark:border-white/30 border-blue-950/30 dark:hover:bg-white/20 hover:border-white/30 dark:hover:border-white/40 hover:shadow-blue-950/50 dark:hover:shadow-white shadow-md dark:focus-visible:ring-white/50 focus-visible:ring-blue-950/50",
+      danger:
+        "bg-red-600 text-white border border-red-700 shadow-md hover:bg-red-500 hover:shadow-red-950/40 focus-visible:ring-red-300/70",
     };
 
     const sizeStyles = {

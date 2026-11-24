@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, TriangleAlert } from "lucide-react";
 import {
   ApplicationStatus,
   type Application,
@@ -434,39 +434,33 @@ export const ApplicationForm = ({
         onOpenChange={setShowUnsavedChangesDialog}
       >
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-            {/* description */}
-            <AlertDialogDescription className="text-sm text-gray-600">
-              You have unsaved changes. Are you sure you want to discard them?
+          <AlertDialogHeader icon={<TriangleAlert size={20} />} tone="warning">
+            <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your edits to this application haven't been saved and will be lost.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel asChild>
+            <AlertDialogAction asChild>
               <Button
-                variant="secondary"
+                variant="danger"
+                size="sm"
                 onClick={() => {
-                  // Discard changes: close alert and form, then call onCancel
                   setShowUnsavedChangesDialog(false);
                   setIsFormOpen(false);
                   resetForm();
                   onCancel?.();
                 }}
               >
-                Discard Changes
-              </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  // Keep editing: simply close the alert and keep the form open
-                  setShowUnsavedChangesDialog(false);
-                }}
-              >
-                Keep Editing
+                Discard
               </Button>
             </AlertDialogAction>
+            {/* Cancel = the safe choice, on the right: it gets focus first and Escape picks it. */}
+            <AlertDialogCancel asChild>
+              <Button variant="secondary" size="sm">
+                Keep editing
+              </Button>
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
