@@ -314,6 +314,69 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   }
 }
 
+/* -----------------------------------------------------------
+   APP HEADER (AppHeader): light in the light theme, deep navy in the dark one.
+----------------------------------------------------------- */
+
+.app-header {
+  background: linear-gradient(160deg, #ffffff 0%, #f3fbfa 55%, #e7f5f3 100%);
+  border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+}
+.dark .app-header {
+  background: linear-gradient(160deg, #050b1a 0%, #071328 55%, #0c1a32 100%);
+  border-bottom-color: transparent;
+}
+
+.app-header__scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(15, 23, 42, 0.018) 2px,
+    rgba(15, 23, 42, 0.018) 3px
+  );
+}
+.dark .app-header__scanlines {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255, 255, 255, 0.025) 2px,
+    rgba(255, 255, 255, 0.025) 3px
+  );
+}
+
+/* Round icon/avatar buttons on the header (account, theme, dashboard, settings). */
+.header-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: rgba(255, 255, 255, 0.7);
+  color: #475569;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.header-icon-button:hover {
+  background: rgba(20, 184, 166, 0.12);
+  border-color: rgba(13, 148, 136, 0.35);
+  color: #0f766e;
+}
+.header-icon-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.3);
+}
+.dark .header-icon-button {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(148, 163, 184, 0.85);
+}
+.dark .header-icon-button:hover {
+  background: rgba(20, 184, 166, 0.15);
+  color: #5eead4;
+}
+
 /* Logo: a still radar scope (the header and page backgrounds already move).
    Light base in the light theme, dark navy in the dark theme. */
 .radar-logo {

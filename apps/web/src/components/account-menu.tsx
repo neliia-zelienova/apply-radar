@@ -23,7 +23,7 @@ import {
 import type { Profile } from "../hooks/use-session";
 
 const itemClass =
-  "flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-800 outline-none hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/5";
+  "flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/5";
 
 export const AccountMenu = ({
   profile,
@@ -51,7 +51,7 @@ export const AccountMenu = ({
         <DropdownMenuTrigger asChild>
           <button
             // Room after the name only when the name is shown (sm and up).
-            className={`flex cursor-pointer items-center gap-2 rounded-full border border-white/15 bg-white/5 p-1 transition-colors hover:bg-teal-500/15 ${displayName ? "sm:pr-3" : ""}`}
+            className={`header-icon-button gap-2 p-1 ${displayName ? "sm:pr-3" : ""}`}
             aria-label="Account menu"
           >
             <UserAvatar
@@ -60,7 +60,7 @@ export const AccountMenu = ({
               label={profile.name || "Your avatar"}
             />
             {displayName && (
-              <span className="hidden max-w-40 truncate text-sm text-slate-200 sm:inline">
+              <span className="hidden max-w-40 truncate text-sm text-slate-700 sm:inline dark:text-slate-200">
                 {displayName}
               </span>
             )}
@@ -70,7 +70,7 @@ export const AccountMenu = ({
           align="end"
           sideOffset={6}
           collisionPadding={8}
-          className="min-w-52 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#0f1829]"
+          className="min-w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-white/10 dark:bg-[#0f1829]"
         >
           {profile.email && (
             <div className="px-3 py-2 text-xs text-gray-400 dark:text-slate-500">

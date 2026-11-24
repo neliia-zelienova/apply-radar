@@ -141,6 +141,11 @@ const serveFixtures = () =>
   check("Unreadable page shows an error", true);
   await panel.screenshot({ path: `${OUT}/03-unreadable-page.png` });
   await panel.getByRole("button", { name: "Dismiss" }).click();
+  // Header menu (light theme): just a screenshot for review.
+  await panel.getByRole("button", { name: "Account and settings" }).click();
+  await panel.getByText("Log out").waitFor();
+  await panel.screenshot({ path: `${OUT}/03b-settings-menu.png` });
+  await panel.keyboard.press("Escape");
 
   // 4. Context menu hand-off: background stores the page, the panel opens the form
   api.parsePage = { status: 200, body: { result: null } };

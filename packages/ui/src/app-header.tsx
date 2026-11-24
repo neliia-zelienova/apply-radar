@@ -17,7 +17,7 @@ export interface AppHeaderProps {
   contentClassName?: string;
 }
 
-/** Dark radar-style header with the Apply Radar logo, shared by the extension and web. */
+/** Radar-style header with the Apply Radar logo (light or dark with the theme), shared by the extension and web. */
 export const AppHeader = ({
   right,
   children,
@@ -28,21 +28,12 @@ export const AppHeader = ({
   return (
     <div
       data-radar-avoid
-      className="w-full relative overflow-hidden"
-      style={{
-        background:
-          "linear-gradient(160deg, #050b1a 0%, #071328 55%, #0c1a32 100%)",
-        paddingBottom,
-      }}
+      // Colors follow the theme (see `.app-header` in styles.css).
+      className="app-header w-full relative overflow-hidden"
+      style={{ paddingBottom }}
     >
       {/* Scanline texture */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.025) 2px, rgba(255,255,255,0.025) 3px)",
-        }}
-      />
+      <div className="app-header__scanlines absolute inset-0 pointer-events-none" />
 
       {/* Slow radar sweep around the logo */}
       {animated && <HeaderRadar />}
@@ -69,10 +60,10 @@ export const AppHeader = ({
             {/* Brand text — left-aligned to the logo (overrides the inherited `#root { text-align: center }`) */}
             <div className="text-left">
               <div
+                className="text-slate-900 dark:text-[#f0fdf9]"
                 style={{
                   fontSize: "22px",
                   fontWeight: 700,
-                  color: "#f0fdf9",
                   letterSpacing: "-0.02em",
                   lineHeight: 1.2,
                   fontFamily: "Roboto, sans-serif",
@@ -81,9 +72,9 @@ export const AppHeader = ({
                 Apply Radar
               </div>
               <div
+                className="text-teal-700/85 dark:text-teal-300/75"
                 style={{
                   fontSize: "12px",
-                  color: "rgba(94,234,212,0.75)",
                   letterSpacing: "0.03em",
                   fontWeight: 400,
                   fontFamily: "Roboto, sans-serif",
