@@ -18,4 +18,5 @@ CLAUDE.md
 .claude/**
 
 # generated / build outputs                                                                                
-packages/shared/dist/  
+packages/shared/dist/
+apps/apply-radar-extension/e2e/output/

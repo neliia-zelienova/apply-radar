@@ -116,7 +116,7 @@ export const AccountMenu = ({
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
-          <AlertDialogHeader>
+          <AlertDialogHeader icon={<Trash2 size={18} />} tone="danger">
             <AlertDialogTitle>Delete your account data?</AlertDialogTitle>
             <AlertDialogDescription>
               This permanently deletes all applications and interviews stored in your
@@ -126,12 +126,14 @@ export const AccountMenu = ({
           {deleteError && <p className="text-sm text-red-500">{deleteError}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel asChild>
-              <Button variant="secondary">Cancel</Button>
+              <Button variant="secondary" size="sm">
+                Cancel
+              </Button>
             </AlertDialogCancel>
             <AlertDialogAction asChild>
               <Button
-                variant="primary"
-                className="!bg-red-600"
+                variant="danger"
+                size="sm"
                 onClick={async (event) => {
                   event.preventDefault();
                   try {

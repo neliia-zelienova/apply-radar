@@ -9,7 +9,8 @@ import {
 import { TooltipContent, TooltipProvider, TooltipRoot, TooltipTrigger } from "../tooltip";
 import { ApplicationStatusIcon } from "../application-status-icon";
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "../select";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../alert-dialog";
+import { Button } from "../button";
 import { ItemContextMenu } from "./item-context-menu";
 import {
   Archive,
@@ -579,21 +580,20 @@ export const ApplicationItem = ({
         onOpenChange={(open) => setDeleteConfirm((d) => ({ ...d, open }))}
       >
         <AlertDialogContent>
-          <AlertDialogHeader>
+          <AlertDialogHeader icon={<Trash2 size={18} />} tone="danger">
             <AlertDialogTitle>Delete interview?</AlertDialogTitle>
+            <AlertDialogDescription>This can't be undone.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel asChild>
-              <button
-                className="px-3 py-2 rounded-md bg-gray-200 dark:bg-neutral-700 text-sm"
-                onClick={() => setDeleteConfirm({ open: false })}
-              >
+              <Button variant="secondary" size="sm">
                 Cancel
-              </button>
+              </Button>
             </AlertDialogCancel>
             <AlertDialogAction asChild>
-              <button
-                className="px-3 py-2 rounded-md bg-red-600 text-white text-sm"
+              <Button
+                variant="danger"
+                size="sm"
                 onClick={() => {
                   if (deleteConfirm.interviewId) {
                     updateApp &&
@@ -608,7 +608,7 @@ export const ApplicationItem = ({
                 }}
               >
                 Delete
-              </button>
+              </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

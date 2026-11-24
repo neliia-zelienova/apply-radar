@@ -1,3 +1,9 @@
+import {
+  EMPLOYMENT_TYPES,
+  WORK_MODES,
+  type JobPostingDraft,
+} from "../job-posting/job-posting";
+import type { PageSnapshot } from "../job-posting/page-snapshot";
 import type { Application, Interview } from "../types/application";
 import type { AvatarSettings } from "../types/avatar";
 
@@ -219,6 +225,37 @@ export const createApiClient = (options: ApiClientOptions) => {
       async remove(id: string): Promise<void> {
         await request(`/application/${id}`, { method: "DELETE" });
       },
+      /**
+       * Asks the API's AI to read a job posting page. Saves nothing.
+       * Resolves null when the page isn't a job posting; rejects with
+       * ApiError 503 when AI parsing isn't configured on the server.
+       */
+      async parsePage(page: {
+        url: string;
+        title: string;
+        text: string;
+      }): Promise<JobPostingDraft | null> {
+        const body = await request<{ result: unknown }>("/application/parse-page", {
+          method: "POST",
+          body: page,
+        });
+        return toJobPostingDraft(body?.result);
+      },
+
+      /**
+       * "Add by link": the API downloads the page and returns its snapshot.
+       * Throws ApiError 422 with a readable message when the site can't be read
+       * (sign-in wall, bot protection, not a web page, ...).
+       */
+      async fetchPage(url: string): Promise<PageSnapshot> {
+        const body = await request<{ snapshot: unknown }>("/application/fetch-page", {
+          method: "POST",
+          body: { url },
+        });
+        const snapshot = toPageSnapshot(body?.snapshot);
+        if (!snapshot) throw new ApiError(502, body, "The server returned an unreadable page.");
+        return snapshot;
+      },
     },
 
     async deleteAccount(): Promise<void> {
@@ -254,6 +291,42 @@ export type ApiClient = ReturnType<typeof createApiClient>;
 // ---------------------------------------------------------------------------
 
 type Raw = Record<string, unknown>;
+
+/** Keeps only known values, so a misbehaving server can't put junk in the form. */
+const toPageSnapshot = (raw: unknown): PageSnapshot | null => {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Raw;
+  const url = str(r.url);
+  if (!url) return null;
+  const meta = (typeof r.meta === "object" && r.meta !== null ? r.meta : {}) as Raw;
+  return {
+    url,
+    canonicalUrl: str(r.canonicalUrl) || undefined,
+    title: str(r.title) ?? "",
+    meta: compact({
+      ogTitle: str(meta.ogTitle),
+      siteName: str(meta.siteName),
+      description: str(meta.description),
+    }),
+    jsonLd: Array.isArray(r.jsonLd) ? r.jsonLd.filter((v): v is string => typeof v === "string") : [],
+    text: str(r.text) ?? "",
+  };
+};
+
+const toJobPostingDraft = (raw: unknown): JobPostingDraft | null => {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Raw;
+  const oneOf = <T extends string>(value: unknown, allowed: readonly T[]) =>
+    allowed.includes(value as T) ? (value as T) : undefined;
+  return compact({
+    company: str(r.company)?.trim() || undefined,
+    position: str(r.position)?.trim() || undefined,
+    workMode: oneOf(r.workMode, WORK_MODES),
+    employmentType: oneOf(r.employmentType, EMPLOYMENT_TYPES),
+    location: str(r.location)?.trim() || undefined,
+    summary: str(r.summary)?.trim() || undefined,
+  });
+};
 
 const str = (value: unknown): string | undefined =>
   typeof value === "string" ? value : undefined;

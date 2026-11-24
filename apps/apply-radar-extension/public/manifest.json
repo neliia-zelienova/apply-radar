@@ -26,9 +26,11 @@
     "default_path": "index.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "permissions": [
+    "activeTab",
     "scripting",
     "tabs",
     "sidePanel",
@@ -45,6 +47,10 @@
     "http://127.0.0.1/*",
     "https://localhost/*",
     "https://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
   ],
   "icons": {
     "32": "icon32.png",
