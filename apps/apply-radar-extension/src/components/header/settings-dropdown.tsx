@@ -6,7 +6,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   AlertDialog,
-  AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -15,6 +14,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
   AvatarPicker,
+  Button,
   UserAvatar,
   useAvatarSettings,
   useRadarEffects,
@@ -40,13 +40,24 @@ export const SettingsDropdown = () => {
     store: isGoogleAuth ? accountAvatarStore : authType === "local" ? localAvatarStore : null,
   });
 
+  // Outside the menu (like the web app), so the menu can close while it's open.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const handleDeleteMyData = async () => {
+    setDeleting(true);
+    setDeleteError(null);
     try {
       await api.deleteAccount();
     } catch (error) {
       console.error("Failed to delete account data:", error);
+      setDeleteError("Couldn't delete your data. Check your connection and try again.");
+      setDeleting(false);
       return;
     }
+    setDeleting(false);
+    setConfirmDelete(false);
     await signOut();
   };
 
@@ -59,6 +70,44 @@ export const SettingsDropdown = () => {
         photoUrl={isGoogleAuth ? picture : undefined}
         onSave={saveAvatar}
       />
+      <AlertDialog open={confirmDelete} onOpenChange={(open) => !deleting && setConfirmDelete(open)}>
+        <AlertDialogContent>
+          <AlertDialogHeader icon={<Trash2 size={18} />} tone="danger">
+            <AlertDialogTitle>Delete your account data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes all applications and interviews stored in your
+              account, and logs you out. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteError && (
+            <p role="alert" className="mt-3 text-sm text-red-600 dark:text-red-400">
+              {deleteError}
+            </p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel asChild>
+              <Button variant="secondary" size="sm" disabled={deleting}>
+                Cancel
+              </Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={deleting}
+                onClick={(event) => {
+                  // Stay open until it's done (and on an error).
+                  event.preventDefault();
+                  void handleDeleteMyData();
+                }}
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <DropdownMenuRoot>
         <DropdownMenuTrigger asChild>
           <button
@@ -115,31 +164,16 @@ export const SettingsDropdown = () => {
           )}
 
           {isGoogleAuth && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <DropdownMenuItem
-                  className="flex items-center gap-2 hover:bg-red-500/10 outline-none p-2 rounded-lg cursor-pointer dark:hover:bg-red-900/40"
-                  onSelect={(e) => e.preventDefault()}
-                >
-                  <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
-                  <span className="text-sm text-red-600 dark:text-red-400">Delete my data</span>
-                </DropdownMenuItem>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete your data?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete your account and all application data. This action cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDeleteMyData}>
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            <DropdownMenuItem
+              className="flex items-center gap-2 hover:bg-red-500/10 outline-none p-2 rounded-lg cursor-pointer dark:hover:bg-red-900/40"
+              onSelect={() => {
+                setDeleteError(null);
+                setConfirmDelete(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+              <span className="text-sm text-red-600 dark:text-red-400">Delete my data</span>
+            </DropdownMenuItem>
           )}
 
           <DropdownMenuItem
