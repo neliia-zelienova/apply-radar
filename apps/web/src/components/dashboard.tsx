@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { List, Plus, Radar, RefreshCw } from "lucide-react";
 import {
   createRemoteRepository,
   type ApplicationSortField,
@@ -21,7 +21,92 @@ import type { Profile } from "../hooks/use-session";
 import { AccountMenu } from "./account-menu";
 import { AddByLinkButton } from "./add-by-link";
 import { BrandLink } from "./brand-link";
+import { DashboardRadar } from "./radar/dashboard-radar";
 import { StatsRow } from "./stats-row";
+
+type View = "list" | "radar";
+const VIEW_KEY = "apply-radar.dashboard-view";
+/** Set once the radar has been opened; until then its switch shows a "new" dot. */
+const RADAR_SEEN_KEY = "apply-radar.radar-seen";
+
+// Storage can be missing or blocked (private mode); the view then just isn't remembered.
+const readStorage = (key: string) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+const writeStorage = (key: string, value: string) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+};
+
+/** List | Radar switch; remembers the choice in this browser. */
+const useDashboardView = () => {
+  const [view, setViewState] = useState<View>(() =>
+    readStorage(VIEW_KEY) === "radar" ? "radar" : "list",
+  );
+  const [radarSeen, setRadarSeen] = useState(() => readStorage(RADAR_SEEN_KEY) === "1");
+  const setView = (next: View) => {
+    setViewState(next);
+    writeStorage(VIEW_KEY, next);
+    if (next === "radar" && !radarSeen) {
+      setRadarSeen(true);
+      writeStorage(RADAR_SEEN_KEY, "1");
+    }
+  };
+  return { view, setView, radarSeen };
+};
+
+const VIEWS = [
+  { value: "list", label: "List", icon: List },
+  { value: "radar", label: "Radar", icon: Radar },
+] as const;
+
+const ViewSwitch = ({
+  view,
+  onChange,
+  radarSeen,
+}: {
+  view: View;
+  onChange: (view: View) => void;
+  radarSeen: boolean;
+}) => (
+  <div
+    role="group"
+    aria-label="View"
+    className="inline-flex h-9 items-center rounded-full bg-black/[0.06] p-1 dark:bg-white/10"
+  >
+    {VIEWS.map(({ value, label, icon: Icon }) => {
+      const active = view === value;
+      return (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={active}
+          onClick={() => onChange(value)}
+          className={`relative inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/30 ${
+            active
+              ? "bg-white text-gray-900 shadow-sm dark:bg-[#0f1829] dark:text-slate-100"
+              : "text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-100"
+          }`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          {label}
+          {value === "radar" && !radarSeen && (
+            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-teal-500 ring-2 ring-white dark:ring-[#0b1426]">
+              <span className="sr-only">New</span>
+            </span>
+          )}
+        </button>
+      );
+    })}
+  </div>
+);
 
 /** Signed-in view: same applications as the extension, read/written via the API. */
 export const Dashboard = ({
@@ -37,6 +122,7 @@ export const Dashboard = ({
   const [filterStatus, setFilterStatus] = useState("All");
   const [sortBy, setSortBy] = useState<ApplicationSortField>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { view, setView, radarSeen } = useDashboardView();
 
   const repository = useMemo(() => createRemoteRepository(api), []);
   const avatarStore = useMemo<AvatarStore>(
@@ -103,6 +189,7 @@ export const Dashboard = ({
             </p>
           </div>
           <div data-radar-avoid className="flex flex-wrap items-center gap-2">
+            <ViewSwitch view={view} onChange={setView} radarSeen={radarSeen} />
             <Button
               variant="secondary"
               size="sm"
@@ -145,6 +232,13 @@ export const Dashboard = ({
           <div data-radar-avoid className="py-16 text-center text-sm text-gray-400 dark:text-slate-500">
             Loading your applications…
           </div>
+        ) : view === "radar" ? (
+          <DashboardRadar
+            applications={store.allApplications}
+            onUpdate={store.updateApplication}
+            search={search}
+            setSearch={setSearch}
+          />
         ) : (
           <ApplicationsPanel listMaxHeight="none" />
         )}

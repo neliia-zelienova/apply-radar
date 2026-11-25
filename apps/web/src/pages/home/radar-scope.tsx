@@ -5,28 +5,23 @@ import {
   ApplicationStatus,
   getStatusLabel,
 } from "@apply-radar/shared";
-import { Button, useRadarEffects } from "@apply-radar/ui";
-import { DEMO_APPLICATIONS, NEXT_STATUS, STATUS_BAND, type DemoApplication } from "./demo-data";
-import { BLIP_DOT, STATUS_PILL } from "./status-style";
-import { StatusIcon } from "./status-icon";
+import { Button } from "@apply-radar/ui";
+import { DEMO_APPLICATIONS, type DemoApplication } from "./demo-data";
+import { NEXT_STATUS, STATUS_BAND } from "../../components/radar/bands";
+import { Scope, type ScopeBlip } from "../../components/radar/scope";
+import { BLIP_DOT, STATUS_PILL } from "../../components/radar/status-style";
+import { StatusIcon } from "../../components/radar/status-icon";
 
-/** One sweep, in seconds (keep in sync with `.scope-sweep` in styles.css). */
-const SWEEP_SECONDS = 6;
-
-const RINGS = [
-  { inset: "36%", label: "Offer" },
-  { inset: "22%", label: "Interview" },
-  { inset: "8%", label: "Applied" },
-];
-
-/** Blip position (percent of the scope) from its angle and ring band. */
-const positionOf = (app: DemoApplication) => {
+/** A demo application as a blip: its own angle, and a spot inside its ring band. */
+const toBlip = (app: DemoApplication): ScopeBlip => {
   const [inner, outer] = STATUS_BAND[app.status];
-  const radius = inner + (outer - inner) * app.jitter;
-  const rad = (app.angle * Math.PI) / 180;
   return {
-    left: `${50 + radius * 50 * Math.sin(rad)}%`,
-    top: `${50 - radius * 50 * Math.cos(rad)}%`,
+    id: app.id,
+    label: app.company,
+    ariaLabel: `${app.company}, ${app.position}: ${getStatusLabel(app.status)}`,
+    status: app.status,
+    angle: app.angle,
+    radius: inner + (outer - inner) * app.jitter,
   };
 };
 
@@ -38,7 +33,6 @@ const daysLabel = (days: number) => (days === 1 ? "1 day ago" : `${days} days ag
  * rejected; the chips below count and filter by status.
  */
 export const RadarScope = () => {
-  const { enabled: effects } = useRadarEffects();
   const [apps, setApps] = useState(DEMO_APPLICATIONS);
   const [selectedId, setSelectedId] = useState<string | null>(DEMO_APPLICATIONS[0].id);
   const [hidden, setHidden] = useState<ReadonlySet<ApplicationStatus>>(new Set());
@@ -69,65 +63,18 @@ export const RadarScope = () => {
 
   return (
     <div data-radar-avoid className="flex w-full flex-col items-center gap-5">
-      <div
-        className={`scope relative aspect-square w-full max-w-[440px] rounded-full ${effects ? "" : "scope--still"}`}
-        role="group"
-        aria-label="Demo radar of job applications"
-      >
-        {/* Range rings, labeled at the top */}
-        <div aria-hidden className="absolute inset-0 rounded-full">
-          {RINGS.map(({ inset, label }) => (
-            <div
-              key={label}
-              className="absolute rounded-full border border-teal-600/25 dark:border-teal-300/20"
-              style={{ inset }}
-            >
-              <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--bg-app)] px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-teal-700/80 dark:text-teal-300/70">
-                {label}
-              </span>
-            </div>
-          ))}
-          <div className="absolute inset-y-[3%] left-1/2 w-px bg-teal-600/15 dark:bg-teal-300/12" />
-          <div className="absolute inset-x-[3%] top-1/2 h-px bg-teal-600/15 dark:bg-teal-300/12" />
-          <div className="scope-sweep absolute inset-0 rounded-full" />
-          <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-500 shadow-[0_0_12px_3px_rgba(20,184,166,0.55)]" />
-        </div>
-
-        {apps.map((app) => {
-          if (hidden.has(app.status)) return null;
-          const isSelected = app.id === selected?.id;
-          return (
-            <button
-              key={app.id}
-              type="button"
-              onClick={() => setSelectedId(isSelected ? null : app.id)}
-              aria-pressed={isSelected}
-              aria-label={`${app.company}, ${app.position}: ${getStatusLabel(app.status)}`}
-              className="scope-blip group absolute flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full transition-[left,top] duration-700 ease-out focus:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/40"
-              style={positionOf(app)}
-            >
-              <span
-                className={`scope-blip-dot block rounded-full transition-transform duration-200 group-hover:scale-125 ${BLIP_DOT[app.status]} ${isSelected ? "h-4 w-4 scope-blip-dot--selected" : "h-3 w-3"}`}
-                // Lights up as the sweep passes its angle.
-                style={{ animationDelay: `${(app.angle / 360) * SWEEP_SECONDS - SWEEP_SECONDS}s` }}
-              />
-              {isSelected && (
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-teal-500/60 dark:ring-teal-300/60"
-                />
-              )}
-              <span className="pointer-events-none absolute left-1/2 top-full mt-0.5 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-medium text-slate-700 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 dark:bg-slate-900/90 dark:text-slate-200">
-                {app.company}
-              </span>
-            </button>
-          );
-        })}
-
-        <span className="absolute -top-1 right-2 rounded-full bg-teal-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow-md shadow-teal-900/20">
-          Demo · click a blip
-        </span>
-      </div>
+      <Scope
+        className="max-w-[440px]"
+        ariaLabel="Demo radar of job applications"
+        blips={apps.filter((app) => !hidden.has(app.status)).map(toBlip)}
+        selectedId={selected?.id ?? null}
+        onSelect={setSelectedId}
+        badge={
+          <span className="rounded-full bg-teal-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow-md shadow-teal-900/20">
+            Demo · click a blip
+          </span>
+        }
+      />
 
       {/* Counts double as filters */}
       <div className="flex flex-wrap justify-center gap-2" aria-label="Filter the demo by status">

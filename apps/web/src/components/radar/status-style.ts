@@ -28,3 +28,11 @@ export const STATUS_ICON: Record<ApplicationStatus, string> = {
   [ApplicationStatus.OFFERED]: "radar-strong-lock",
   [ApplicationStatus.REJECTED]: "radar-lost",
 };
+
+/** Number on a "+N" group bubble, readable on its status color. */
+export const GROUP_TEXT: Record<ApplicationStatus, string> = {
+  [ApplicationStatus.PENDING]: "text-amber-950",
+  [ApplicationStatus.INTERVIEW]: "text-teal-950",
+  [ApplicationStatus.OFFERED]: "text-emerald-950",
+  [ApplicationStatus.REJECTED]: "text-white",
+};
