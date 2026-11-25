@@ -15,6 +15,8 @@ export interface AppHeaderProps {
   paddingBottom?: number;
   /** Extra classes for the content row, e.g. "mx-auto max-w-6xl" to line up with the page. */
   contentClassName?: string;
+  /** Wraps the logo and name, e.g. in a link to the home page. */
+  wrapBrand?: (brand: ReactNode) => ReactNode;
 }
 
 /** Radar-style header with the Apply Radar logo (light or dark with the theme), shared by the extension and web. */
@@ -24,6 +26,7 @@ export const AppHeader = ({
   animated = true,
   paddingBottom = 28,
   contentClassName = "",
+  wrapBrand = (brand) => brand,
 }: AppHeaderProps) => {
   return (
     <div
@@ -53,37 +56,39 @@ export const AppHeader = ({
 
       <div className={`relative z-10 px-[18px] pt-[18px] flex flex-col gap-3.5 ${contentClassName}`}>
         {/* Top row: logo + settings */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <RadarLogo />
+        <div className="flex items-center justify-between gap-3">
+          {wrapBrand(
+            <div className="flex items-center gap-2.5">
+              <RadarLogo />
 
-            {/* Brand text — left-aligned to the logo (overrides the inherited `#root { text-align: center }`) */}
-            <div className="text-left">
-              <div
-                className="text-slate-900 dark:text-[#f0fdf9]"
-                style={{
-                  fontSize: "22px",
-                  fontWeight: 700,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.2,
-                  fontFamily: "Roboto, sans-serif",
-                }}
-              >
-                Apply Radar
+              {/* Brand text — left-aligned to the logo (overrides the inherited `#root { text-align: center }`) */}
+              <div className="text-left">
+                <div
+                  className="text-slate-900 dark:text-[#f0fdf9]"
+                  style={{
+                    fontSize: "22px",
+                    fontWeight: 700,
+                    letterSpacing: "-0.02em",
+                    lineHeight: 1.2,
+                    fontFamily: "Roboto, sans-serif",
+                  }}
+                >
+                  Apply Radar
+                </div>
+                <div
+                  className="text-teal-700/85 dark:text-teal-300/75"
+                  style={{
+                    fontSize: "12px",
+                    letterSpacing: "0.03em",
+                    fontWeight: 400,
+                    fontFamily: "Roboto, sans-serif",
+                  }}
+                >
+                  Every application. Always on radar.
+                </div>
               </div>
-              <div
-                className="text-teal-700/85 dark:text-teal-300/75"
-                style={{
-                  fontSize: "12px",
-                  letterSpacing: "0.03em",
-                  fontWeight: 400,
-                  fontFamily: "Roboto, sans-serif",
-                }}
-              >
-                Every application. Always on radar.
-              </div>
-            </div>
-          </div>
+            </div>,
+          )}
 
           {right && <div className="flex-shrink-0">{right}</div>}
         </div>

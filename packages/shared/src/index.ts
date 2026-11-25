@@ -29,6 +29,7 @@ export {
   fromApiApplication,
   fromApiInterview,
   type ApiClient,
+  type ContentPage,
   type ApiClientOptions,
   type ApplicationInput,
   type InterviewInput,

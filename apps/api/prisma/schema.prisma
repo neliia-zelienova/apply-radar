@@ -94,3 +94,17 @@ model UserApplications {
   @@id([userId, applicationId])
   @@map("user_applications")
 }
+
+/// Public content pages of the web app (/about, /extension). Edited directly in
+/// the DB (Neon SQL editor or Prisma Studio); the API caches them for ~60s.
+model Pages {
+  /// URL path segment, e.g. "about" for /about
+  slug      String   @id
+  title     String
+  /// Markdown (no raw HTML)
+  body      String
+  /// Has a DB default so rows inserted or edited by hand in SQL work too.
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("pages")
+}

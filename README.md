@@ -42,9 +42,9 @@ pnpm dev:web
 
 | App | What it is |
 | --- | --- |
-| `apps/api` | NestJS + Prisma (PostgreSQL/Neon). Google sign-in, JWT access token + HttpOnly refresh cookie. All `/application`, `/interview`, `/users` routes require `Authorization: Bearer <token>`. |
+| `apps/api` | NestJS + Prisma (PostgreSQL/Neon). Google sign-in, JWT access token + HttpOnly refresh cookie. All `/application`, `/interview`, `/users` routes require `Authorization: Bearer <token>`; `GET /pages/:slug` (public page text) doesn't. |
 | `apps/apply-radar-extension` | Chrome extension. **Signed in with Google**: reads/writes the account via the API (applications saved "device only" are copied to the account once, on first sign-in). **Device only**: data stays in `chrome.storage`. |
-| `apps/web` | Web dashboard for signed-in users — the same applications as the extension, in a wider layout with stats. |
+| `apps/web` | Public pages (`/` home, `/about`, `/extension`) and the dashboard at `/dashboard` for signed-in users — the same applications as the extension, in a wider layout with stats. |
 
 ### Web dashboard setup
 
@@ -54,7 +54,7 @@ pnpm dev:web
    `http://localhost:5173/oauth2` (the web sign-in popup returns there).
 3. The API must allow the web origin (CORS). Without `CORS_ORIGINS` set, local dev already allows
    `http://localhost:5173`; if you set `CORS_ORIGINS`, include it there.
-4. `pnpm dev:api` and `pnpm dev:web`, then open http://localhost:5173.
+4. `pnpm dev:api` and `pnpm dev:web`, then open http://localhost:5173 (the home page; the dashboard is at `/dashboard`).
    When signed in with Google, the extension header has a dashboard button that opens (or focuses) it;
    set `VITE_WEB_APP_URL` in the extension env if the web app runs elsewhere (default `http://localhost:5173`).
 
@@ -62,6 +62,28 @@ The web app keeps the access token in memory and restores the session from the r
 That cookie is shared with the extension in the same browser, so signing in, signing out or switching
 accounts in one app is picked up by the other (on open/focus and every 30s). "Device only" mode in the
 extension is never switched automatically.
+
+Hosting: the web app is a single-page app, so the server must answer every path (`/dashboard`,
+`/about`, …) with `index.html`. Vite's dev server and `vite preview` already do.
+
+### Editing the public pages (no deploy)
+
+The text of `/about` and `/extension` lives in the `pages` table as Markdown (`slug`, `title`, `body`).
+Edit it in the Neon SQL editor or Prisma Studio (`pnpm --filter api-prisma exec prisma studio`);
+the API caches each page for 60 seconds, and browsers for another 60, so a change shows up within
+about two minutes. Raw HTML in the Markdown is shown as text; links starting with `/` stay in the app.
+
+```sql
+UPDATE pages SET body = $md$
+Your **Markdown** here.
+
+## A section
+- a point
+$md$ WHERE slug = 'about';
+```
+
+A new page is one row (`INSERT INTO pages (slug, title, body) VALUES (...)`) plus a route in
+`apps/web/src/App.tsx`.
 
 ### Add an application from a job page (extension)
 

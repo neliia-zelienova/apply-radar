@@ -7,6 +7,7 @@ import { CommonModule } from './common/common.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { PagesModule } from './pages/pages.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -21,6 +22,7 @@ import { ConfigModule } from '@nestjs/config';
     InterviewModule,
     UsersModule,
     AuthModule,
+    PagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

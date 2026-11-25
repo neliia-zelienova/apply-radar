@@ -20,6 +20,7 @@ import { api } from "../api";
 import type { Profile } from "../hooks/use-session";
 import { AccountMenu } from "./account-menu";
 import { AddByLinkButton } from "./add-by-link";
+import { BrandLink } from "./brand-link";
 import { StatsRow } from "./stats-row";
 
 /** Signed-in view: same applications as the extension, read/written via the API. */
@@ -77,6 +78,7 @@ export const Dashboard = ({
         animated={false}
         paddingBottom={18}
         contentClassName="mx-auto w-full max-w-6xl"
+        wrapBrand={(brand) => <BrandLink>{brand}</BrandLink>}
         right={
           <AccountMenu
             profile={profile}
