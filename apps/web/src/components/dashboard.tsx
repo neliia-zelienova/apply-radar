@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
 import { List, Plus, Radar, RefreshCw } from "lucide-react";
 import {
+  APPLICATION_STATUSES,
   createRemoteRepository,
   type ApplicationSortField,
+  type ApplicationStatus,
 } from "@apply-radar/shared";
 import {
   AppHeader,
   ApplicationForm,
-  ApplicationsContext,
-  ApplicationsPanel,
   BannerAction,
   Button,
   StatusBanner,
@@ -20,6 +20,8 @@ import { api } from "../api";
 import type { Profile } from "../hooks/use-session";
 import { AccountMenu } from "./account-menu";
 import { AddByLinkButton } from "./add-by-link";
+import { DashboardList, SortMenu } from "./applications/dashboard-list";
+import { ApplicationsToolbar } from "./applications/toolbar";
 import { BrandLink } from "./brand-link";
 import { DashboardRadar } from "./radar/dashboard-radar";
 import { StatsRow } from "./stats-row";
@@ -119,10 +121,12 @@ export const Dashboard = ({
   onDeleteAccount: () => Promise<void>;
 }) => {
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
   const [sortBy, setSortBy] = useState<ApplicationSortField>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const { view, setView, radarSeen } = useDashboardView();
+  // Shared by the list and the radar.
+  const [hidden, setHidden] = useState<ReadonlySet<ApplicationStatus>>(new Set());
+  const [showArchived, setShowArchived] = useState(false);
 
   const repository = useMemo(() => createRemoteRepository(api), []);
   const avatarStore = useMemo<AvatarStore>(
@@ -136,29 +140,43 @@ export const Dashboard = ({
   const store = useApplicationsStore({
     repository,
     search,
-    filterStatus,
+    // Statuses are filtered by the toolbar chips (several at once), not here.
+    filterStatus: "All",
     sortBy,
     sortOrder,
   });
 
-  const applicationsContext = {
-    applications: store.applications,
-    total: store.total,
-    search,
-    setSearch,
-    setFilterStatus,
-    createApplication: store.createApplication,
-    deleteApplication: store.deleteApplication,
-    archiveApplication: store.archiveApplication,
-    updateApplication: store.updateApplication,
-    sortBy,
-    sortOrder,
-    setSortBy,
-    setSortOrder,
-  };
+  const toggleStatus = (status: ApplicationStatus) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+
+  // store.applications is already searched and sorted.
+  const needle = search.trim().toLowerCase();
+  const matching = store.allApplications.filter(
+    (a) => !a.archived && (!needle || a.name.toLowerCase().includes(needle)),
+  );
+  const counts = Object.fromEntries(APPLICATION_STATUSES.map((s) => [s, 0])) as Record<
+    ApplicationStatus,
+    number
+  >;
+  for (const app of matching) counts[app.status] += 1;
+  const archivedCount = store.allApplications.filter((a) => a.archived).length;
+  const listed = store.applications.filter(
+    (a) => !hidden.has(a.status) && (showArchived || !a.archived),
+  );
+  const emptyMessage =
+    store.allApplications.length === 0
+      ? { title: "No applications yet", hint: "Add one with the buttons above, or from the extension." }
+      : needle
+        ? { title: `No results for “${search.trim()}”`, hint: "Try another company name." }
+        : { title: "Nothing to show", hint: "Every status is switched off above." };
 
   return (
-    <ApplicationsContext.Provider value={applicationsContext}>
+    <>
       {/* Same header as the extension, minus its sweep (the page background moves). */}
       <AppHeader
         animated={false}
@@ -232,17 +250,56 @@ export const Dashboard = ({
           <div data-radar-avoid className="py-16 text-center text-sm text-gray-400 dark:text-slate-500">
             Loading your applications…
           </div>
-        ) : view === "radar" ? (
-          <DashboardRadar
-            applications={store.allApplications}
-            onUpdate={store.updateApplication}
-            search={search}
-            setSearch={setSearch}
-          />
         ) : (
-          <ApplicationsPanel listMaxHeight="none" />
+          <>
+            <ApplicationsToolbar
+              search={search}
+              onSearch={setSearch}
+              counts={counts}
+              hidden={hidden}
+              onToggleStatus={toggleStatus}
+              archived={
+                view === "list"
+                  ? {
+                      count: archivedCount,
+                      shown: showArchived,
+                      onToggle: () => setShowArchived((v) => !v),
+                    }
+                  : undefined
+              }
+            >
+              {view === "list" && (
+                <SortMenu
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onChange={(by, order) => {
+                    setSortBy(by);
+                    setSortOrder(order);
+                  }}
+                />
+              )}
+            </ApplicationsToolbar>
+            {view === "radar" ? (
+              <DashboardRadar
+                applications={store.allApplications}
+                onUpdate={store.updateApplication}
+                search={search}
+                hidden={hidden}
+              />
+            ) : (
+              <DashboardList
+                applications={listed}
+                onUpdate={store.updateApplication}
+                onArchive={(id, archived) =>
+                  void store.updateApplication(id, (app) => ({ ...app, archived }))
+                }
+                onDelete={(id) => void store.deleteApplication(id)}
+                emptyMessage={emptyMessage}
+              />
+            )}
+          </>
         )}
       </div>
-    </ApplicationsContext.Provider>
+    </>
   );
 };
