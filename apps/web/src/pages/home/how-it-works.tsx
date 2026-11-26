@@ -2,8 +2,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { CalendarClock, Crosshair, ListChecks, MousePointerClick, Sparkles } from "lucide-react";
 import { ApplicationStatus, getStatusLabel } from "@apply-radar/shared";
 import { RadarLogo, useRadarEffects } from "@apply-radar/ui";
-import { StatusIcon } from "./status-icon";
-import { STATUS_PILL } from "./status-style";
+import { StatusIcon } from "../../components/radar/status-icon";
+import { STATUS_PILL } from "../../components/radar/status-style";
 
 const STEP_MS = 6000;
 

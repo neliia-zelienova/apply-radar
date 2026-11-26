@@ -44,7 +44,7 @@ pnpm dev:web
 | --- | --- |
 | `apps/api` | NestJS + Prisma (PostgreSQL/Neon). Google sign-in, JWT access token + HttpOnly refresh cookie. All `/application`, `/interview`, `/users` routes require `Authorization: Bearer <token>`; `GET /pages/:slug` (public page text) doesn't. |
 | `apps/apply-radar-extension` | Chrome extension. **Signed in with Google**: reads/writes the account via the API (applications saved "device only" are copied to the account once, on first sign-in). **Device only**: data stays in `chrome.storage`. |
-| `apps/web` | Public pages (`/` home, `/about`, `/extension`) and the dashboard at `/dashboard` for signed-in users — the same applications as the extension, in a wider layout with stats. |
+| `apps/web` | Public pages (`/` home, `/about`, `/extension`) and the dashboard at `/dashboard` for signed-in users — the same applications as the extension, in a wider layout with stats, as a list or a radar (stage by distance from the center, time since applying clockwise). |
 
 ### Web dashboard setup
 

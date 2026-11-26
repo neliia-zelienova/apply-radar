@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
-import { Plus, RefreshCw } from "lucide-react";
+import { List, Plus, Radar, RefreshCw } from "lucide-react";
 import {
+  APPLICATION_STATUSES,
   createRemoteRepository,
   type ApplicationSortField,
+  type ApplicationStatus,
 } from "@apply-radar/shared";
 import {
   AppHeader,
   ApplicationForm,
-  ApplicationsContext,
-  ApplicationsPanel,
   BannerAction,
   Button,
   StatusBanner,
@@ -20,8 +20,95 @@ import { api } from "../api";
 import type { Profile } from "../hooks/use-session";
 import { AccountMenu } from "./account-menu";
 import { AddByLinkButton } from "./add-by-link";
+import { DashboardList, SortMenu } from "./applications/dashboard-list";
+import { ApplicationsToolbar } from "./applications/toolbar";
 import { BrandLink } from "./brand-link";
+import { DashboardRadar } from "./radar/dashboard-radar";
 import { StatsRow } from "./stats-row";
+
+type View = "list" | "radar";
+const VIEW_KEY = "apply-radar.dashboard-view";
+/** Set once the radar has been opened; until then its switch shows a "new" dot. */
+const RADAR_SEEN_KEY = "apply-radar.radar-seen";
+
+// Storage can be missing or blocked (private mode); the view then just isn't remembered.
+const readStorage = (key: string) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+const writeStorage = (key: string, value: string) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore
+  }
+};
+
+/** List | Radar switch; remembers the choice in this browser. */
+const useDashboardView = () => {
+  const [view, setViewState] = useState<View>(() =>
+    readStorage(VIEW_KEY) === "radar" ? "radar" : "list",
+  );
+  const [radarSeen, setRadarSeen] = useState(() => readStorage(RADAR_SEEN_KEY) === "1");
+  const setView = (next: View) => {
+    setViewState(next);
+    writeStorage(VIEW_KEY, next);
+    if (next === "radar" && !radarSeen) {
+      setRadarSeen(true);
+      writeStorage(RADAR_SEEN_KEY, "1");
+    }
+  };
+  return { view, setView, radarSeen };
+};
+
+const VIEWS = [
+  { value: "list", label: "List", icon: List },
+  { value: "radar", label: "Radar", icon: Radar },
+] as const;
+
+const ViewSwitch = ({
+  view,
+  onChange,
+  radarSeen,
+}: {
+  view: View;
+  onChange: (view: View) => void;
+  radarSeen: boolean;
+}) => (
+  <div
+    role="group"
+    aria-label="View"
+    className="inline-flex h-9 items-center rounded-full bg-black/[0.06] p-1 dark:bg-white/10"
+  >
+    {VIEWS.map(({ value, label, icon: Icon }) => {
+      const active = view === value;
+      return (
+        <button
+          key={value}
+          type="button"
+          aria-pressed={active}
+          onClick={() => onChange(value)}
+          className={`relative inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/30 ${
+            active
+              ? "bg-white text-gray-900 shadow-sm dark:bg-[#0f1829] dark:text-slate-100"
+              : "text-gray-600 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-100"
+          }`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+          {label}
+          {value === "radar" && !radarSeen && (
+            <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-teal-500 ring-2 ring-white dark:ring-[#0b1426]">
+              <span className="sr-only">New</span>
+            </span>
+          )}
+        </button>
+      );
+    })}
+  </div>
+);
 
 /** Signed-in view: same applications as the extension, read/written via the API. */
 export const Dashboard = ({
@@ -34,9 +121,12 @@ export const Dashboard = ({
   onDeleteAccount: () => Promise<void>;
 }) => {
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
   const [sortBy, setSortBy] = useState<ApplicationSortField>("date");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const { view, setView, radarSeen } = useDashboardView();
+  // Shared by the list and the radar.
+  const [hidden, setHidden] = useState<ReadonlySet<ApplicationStatus>>(new Set());
+  const [showArchived, setShowArchived] = useState(false);
 
   const repository = useMemo(() => createRemoteRepository(api), []);
   const avatarStore = useMemo<AvatarStore>(
@@ -50,29 +140,43 @@ export const Dashboard = ({
   const store = useApplicationsStore({
     repository,
     search,
-    filterStatus,
+    // Statuses are filtered by the toolbar chips (several at once), not here.
+    filterStatus: "All",
     sortBy,
     sortOrder,
   });
 
-  const applicationsContext = {
-    applications: store.applications,
-    total: store.total,
-    search,
-    setSearch,
-    setFilterStatus,
-    createApplication: store.createApplication,
-    deleteApplication: store.deleteApplication,
-    archiveApplication: store.archiveApplication,
-    updateApplication: store.updateApplication,
-    sortBy,
-    sortOrder,
-    setSortBy,
-    setSortOrder,
-  };
+  const toggleStatus = (status: ApplicationStatus) =>
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+
+  // store.applications is already searched and sorted.
+  const needle = search.trim().toLowerCase();
+  const matching = store.allApplications.filter(
+    (a) => !a.archived && (!needle || a.name.toLowerCase().includes(needle)),
+  );
+  const counts = Object.fromEntries(APPLICATION_STATUSES.map((s) => [s, 0])) as Record<
+    ApplicationStatus,
+    number
+  >;
+  for (const app of matching) counts[app.status] += 1;
+  const archivedCount = store.allApplications.filter((a) => a.archived).length;
+  const listed = store.applications.filter(
+    (a) => !hidden.has(a.status) && (showArchived || !a.archived),
+  );
+  const emptyMessage =
+    store.allApplications.length === 0
+      ? { title: "No applications yet", hint: "Add one with the buttons above, or from the extension." }
+      : needle
+        ? { title: `No results for “${search.trim()}”`, hint: "Try another company name." }
+        : { title: "Nothing to show", hint: "Every status is switched off above." };
 
   return (
-    <ApplicationsContext.Provider value={applicationsContext}>
+    <>
       {/* Same header as the extension, minus its sweep (the page background moves). */}
       <AppHeader
         animated={false}
@@ -103,6 +207,7 @@ export const Dashboard = ({
             </p>
           </div>
           <div data-radar-avoid className="flex flex-wrap items-center gap-2">
+            <ViewSwitch view={view} onChange={setView} radarSeen={radarSeen} />
             <Button
               variant="secondary"
               size="sm"
@@ -146,9 +251,55 @@ export const Dashboard = ({
             Loading your applications…
           </div>
         ) : (
-          <ApplicationsPanel listMaxHeight="none" />
+          <>
+            <ApplicationsToolbar
+              search={search}
+              onSearch={setSearch}
+              counts={counts}
+              hidden={hidden}
+              onToggleStatus={toggleStatus}
+              archived={
+                view === "list"
+                  ? {
+                      count: archivedCount,
+                      shown: showArchived,
+                      onToggle: () => setShowArchived((v) => !v),
+                    }
+                  : undefined
+              }
+            >
+              {view === "list" && (
+                <SortMenu
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onChange={(by, order) => {
+                    setSortBy(by);
+                    setSortOrder(order);
+                  }}
+                />
+              )}
+            </ApplicationsToolbar>
+            {view === "radar" ? (
+              <DashboardRadar
+                applications={store.allApplications}
+                onUpdate={store.updateApplication}
+                search={search}
+                hidden={hidden}
+              />
+            ) : (
+              <DashboardList
+                applications={listed}
+                onUpdate={store.updateApplication}
+                onArchive={(id, archived) =>
+                  void store.updateApplication(id, (app) => ({ ...app, archived }))
+                }
+                onDelete={(id) => void store.deleteApplication(id)}
+                emptyMessage={emptyMessage}
+              />
+            )}
+          </>
         )}
       </div>
-    </ApplicationsContext.Provider>
+    </>
   );
 };

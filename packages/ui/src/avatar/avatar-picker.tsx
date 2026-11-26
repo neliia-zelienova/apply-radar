@@ -1,16 +1,18 @@
 import { lazy, Suspense, useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { ANIMAL_ICONS, type AvatarSettings } from "@apply-radar/shared";
 import classNames from "classnames";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "../dialog";
 import { Button } from "../button";
+import { Popover, PopoverContent, PopoverTrigger } from "../popover";
 import { useThemeContext } from "../context/theme-context";
 import { ANIMAL_ICON_COMPONENTS } from "./animal-icons";
 import { UserAvatar } from "./user-avatar";
 
-// The color picker is large; load it only when the avatar dialog is opened.
-const ColorPicker = lazy(() => import("react-best-gradient-color-picker"));
-
-type ColorTab = "color" | "background";
+// The color picker is large: it's fetched when the avatar dialog opens and
+// shown only when a color is clicked.
+const loadColorPicker = () => import("react-best-gradient-color-picker");
+const ColorPicker = lazy(loadColorPicker);
 
 const SWATCHES = [
   "rgba(255,255,255,1)",
@@ -36,6 +38,80 @@ export interface AvatarPickerProps {
   onSave: (avatar: AvatarSettings) => Promise<void> | void;
 }
 
+/**
+ * One color: a tile with the current color in a circle; clicking it opens the
+ * full picker in a popover.
+ */
+const ColorField = ({
+  label,
+  value,
+  onChange,
+  solidOnly = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  /** SVG strokes take a solid color only. */
+  solidOnly?: boolean;
+}) => {
+  const { theme } = useThemeContext();
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label={`${label}: change color`}
+          className="group flex min-w-0 cursor-pointer items-center gap-2.5 rounded-xl border border-black/10 px-2.5 py-2 text-left transition-colors hover:bg-black/[0.03] focus:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/25 data-[state=open]:border-teal-500/60 data-[state=open]:bg-teal-500/[0.06] dark:border-white/10 dark:hover:bg-white/[0.04]"
+        >
+          <span
+            aria-hidden
+            className="h-7 w-7 shrink-0 rounded-full shadow-inner ring-1 ring-black/10 transition-transform group-hover:scale-105 dark:ring-white/20"
+            style={{ background: value }}
+          />
+          <span className="min-w-0 flex-1 truncate whitespace-nowrap text-sm font-medium text-gray-800 dark:text-slate-200">
+            {label}
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-gray-400 max-sm:hidden transition-transform group-data-[state=open]:rotate-90 dark:text-slate-500" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        withArrow={false}
+        // Below the tiles, so the preview above stays visible while choosing.
+        side="bottom"
+        align="start"
+        collisionPadding={12}
+        // Above the dialog (z-[110]); scrolls if the screen is too short for it.
+        style={{ zIndex: 150, maxHeight: "var(--radix-popover-content-available-height)" }}
+        className="custom-scroll w-auto overflow-y-auto p-3"
+        aria-label={`${label} color`}
+      >
+        <Suspense
+          fallback={
+            <div className="flex h-[240px] w-[280px] items-center justify-center text-xs text-gray-400">
+              Loading colors…
+            </div>
+          }
+        >
+          <ColorPicker
+            value={value}
+            onChange={onChange}
+            width={280}
+            height={120}
+            hideColorTypeBtns={solidOnly}
+            presets={solidOnly ? SWATCHES.filter((s) => !s.startsWith("linear")) : SWATCHES}
+            hideEyeDrop
+            hideAdvancedSliders
+            hideColorGuide
+            hideInputType
+            disableDarkMode={theme !== "dark"}
+            disableLightMode={theme === "dark"}
+          />
+        </Suspense>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 /** Pick an animal icon, its stroke color and background (solid or gradient). */
 export const AvatarPicker = ({
   open,
@@ -44,9 +120,7 @@ export const AvatarPicker = ({
   photoUrl,
   onSave,
 }: AvatarPickerProps) => {
-  const { theme } = useThemeContext();
   const [draft, setDraft] = useState<AvatarSettings>(value);
-  const [tab, setTab] = useState<ColorTab>("background");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +129,8 @@ export const AvatarPicker = ({
     if (open) {
       setDraft(value);
       setError(null);
+      // Fetch the picker now, so it's ready when a color is clicked.
+      void loadColorPicker();
     }
   }, [open, value]);
 
@@ -118,6 +194,25 @@ export const AvatarPicker = ({
           </div>
 
           <div className={classNames("flex flex-col gap-4", usingPhoto && "pointer-events-none opacity-40")}>
+            {/* Colors: the current ones; click to change */}
+            <div>
+              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+                Colors
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <ColorField
+                  label="Background"
+                  value={draft.background}
+                  onChange={(background) => update({ background, source: "icon" })}
+                />
+                <ColorField
+                  label="Icon color"
+                  value={draft.color}
+                  onChange={(color) => update({ color, source: "icon" })}
+                  solidOnly
+                />
+              </div>
+            </div>
             {/* Icons */}
             <div>
               <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-slate-500">
@@ -149,67 +244,6 @@ export const AvatarPicker = ({
               </div>
             </div>
 
-            {/* Colors */}
-            <div>
-              <div className="mb-2 flex gap-1 rounded-full bg-black/5 p-1 text-xs font-semibold dark:bg-white/5">
-                {(["background", "color"] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTab(t)}
-                    className={classNames(
-                      "flex-1 cursor-pointer rounded-full px-2 py-1.5 transition-colors",
-                      tab === t
-                        ? "bg-white text-gray-900 shadow-sm dark:bg-[#1e293b] dark:text-slate-100"
-                        : "text-gray-500 dark:text-slate-400",
-                    )}
-                  >
-                    {t === "background" ? "Background" : "Icon color"}
-                  </button>
-                ))}
-              </div>
-              <div className="flex min-h-[260px] justify-center">
-                <Suspense
-                  fallback={
-                    <span className="self-center text-xs text-gray-400">Loading colors…</span>
-                  }
-                >
-                  {tab === "background" ? (
-                    <ColorPicker
-                      key="background"
-                      value={draft.background}
-                      onChange={(background) => update({ background, source: "icon" })}
-                      width={300}
-                      height={150}
-                      presets={SWATCHES}
-                      hideEyeDrop
-                      hideAdvancedSliders
-                      hideColorGuide
-                      hideInputType
-                      disableDarkMode={theme !== "dark"}
-                      disableLightMode={theme === "dark"}
-                    />
-                  ) : (
-                    <ColorPicker
-                      key="color"
-                      value={draft.color}
-                      onChange={(color) => update({ color, source: "icon" })}
-                      width={300}
-                      height={150}
-                      // SVG strokes take a solid color only.
-                      hideColorTypeBtns
-                      presets={SWATCHES.filter((s) => !s.startsWith("linear"))}
-                      hideEyeDrop
-                      hideAdvancedSliders
-                      hideColorGuide
-                      hideInputType
-                      disableDarkMode={theme !== "dark"}
-                      disableLightMode={theme === "dark"}
-                    />
-                  )}
-                </Suspense>
-              </div>
-            </div>
           </div>
 
           {error && <p className="text-sm text-red-500">Couldn't save: {error}</p>}
