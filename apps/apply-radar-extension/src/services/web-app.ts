@@ -4,17 +4,21 @@ export const WEB_APP_URL = (
   "http://localhost:5173"
 ).replace(/\/+$/, "");
 
+/** The dashboard page of the web app (its home page is the public landing page). */
+export const WEB_DASHBOARD_URL = `${WEB_APP_URL}/dashboard`;
+
 /**
- * Opens the web dashboard: focuses an already open tab of it if there is one,
- * otherwise opens a new tab. The web app shares the sign-in with the extension.
+ * Opens the web dashboard: focuses an already open dashboard tab if there is
+ * one, otherwise opens a new tab. The web app shares the sign-in with the extension.
  */
 export const openWebApp = async () => {
   if (typeof chrome === "undefined" || !chrome.tabs) {
-    window.open(WEB_APP_URL, "_blank", "noopener");
+    window.open(WEB_DASHBOARD_URL, "_blank", "noopener");
     return;
   }
   try {
-    const [existing] = await chrome.tabs.query({ url: `${WEB_APP_URL}/*` });
+    // Only dashboard tabs (not the home or about pages).
+    const [existing] = await chrome.tabs.query({ url: `${WEB_DASHBOARD_URL}*` });
     if (existing?.id !== undefined) {
       await chrome.tabs.update(existing.id, { active: true });
       if (existing.windowId !== undefined) {
@@ -25,7 +29,7 @@ export const openWebApp = async () => {
   } catch {
     // Invalid match pattern or no access: just open a new tab.
   }
-  await chrome.tabs.create({ url: WEB_APP_URL });
+  await chrome.tabs.create({ url: WEB_DASHBOARD_URL });
 };
 
 /** True when `url` is a page of the web dashboard (same origin, not just a prefix). */

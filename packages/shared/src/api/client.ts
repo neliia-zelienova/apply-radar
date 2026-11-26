@@ -281,6 +281,41 @@ export const createApiClient = (options: ApiClientOptions) => {
         return body.avatar;
       },
     },
+
+    pages: {
+      /**
+       * A public content page (/about, /extension). No token and no refresh:
+       * a signed-out visitor must never trigger "session expired".
+       */
+      async get(slug: string): Promise<ContentPage> {
+        const response = await send(`/pages/${encodeURIComponent(slug)}`);
+        const body = await parse(response);
+        if (!response.ok) throw new ApiError(response.status, body);
+        const page = toContentPage(body);
+        if (!page) throw new ApiError(502, body, "The server returned an unreadable page.");
+        return page;
+      },
+    },
+  };
+};
+
+/** Editable content page; `body` is Markdown. */
+export interface ContentPage {
+  slug: string;
+  title: string;
+  body: string;
+  updatedAt?: string;
+}
+
+const toContentPage = (raw: unknown): ContentPage | null => {
+  if (typeof raw !== "object" || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.slug !== "string" || typeof r.body !== "string") return null;
+  return {
+    slug: r.slug,
+    title: typeof r.title === "string" ? r.title : "",
+    body: r.body,
+    updatedAt: typeof r.updatedAt === "string" ? r.updatedAt : undefined,
   };
 };
 
