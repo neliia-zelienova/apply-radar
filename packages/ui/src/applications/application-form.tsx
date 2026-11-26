@@ -9,6 +9,7 @@ import {
 } from "@apply-radar/shared";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "../button";
+import { Field, Input, fieldClasses } from "../field";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../dialog";
 import { AlertDialog, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogCancel, AlertDialogAction, AlertDialogDescription } from "../alert-dialog";
 import { SelectContent, SelectItem, SelectRoot, SelectTrigger } from "../select";
@@ -195,110 +196,85 @@ export const ApplicationForm = ({
           {/* Remove implicit close to control explicitly */}
         </DialogHeader>
         {notice && (
-          <div className="mb-1 rounded-md border border-teal-500/25 bg-teal-500/5 px-3 py-2 text-left text-xs text-gray-600 dark:text-slate-300">
+          <div className="mb-1 rounded-xl border border-teal-500/25 bg-teal-500/5 px-3.5 py-2.5 text-left text-xs text-gray-600 dark:text-slate-300">
             {notice}
           </div>
         )}
         {/* Fields */}
         <div className="grid grid-cols-1 gap-3 w-full">
-          {/* Company Name */}
-          <label className="flex flex-col items-start w-full gap-1">
-            <span className="text-sm">Company Name</span>
-            <input
+          <Field
+            label="Company Name"
+            error={!isCompanyNameValid && touched.companyName && "Please enter at least 2 characters"}
+          >
+            <Input
               type="text"
               aria-label="Company Name"
               placeholder="e.g. Google"
               value={companyName}
-              onChange={(e) => {
-                setCompanyName(e.target.value);
-              }}
+              onChange={(e) => setCompanyName(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, companyName: true }))}
-              className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
-                !isCompanyNameValid && touched.companyName
-                  ? "border-red-500"
-                  : "border-black/15 dark:border-white/20"
-              }`}
+              invalid={!isCompanyNameValid && touched.companyName}
             />
-            {!isCompanyNameValid && touched.companyName && (
-              <span role="alert" className="text-xs text-red-400">
-                Please enter at least 2 characters
-              </span>
-            )}
-          </label>
-          {/** Position */}
-          <label className="flex flex-col items-start w-full gap-1">
-            <span className="text-sm">Position</span>
-            <input
+          </Field>
+          <Field
+            label="Position"
+            error={!isPositionValid && touched.position && "Please enter at least 2 characters"}
+          >
+            <Input
               type="text"
               aria-label="Position"
               placeholder="e.g. QA Engineer"
               value={position}
-              onChange={(e) => {
-                setPosition(e.target.value);
-              }}
+              onChange={(e) => setPosition(e.target.value)}
               onBlur={() => setTouched((t) => ({ ...t, position: true }))}
-              className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
-                !isPositionValid && touched.position
-                  ? "border-red-500"
-                  : "border-black/15 dark:border-white/20"
-              }`}
+              invalid={!isPositionValid && touched.position}
             />
-            {!isPositionValid && touched.position && (
-              <span role="alert" className="text-xs text-red-400">
-                Please enter at least 2 characters
-              </span>
-            )}
-          </label>
+          </Field>
 
           <div className="grid grid-cols-3 gap-3 w-full">
-            {/* Link */}
-            <label
-              className={`flex flex-col gap-1 items-start w-full ${
-                app ? "col-span-2" : "col-span-3"
-              }`}
+            <Field
+              label="Link (optional)"
+              className={app ? "col-span-2" : "col-span-3"}
+              error={
+                !isLinkValid &&
+                touched.link &&
+                "Enter a valid URL (starts with https://) or leave blank."
+              }
+              hint={
+                link &&
+                isLinkValid && (
+                  <a
+                    href={link.startsWith("http") ? link : `https://${link}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-medium text-teal-600 hover:underline dark:text-teal-400"
+                  >
+                    Preview link
+                  </a>
+                )
+              }
             >
-              <span className="text-sm">Link (optional)</span>
-              <input
+              <Input
                 type="url"
                 aria-label="Application Link"
                 placeholder="https://company.com/careers/job"
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
                 onBlur={() => setTouched((t) => ({ ...t, link: true }))}
-                className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors ${
-                  !isLinkValid && touched.link
-                    ? "border-red-500"
-                    : "border-black/15 dark:border-white/20"
-                }`}
+                invalid={!isLinkValid && touched.link}
               />
-              <div className="flex items-center justify-between">
-                {!isLinkValid && touched.link && (
-                  <span role="alert" className="text-xs text-red-400">
-                    Enter a valid URL (starts with https://) or leave blank.
-                  </span>
-                )}
-                {link && isLinkValid && (
-                  <a
-                    href={link.startsWith("http") ? link : `https://${link}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-teal-400 hover:underline"
-                  >
-                    Preview link
-                  </a>
-                )}
-              </div>
-            </label>
+            </Field>
             {app && status && (
-              <label className="flex flex-col col-span-1 gap-1 items-start w-full">
-                <span className="text-sm">Status</span>
+              <Field label="Status" className="col-span-1">
                 <SelectRoot
                   onValueChange={(value) => {
                     setStatus(value as ApplicationStatus);
                   }}
                 >
-                  {/* Same border, text size and height as the inputs next to it. */}
-                  <SelectTrigger className="p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors w-full text-left cursor-pointer">
+                  {/* Same look and height as the inputs next to it. */}
+                  <SelectTrigger
+                    className={`h-10 px-3.5 text-left cursor-pointer ${fieldClasses()}`}
+                  >
                     <span className="w-full truncate">{getStatusLabel(status)}</span>
                     <ChevronDown aria-hidden className="h-4 w-4 shrink-0 opacity-60" />
                   </SelectTrigger>
@@ -313,50 +289,43 @@ export const ApplicationForm = ({
                     ))}
                   </SelectContent>
                 </SelectRoot>
-              </label>
+              </Field>
             )}
           </div>
 
-          {/* Applied date */}
-          <div className="grid grid-cols-3 gap-3 w-full">
-            <label className="flex flex-col gap-1 items-start w-full col-span-1">
-              <span className="text-sm">Applied on</span>
-              <input
+          {/* Half width: a third cuts the date off. */}
+          <div className="grid grid-cols-2 gap-3 w-full">
+            <Field
+              label="Applied on"
+              error={!isAppliedDateValid && "Pick a date that isn't in the future."}
+            >
+              <Input
                 type="date"
                 aria-label="Applied on"
                 value={appliedDate}
                 max={todayInputValue}
                 onChange={(e) => setAppliedDate(e.target.value)}
-                className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors font-roboto ${
-                  isAppliedDateValid ? "border-black/15 dark:border-white/20" : "border-red-500"
-                }`}
+                invalid={!isAppliedDateValid}
+                className="font-roboto"
               />
-              {!isAppliedDateValid && (
-                <span role="alert" className="text-xs text-red-400">
-                  Pick a date that isn't in the future.
-                </span>
-              )}
-            </label>
+            </Field>
           </div>
 
-          {/* Notes */}
-          <label className="flex flex-col gap-1 items-start w-full">
-            <span className="text-sm">Notes</span>
-            <div className="relative w-full p-2 pb-5.5 min-h-24 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <Field label="Notes">
+            {/* The counter sits inside the box, so the wrapper is the field. */}
+            <div className={`relative pb-5 ${fieldClasses({ within: true })}`}>
               <textarea
                 aria-label="Application Notes"
                 placeholder="Add quick notes (e.g. referral, contact, next steps...)"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value.slice(0, notesLimit))}
-                className="h-[90%] resize-none w-full focus:outline-none bg-transparent"
+                className="block min-h-20 w-full resize-none bg-transparent px-3.5 pt-2.5 placeholder:text-gray-400 focus:outline-none dark:placeholder:text-white/30"
               />
-              <div className="absolute bottom-1 right-1 flex items-center justify-between text-xs text-gray-500 dark:text-white/60">
-                <span>
-                  {notesCount}/{notesLimit}
-                </span>
-              </div>
+              <span className="absolute bottom-1.5 right-3 text-xs text-gray-500 dark:text-white/50">
+                {notesCount}/{notesLimit}
+              </span>
             </div>
-          </label>
+          </Field>
         </div>
         {saveFailed && (
           <p role="alert" className="text-left text-sm text-red-600 dark:text-red-400">

@@ -1,8 +1,39 @@
-import { AppHeader, GoogleSignInCard, StatusBanner } from "@apply-radar/ui";
+import { Check, Loader2, Moon, Sun } from "lucide-react";
+import {
+  AppHeader,
+  Button,
+  GoogleIcon,
+  RadarLogo,
+  StatusBanner,
+  useThemeContext,
+} from "@apply-radar/ui";
+
+const FEATURES = [
+  "The same applications as in the extension",
+  "Synced across all your browsers",
+  "Backed up to your account",
+];
+
+/** Light/dark switch: signed out there's no account menu to hold it. */
+const ThemeToggle = () => {
+  const { theme, toggleTheme } = useThemeContext();
+  const dark = theme === "dark";
+  return (
+    <button
+      type="button"
+      onClick={() => void toggleTheme()}
+      aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
+      // Same style as the account menu button on the dashboard.
+      className="header-icon-button h-10 w-10"
+    >
+      {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
+  );
+};
 
 /**
- * Same start page as the extension (header + "Sign in with Google" card),
- * without the "device only" option — the web app needs an account.
+ * Signed out: the dashboard's header (so it stays put after signing in) and a
+ * centered sign-in card. No "device only" option: the web app needs an account.
  */
 export const SignInPage = ({
   error,
@@ -16,55 +47,93 @@ export const SignInPage = ({
   /** Stops waiting for the Google popup. */
   onCancel: () => void;
 }) => (
-  <div className="flex min-h-screen justify-center">
-    <div data-radar-avoid className="flex w-full max-w-[600px] flex-col">
-      {/* No header sweep: the page background is already animated. */}
-      <AppHeader animated={false} />
-      <div
-        className="bg-slate-50 dark:bg-[#070d1a]"
-        style={{
-          flex: 1,
-          padding: "28px 24px 24px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          fontFamily: "Roboto, sans-serif",
-        }}
+  <div className="flex min-h-screen flex-col">
+    {/* No header sweep: the page background is already animated. */}
+    <AppHeader
+      animated={false}
+      paddingBottom={18}
+      contentClassName="mx-auto w-full max-w-6xl"
+      right={<ThemeToggle />}
+    />
+
+    <main className="flex flex-1 items-center justify-center px-4 py-10">
+      <section
+        data-radar-avoid
+        aria-labelledby="sign-in-title"
+        className="w-full max-w-[400px] rounded-3xl border border-black/5 bg-white/95 p-8 text-center shadow-xl shadow-slate-900/5 backdrop-blur dark:border-white/10 dark:bg-[#0f1829]/95 dark:shadow-black/40"
       >
-        <div style={{ textAlign: "center", marginBottom: "4px" }}>
-          <div
-            className="text-gray-900 dark:text-slate-100"
-            style={{ fontSize: "18px", fontWeight: 700, marginBottom: "6px" }}
-          >
-            Sign in to Apply Radar
-          </div>
-          <div className="text-gray-400 dark:text-slate-500" style={{ fontSize: "12px" }}>
-            Use the same Google account as in the extension to see your applications
-          </div>
+        <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-teal-500/20 bg-teal-500/10">
+          <RadarLogo size={40} />
         </div>
+        <h1
+          id="sign-in-title"
+          className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-slate-100"
+        >
+          Sign in to Apply Radar
+        </h1>
+        <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
+          Use the same Google account as in the extension to see your applications.
+        </p>
 
-        {error && <StatusBanner tone="error">{error}</StatusBanner>}
+        <ul className="mt-6 flex flex-col gap-2.5 text-left text-sm text-gray-600 dark:text-slate-300">
+          {FEATURES.map((feature) => (
+            <li key={feature} className="flex items-center gap-2.5">
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-500/15 text-teal-600 dark:text-teal-400">
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </span>
+              {feature}
+            </li>
+          ))}
+        </ul>
 
-        <GoogleSignInCard onSignIn={onSignIn} busy={busy} recommended={false} />
+        {error && (
+          <div className="mt-6 text-left">
+            <StatusBanner tone="error">{error}</StatusBanner>
+          </div>
+        )}
+
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          className="mt-6"
+          disabled={busy}
+          onClick={onSignIn}
+        >
+          {busy ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Signing in…
+            </>
+          ) : (
+            <>
+              {/* The "G" on white, so its colors stay true on the teal button. */}
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white">
+                <GoogleIcon size={14} />
+              </span>
+              Continue with Google
+            </>
+          )}
+        </Button>
 
         {busy && (
           // We can't detect the popup being closed (Google's pages cut it off
           // from this window), so let the user stop waiting.
           <div
             role="status"
-            className="flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-slate-400"
+            className="mt-3 flex items-center justify-center gap-1 text-xs text-gray-500 dark:text-slate-400"
           >
             <span>Finish signing in in the Google window.</span>
             <button
               type="button"
               onClick={onCancel}
-              className="cursor-pointer rounded-full border border-black/10 px-3 py-1 font-medium text-gray-700 hover:bg-black/5 dark:border-white/15 dark:text-slate-200 dark:hover:bg-white/5"
+              className="cursor-pointer rounded-full px-2 py-1 font-semibold text-teal-700 hover:bg-teal-600/10 dark:text-teal-300 dark:hover:bg-teal-400/10"
             >
               Cancel
             </button>
           </div>
         )}
-      </div>
-    </div>
+      </section>
+    </main>
   </div>
 );

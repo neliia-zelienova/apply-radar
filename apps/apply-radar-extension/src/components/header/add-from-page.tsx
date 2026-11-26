@@ -44,8 +44,8 @@ export const AddFromPageButton = () => {
       {state.status === "error" && (
         <StatusBanner
           tone="error"
-          // The header is dark in both themes: light-on-dark colors here.
-          className="basis-full !border-red-400/40 !bg-red-500/15 !text-red-100"
+          // The header follows the theme, so the banner's own colors fit.
+          className="basis-full"
           actions={<BannerAction onClick={reset}>Dismiss</BannerAction>}
         >
           {state.message}

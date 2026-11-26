@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "../button";
+import { Field, Input, Textarea } from "../field";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "../dialog";
 import { type Interview } from "@apply-radar/shared";
 import type { SaveResult } from "./save-result";
@@ -153,59 +154,51 @@ export const InterviewForm = ({
           </DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-1 gap-3 w-full">
-          <label className="flex flex-col gap-1 items-start w-full">
-            <span className="text-sm">Name</span>
-            <input
+          <Field label="Name">
+            <Input
               type="text"
               placeholder="e.g., Screening, Technical, Onsite"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
+              className="font-roboto"
             />
-          </label>
+          </Field>
           <div className="grid grid-cols-2 gap-3 w-full">
-            <label className="flex flex-col gap-1 items-start w-full">
-              <span className="text-sm">Date</span>
-              <input
+            <Field label="Date">
+              <Input
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
+                className="font-roboto"
               />
-            </label>
-            <label className="flex flex-col gap-1 items-start w-full">
-              <span className="text-sm">Time</span>
-              <input
+            </Field>
+            <Field label="Time">
+              <Input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 font-roboto"
+                className="font-roboto"
               />
-            </label>
+            </Field>
           </div>
-          <label className="flex flex-col gap-1 items-start w-full">
-            <span className="text-sm">Location or Link </span>
-            <input
+          <Field label="Location or Link">
+            <Input
               type="text"
               placeholder="Zoom/Meet/Maps/Address"
               value={locationLink}
               onChange={(e) => setLocationLink(e.target.value)}
-              className={`w-full p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors font-roboto ${
-                isProbablyUrl(locationLink) && !isUrlSyntaxValid(locationLink)
-                  ? "border-red-500"
-                  : "border-black/15 dark:border-white/20"
-              }`}
+              invalid={isProbablyUrl(locationLink) && !isUrlSyntaxValid(locationLink)}
+              className="font-roboto"
             />
-          </label>
-          <label className="flex flex-col gap-1 items-start w-full">
-            <span className="text-sm">Notes</span>
-            <textarea
+          </Field>
+          <Field label="Notes">
+            <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full min-h-24 p-2 rounded-md bg-teal-400/10 dark:bg-black/20 border border-black/15 dark:border-white/20 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none font-roboto"
+              className="font-roboto"
               placeholder="Interview panel, agenda, reminders..."
             />
-          </label>
+          </Field>
         </div>
         {saveFailed && (
           <p role="alert" className="text-left text-sm text-red-600 dark:text-red-400">

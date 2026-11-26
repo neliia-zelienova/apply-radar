@@ -27,7 +27,7 @@ export const StatusBanner = ({
     data-radar-avoid
     role={tone === "error" ? "alert" : "status"}
     className={classNames(
-      "flex items-start justify-between gap-3 rounded-lg border px-3 py-2 text-xs",
+      "flex items-start justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-xs",
       TONES[tone],
       className,
     )}

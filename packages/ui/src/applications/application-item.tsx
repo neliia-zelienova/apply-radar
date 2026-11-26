@@ -342,7 +342,7 @@ export const ApplicationItem = ({
                   border: "none",
                   cursor: "pointer",
                   padding: "4px",
-                  borderRadius: "6px",
+                  borderRadius: "9999px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -380,7 +380,7 @@ export const ApplicationItem = ({
                     border: "none",
                     cursor: "pointer",
                     padding: "4px",
-                    borderRadius: "6px",
+                    borderRadius: "9999px",
                     display: "flex",
                     alignItems: "center",
                   }}
@@ -411,7 +411,7 @@ export const ApplicationItem = ({
                     display: "flex",
                     alignItems: "center",
                     padding: "4px",
-                    borderRadius: "6px",
+                    borderRadius: "9999px",
                     textDecoration: "none",
                   }}
                 >

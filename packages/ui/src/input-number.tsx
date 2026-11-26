@@ -1,5 +1,6 @@
 import * as React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { fieldClasses } from "./field";
 
 type InputNumberProps = {
   value: number;
@@ -157,7 +158,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
 
   return (
     <div
-      className={`relative inline-flex items-center gap-2 border border-black/15 dark:border-white/20 rounded px-2 py-1 w-24 bg-teal-400/10 dark:bg-black/20 focus-within:ring-2 focus-within:ring-teal-500 transition-colors ${
+      className={`relative inline-flex h-10 w-24 items-center gap-2 px-3 ${fieldClasses({ within: true })} ${
         className ?? ""
       }`}
     >
@@ -197,7 +198,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
           onPointerDown={(e) => startHold(1, e)}
           onPointerUp={stopHold}
           onBlur={stopHold}
-          className="py-0.5 px-1 hover:bg-teal-300/20 rounded absolute bottom-0 right-0"
+          className="py-0.5 px-1 hover:bg-teal-300/20 rounded-full absolute bottom-0 right-0"
         >
           <ChevronUp className="h-2 w-4" />
         </button>
@@ -208,7 +209,7 @@ export const InputNumber: React.FC<InputNumberProps> = ({
           onPointerDown={(e) => startHold(-1, e)}
           onPointerUp={stopHold}
           onBlur={stopHold}
-          className="py-0.5 px-1 hover:bg-teal-300/20 rounded absolute top-0 right-0"
+          className="py-0.5 px-1 hover:bg-teal-300/20 rounded-full absolute top-0 right-0"
         >
           <ChevronDown className="h-2 w-4" />
         </button>
